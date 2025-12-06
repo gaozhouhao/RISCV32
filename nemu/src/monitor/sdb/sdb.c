@@ -14,6 +14,8 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#include <memory/vaddr.h>
+#include <memory/paddr.h>
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -49,7 +51,106 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
-  return -1;
+    nemu_state.state = NEMU_QUIT;
+    return -1;
+}
+
+static int cmd_si(char *args) {
+    long n = 1;
+    if(args != NULL){
+        n = strtol(args, NULL, 0);
+    }
+    cpu_exec(n);   
+    return 0; 
+}
+
+static int cmd_info(char *args){   
+    if(strcmp(args, "r") == 0){
+        isa_reg_display();
+    }
+    if(strcmp(args, "w") == 0){
+        WP* wp = find_head_wp();
+        if(wp != NULL){
+            printf("%-4s %-20s %-10s\n", "NO", "Info", "Val");
+        }
+        else{
+            printf("No Watchpoint!\n");
+        }
+        while(wp != NULL){
+            printf("%-4d %-20s %-10x\n", wp->cnt, wp->addr_expr, wp->last_val);
+            wp = wp->next;
+        }
+    }
+    return 0; 
+}
+
+static int cmd_x(char *args){
+    if(args != NULL){
+        char *first_para = strtok(args, " ");
+        char *second_para = first_para + strlen(first_para) + 1;
+        long n = strtol(first_para, NULL, 0);
+        word_t addr = strtol(second_para, NULL, 0);
+        bool success = false;
+        expr(second_para, &success);
+        for(int i = 0; i < n; i ++){
+            if(addr >= PMEM_LEFT && addr <= PMEM_RIGHT){
+                printf("0x%08X:\t", addr);
+                printf("%02X\t", (vaddr_read(addr, 4)>>24)&0xff);
+                printf("%02X\t", (vaddr_read(addr, 4)>>16)&0xff);
+                printf("%02X\t", (vaddr_read(addr, 4)>>8)&0xff);
+                printf("%02X\t\n", vaddr_read(addr, 4)&0xff);
+                addr += 4;
+            }
+        }
+    }
+    return 0;
+}
+
+static int cmd_p(char *args){
+    if(args != NULL){
+        bool success = false;
+        printf("%d\n",expr(args, &success));
+    }
+    return 0;
+
+}
+static int cmd_w(char *args){
+    if(args != NULL){
+        WP *wp = new_wp();
+        bool success = false;
+        strncpy(wp->addr_expr, args, sizeof(wp->addr_expr) - 1);
+        wp->addr_expr[sizeof(wp->addr_expr) - 1] = '\0';
+        wp->last_val = expr(args, &success);
+        if(wp->next == NULL)    wp->cnt = 1;
+        else    wp->cnt = wp->next->cnt + 1;
+        printf("Hardware watchpoint %d: %s\n", wp->cnt, args);
+    }
+    return 0;
+}
+
+static int cmd_d(char *args){
+    if(args != NULL){
+        int num = strtol(args, NULL, 0);
+        WP *tmp = find_head_wp();
+        if(tmp == NULL){
+            printf("No such watchpoint\n");
+            return 0;
+        }
+        else if(num > tmp->cnt){
+            printf("No such watchpoint\n");
+            return 0;
+        }
+        else{
+            for(; tmp != NULL; tmp = tmp->next){
+                if(tmp->cnt == num){
+                    free_wp(tmp);
+                    printf("Delet watchpoint: %d\n", num);
+                    return 0;
+                }
+            }
+        }
+    }
+    return 0;
 }
 
 static int cmd_help(char *args);
@@ -62,9 +163,14 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  
   /* TODO: Add more commands */
-
+  { "si", "single step execute", cmd_si},
+  { "info", "print infomation", cmd_info},
+  { "x", "scan memory", cmd_x},
+  { "p", "expr", cmd_p},
+  { "w", "add a watch point", cmd_w},
+  { "d", "delet a watch point", cmd_d},
 };
 
 #define NR_CMD ARRLEN(cmd_table)

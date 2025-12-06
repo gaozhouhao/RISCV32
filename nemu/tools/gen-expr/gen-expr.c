@@ -27,12 +27,87 @@ static char *code_format =
 "#include <stdio.h>\n"
 "int main() { "
 "  unsigned result = %s; "
-"  printf(\"%%u\", result); "
+"  printf(\"%%uu\", result); "
 "  return 0; "
 "}";
+uint32_t position = 0;
+int cnt = 0;
 
-static void gen_rand_expr() {
-  buf[0] = '\0';
+uint32_t gen_num(){
+    uint32_t num = rand()%10;
+    //position += sprintf(buf + position, "(unsigned)");
+    buf[position++] = num + '0';
+    buf[position] = 'u';
+    position ++;
+    return num;
+}
+
+char gen_rand_op(){
+    int op = rand() % 4;
+    switch(op){
+        case 0: buf[position] = '+'; break;
+        case 1: buf[position] = '-'; break;
+        case 2: buf[position] = '*'; break;
+        case 3: buf[position] = '/'; break;
+    }
+    position ++;
+    switch(op){
+        case 0: return '+';
+        case 1: return '-';
+        case 2: return '*';
+        case 3: return '/';
+    }
+    return 0;
+}
+
+void gen(char ch){
+    buf[position] = ch;
+    position ++;
+}
+
+int choose(int num){
+    return  rand()%num;
+}
+
+
+uint32_t gen_rand_expr() {
+    cnt ++;
+    if(cnt < 100){
+        switch (choose(3)) {
+            case 0:
+                uint32_t ret1 = gen_num();
+                return ret1;
+            case 1:
+                //gen('(');
+                uint32_t ret2 = gen_rand_expr();
+                //gen(')');
+                return ret2;    
+            default:
+                gen('(');
+                uint32_t ret3 = gen_rand_expr();
+                gen(')');
+                char op = gen_rand_op();
+                uint32_t start_pos = position;
+                gen('(');
+                uint32_t ret4 = gen_rand_expr();
+                gen(')');
+                switch(op){
+                    case '+':return ret3 + ret4;
+                    case '-':return ret3 - ret4;
+                    case '*':return ret3 * ret4;
+                    case '/':if(ret4 == 0){
+                                position = start_pos;
+                                buf[position++] = '1';
+                                buf[position] = '\0';
+                                return ret3;
+                            }
+                            else return ret3 / ret4;
+                     }
+        }
+    }
+    else
+        return gen_num();
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -44,8 +119,10 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+    position = 0;
+    cnt = 0;
     gen_rand_expr();
-
+    buf[position] = '\0';
     sprintf(code_buf, code_format, buf);
 
     FILE *fp = fopen("/tmp/.code.c", "w");

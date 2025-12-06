@@ -18,6 +18,19 @@
 
 #include <common.h>
 
+typedef struct watchpoint{
+    int NO;
+    struct watchpoint *next;
+    char addr_expr[128];
+    word_t last_val;
+    int cnt;
+}WP;
+
 word_t expr(char *e, bool *success);
+
+WP* find_head_wp();
+WP* new_wp();
+void free_wp(WP *wp);
+
 
 #endif

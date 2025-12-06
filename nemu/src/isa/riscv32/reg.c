@@ -1,4 +1,4 @@
-/***************************************************************************************
+/**************************************************************************************
 * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
 *
 * NEMU is licensed under Mulan PSL v2.
@@ -24,8 +24,20 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+    for(int i = 0; i < 32; i ++){
+        printf("%-3s:  %02x", regs[i], cpu.gpr[i]);
+        if(i%4 == 3)   printf("\n");
+        else    printf("\t");
+    }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
-  return 0;
+    *success = false;
+    for(int i = 0; i < 32; i ++){
+        if(strcmp(regs[i], s) == 0){
+            *success = true;
+            return cpu.gpr[i];
+        }
+    }
+    return 0;
 }
