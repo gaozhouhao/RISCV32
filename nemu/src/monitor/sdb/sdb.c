@@ -89,9 +89,9 @@ static int cmd_x(char *args){
         char *first_para = strtok(args, " ");
         char *second_para = first_para + strlen(first_para) + 1;
         long n = strtol(first_para, NULL, 0);
-        word_t addr = strtol(second_para, NULL, 0);
+        //word_t addr = strtol(second_para, NULL, 0);
         bool success = false;
-        expr(second_para, &success);
+        word_t addr = expr(second_para, &success);
         for(int i = 0; i < n; i ++){
             if(addr >= PMEM_LEFT && addr <= PMEM_RIGHT){
                 printf("0x%08X:\t", addr);

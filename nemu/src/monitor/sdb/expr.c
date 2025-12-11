@@ -21,6 +21,7 @@
 #include <regex.h>
 #include <memory/vaddr.h>
 
+
 enum {
   TK_NOTYPE = 256, TK_DEREF, TK_EQ, TK_HEX, TK_DEC, TK_LT, TK_GT, TK_LE, TK_GE, TK_AND
 
@@ -50,7 +51,8 @@ static struct rule {
   {">=", TK_GE},                    // greater or equal
   {">", TK_LT},                     // greater than
   {"<", TK_GT},                     // less than
-  {"&&", TK_AND},                   // logic AND
+  {"&&", TK_AND},                   // logic ANDi
+  {"\\$[a-zA-Z]{1,2}[0-9]{0,2}", '$'},                       // get reg value
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -68,6 +70,7 @@ int prec(int type){
         case '*':
         case '/':       return 5;
         case TK_DEREF:  return 6;
+        case '$':       return 7;
         default:        return 100;
     }
 }
@@ -174,9 +177,14 @@ static bool make_token(char *e) {
           case TK_AND:  tokens[nr_token].type = TK_AND;
                         nr_token ++;
                         break;
-          case  TK_DEREF:tokens[nr_token].type = TK_DEREF;
+          case TK_DEREF:tokens[nr_token].type = TK_DEREF;
                          nr_token ++;
                          break;
+          case '$':     tokens[nr_token].type = '$';
+                        strncpy(tokens[nr_token].str, substr_start, substr_len%32);
+                        tokens[nr_token].str[substr_len%32] = '\0';
+                        nr_token ++;
+                        break;
         }
 
         break;
@@ -239,6 +247,14 @@ uint32_t eval(int p, int q) {
      */
     if(tokens[p].type == TK_DEC || tokens[p].type == TK_HEX){
         return (uint32_t)strtol(tokens[p].str, NULL, 0);
+    }
+    if(tokens[p].type == '$'){
+        if(strcmp(tokens[p].str+1, "pc") == 0) return cpu.pc;
+        else{
+            for(int i = 0; i < 32; i ++){
+                if(strcmp(tokens[p].str+1, regs[i]) == 0) return cpu.gpr[i]; 
+            }
+        }
     }
   }
   else if (check_parentheses(p, q) == true) {
