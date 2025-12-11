@@ -9,6 +9,7 @@
 
 static TOP_NAME dut;
 
+uint32_t pmem_read(uint32_t pc);
 void nvboard_bind_all_pins(TOP_NAME* top);
 
 static void single_cycle() {
