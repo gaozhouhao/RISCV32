@@ -7,16 +7,6 @@ module top(
 //always@(posedge clk)
 //    $display("jump_flag:%d", jump_flag);
 
-wire    [7:0]   q;
-
-wire            wen;
-wire    [1:0]   waddr;
-wire    [1:0]   raddr1;
-wire    [1:0]   raddr2;
-wire    [7:0]   wdata;
-wire    [7:0]   rdata1;
-wire    [7:0]   rdata2;
-
 
 wire    [31:0]  next_pc;
 wire            jp_en;
@@ -70,5 +60,8 @@ EXU exu(
     .immU(immU),
     .wb(wb)
 );
+
+
+
 
 endmodule
