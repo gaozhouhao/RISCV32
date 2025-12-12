@@ -41,8 +41,8 @@ int main(int argc, char** argv){
     //top->trace(tfp.get(), 99);
     //tfp->open("./build/obj_dir/wave.fst");
     
-    while(1){
-    //while (contextp->time() < 40) {
+    //while(1){
+    while (contextp->time() < 10) {
         printf("PC:%d\n", dut.rootp->top__DOT__rom__DOT__current_pc);
         //for(int i = 0; i < 4; i ++){
         //    printf("%X\n", dut.rootp->top__DOT__ram__DOT__register[i]);

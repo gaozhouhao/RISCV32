@@ -28,7 +28,7 @@ localparam [1:0]
 
 
 wire    [6:0]   opcode;
-wire    [2:0] funct3;
+wire    [2:0]   funct3;
 
 assign src1 = inst[19:15];
 assign src2 = inst[24:20];

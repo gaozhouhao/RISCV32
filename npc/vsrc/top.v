@@ -1,5 +1,6 @@
 module top(
     input   clk,
+    input   [31:0]  inst,
     output  [7:0]   seg0,
     output  [7:0]   seg1
 );
@@ -11,6 +12,7 @@ wire    [3:0]   next_pc;
 wire    [7:0]   q;
 wire            jump_flag;
 
+wire            jp_en;
 wire            wen;
 wire    [1:0]   waddr;
 wire    [1:0]   raddr1;
@@ -18,6 +20,24 @@ wire    [1:0]   raddr2;
 wire    [7:0]   wdata;
 wire    [7:0]   rdata1;
 wire    [7:0]   rdata2;
+
+wire    [31:0]  next_pc;
+wire    [31:0]  pc;
+
+
+
+
+IFU ifu(
+    .jp_en(.jp_en),
+    .clk(clk),
+    .next_pc(next_pc),
+    .pc(pc)
+);
+
+IDU idu(
+    .inst(inst)
+);
+
 
 rom rom(
     .jump_flag(jump_flag),
