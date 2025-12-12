@@ -1,22 +1,35 @@
 module EXU (
-    input       [1:0]       wb_sel,
-    input       [2:0]       imm_sel,
-    input                   ALUSrc,
-    input       [2:0]       ALUop,
-    input       [4:0]       rsc1_data,
-    input       [4:0]       rsc2_data,
-    input       [4:0]       rd,
-    input       [31:0]      immI,
-    input       [31:0]      immU,
+    input   wire    [1:0]       wb_sel,
+    input   wire    [2:0]       imm_sel,
+    input   reg                 ALUSrc,
+    input   reg     [2:0]       ALUop,
+    input   wire    [31:0]      rsc1_data,
+    input   wire    [31:0]      rsc2_data,
+    input   wire    [4:0]       rd,
+    input   wire    [31:0]      immI,
+    input   wire    [31:0]      immU,
     
-    output      [31:0]      wb
+    output  reg     [31:0]      wb
 );
 
-wire    [31:0]  imm;
-wire    [31:0]  alu_rsc1;
-wire    [31:0]  alu_rsc2;
-wire    [31:0]  alu_result;
-wire    [31:0]  wb;
+reg    [31:0]  imm;
+reg    [31:0]  alu_rsc1;
+reg    [31:0]  alu_rsc2;
+reg    [31:0]  alu_result;
+
+
+localparam [2:0]
+    IMM_X = 3'b000,
+    IMM_I = 3'b001,
+    IMM_S = 3'b010,
+    IMM_B = 3'b011,
+    IMM_U = 3'b100,
+    IMM_J = 3'b101;
+
+localparam [1:0]
+  WB_ALU = 2'b00,
+  WB_MEM = 2'b01,
+  WB_PC4 = 2'b10;
 
 
 always @(*) begin
@@ -35,8 +48,8 @@ always @(*) begin
 end
 
 always @(*) begin
-    alu_src1 = rsc1_data;
-    alu_src2 = ALUSrc?imm:rsc2_data;
+    alu_rsc1 = rsc1_data;
+    alu_rsc2 = ALUSrc?imm:rsc2_data;
 end
 
 always @(*) begin

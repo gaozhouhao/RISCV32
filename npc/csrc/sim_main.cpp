@@ -43,7 +43,11 @@ int main(int argc, char** argv){
     
     //while(1){
     while (contextp->time() < 10) {
-        printf("PC:%d\n", dut.rootp->top__DOT__rom__DOT__current_pc);
+        top->inst = pmem_read(top->pc);
+        printf("PC:%d\n", top->pc);
+        printf("INST:%X\n", top->inst);
+        printf("IDU->INST:%X\n", dut.rootp->top__DOT__idu__DOT__inst);
+        printf("TOP->INST:%X\n", dut.rootp->top__DOT__inst);
         //for(int i = 0; i < 4; i ++){
         //    printf("%X\n", dut.rootp->top__DOT__ram__DOT__register[i]);
         //}

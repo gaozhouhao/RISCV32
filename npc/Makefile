@@ -39,14 +39,14 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(OBJ_DIR) --Wno-UNOPTFLAT --exe --trace-fst -o $(abspath $(BIN))
+		--Mdir $(OBJ_DIR) --Wno-UNOPTFLAT --public --exe --trace-fst -o $(abspath $(BIN))
 	
 
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by your self."
 	@$^
-	gtkwave $(OBJ_DIR)/wave.fst
+#	gtkwave $(OBJ_DIR)/wave.fst
 #	verilator --cc --Wno-UNOPTFLAT --exe --trace-fst --build -j 0 -Wall sim_main.cpp top.v
 #	./obj_dir/Vtop
 #	gtkwave ./obj_dir/wave.fst
