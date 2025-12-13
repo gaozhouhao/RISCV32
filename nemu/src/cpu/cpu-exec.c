@@ -41,7 +41,6 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 #ifdef CONFIG_WATCHPOINT
     WP* wp = find_head_wp();       
-
     while(wp != NULL){
         bool success = false;
         word_t current_val = expr(wp->addr_expr, &success);
@@ -52,6 +51,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
             wp->last_val = current_val;
             nemu_state.state = NEMU_STOP;
         }
+        wp = wp->next;
     }
 #endif
 }
