@@ -1,4 +1,4 @@
-module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
+module RegisterFile #(ADDR_WIDTH = 5, DATA_WIDTH = 32) (
     input                         clk,
     input     [DATA_WIDTH-1:0]    wdata,
     input     [ADDR_WIDTH-1:0]    waddr,
@@ -14,8 +14,8 @@ module RegisterFile #(ADDR_WIDTH = 1, DATA_WIDTH = 1) (
         if (wen) rf[waddr] <= wdata;
     end
     
-    assign rdata1 = (raddr1 == 0)?{DATA_WIDTH[1'b0]}:rf[raddr1];
-    assign rdata2 = (raddr2 == 0)?{DATA_WIDTH{1'b0}}:rf[rdaar2];
+    assign rdata1 = (raddr1 == 5'b0)?{DATA_WIDTH{1'b0}}:rf[raddr1];
+    assign rdata2 = (raddr2 == 5'b0)?{DATA_WIDTH{1'b0}}:rf[raddr2];
 
 
 endmodule

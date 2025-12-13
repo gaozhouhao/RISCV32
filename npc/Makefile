@@ -48,8 +48,9 @@ sim: $(BIN)
 	@$^
 #	gtkwave $(OBJ_DIR)/wave.fst
 #	verilator --cc --Wno-UNOPTFLAT --exe --trace-fst --build -j 0 -Wall sim_main.cpp top.v
+#	@echo complite OK
 #	./obj_dir/Vtop
-#	gtkwave ./obj_dir/wave.fst
+	gtkwave $(OBJ_DIR)/wave.fst
 
 clean:
 	rm -rf $(BUILD_DIR)
