@@ -45,12 +45,12 @@ $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by your self."
-	@$^
+	@$(BIN) $(IMG)
 #	gtkwave $(OBJ_DIR)/wave.fst
 #	verilator --cc --Wno-UNOPTFLAT --exe --trace-fst --build -j 0 -Wall sim_main.cpp top.v
 #	@echo complite OK
 #	./obj_dir/Vtop
-	gtkwave $(OBJ_DIR)/wave.fst
+#	gtkwave $(OBJ_DIR)/wave.fst
 
 clean:
 	rm -rf $(BUILD_DIR)

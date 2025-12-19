@@ -9,9 +9,14 @@ module RegisterFile #(ADDR_WIDTH = 5, DATA_WIDTH = 32) (
     output    [DATA_WIDTH-1:0]    rdata2
 );
     reg [DATA_WIDTH-1:0] rf [2**ADDR_WIDTH-1:0];
-    
+
+integer i;
+initial begin
+    for (i = 0; i < 32; i = i + 1) rf[i] = 32'b0;
+end
+
     always @(posedge clk) begin
-        if (wen) rf[waddr] <= wdata;
+        if (wen) if(waddr != 5'b0) rf[waddr] <= wdata;
     end
     
     assign rdata1 = (raddr1 == 5'b0)?{DATA_WIDTH{1'b0}}:rf[raddr1];

@@ -8,3 +8,4 @@ _start:
   call _trm_init
 
 .size _start, . - _start
+

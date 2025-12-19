@@ -7,7 +7,16 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 int printf(const char *fmt, ...) {
-  panic("Not implemented");
+    //char *out = NULL;
+    //int num = sprintf(out, fmt);
+    /*
+    while(*out != '\0'){
+        putch(*out);
+        out ++;
+    }
+    */
+    //return num;
+    panic("Not implemented");
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {

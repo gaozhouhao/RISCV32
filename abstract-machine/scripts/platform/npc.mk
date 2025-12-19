@@ -27,5 +27,8 @@ image: image-dep
 
 run: insert-arg
 	echo "TODO: add command here to run simulation"
+	$(MAKE) -C $(NPC_HOME) ISA=$(ISA) sim IMG=$(IMAGE).bin	
+
+
 
 .PHONY: insert-arg
