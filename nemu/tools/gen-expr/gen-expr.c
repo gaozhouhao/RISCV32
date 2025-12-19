@@ -33,10 +33,27 @@ static char *code_format =
 uint32_t position = 0;
 int cnt = 0;
 
+uint32_t cnt_num(uint32_t num){
+    int cnt = 0;
+    while(num){
+        cnt ++;
+        num /= 10;
+    }
+    return cnt;
+}
+
 uint32_t gen_num(){
-    uint32_t num = rand()%10;
-    //position += sprintf(buf + position, "(unsigned)");
-    buf[position++] = num + '0';
+    uint32_t num = rand()%1000000;
+    int cnt = cnt_num(num);
+    int tmp = 0;
+    for(int i = cnt-1; i >= 0; i --){
+        tmp = num;
+        for(int j = 0; j < i; j ++){
+            tmp /= 10;
+        }
+        tmp = tmp % 10;
+        buf[position ++] = tmp + '0';
+    }
     buf[position] = 'u';
     position ++;
     return num;
