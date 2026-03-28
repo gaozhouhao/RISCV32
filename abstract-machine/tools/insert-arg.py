@@ -10,7 +10,7 @@ mainargs = argv[4]
 if len(mainargs) >= max_len:
     print("Error: mainargs should not be longer than {0} bytes\n".format(max_len))
     exit(1)
-print("mainargs={0}".format(mainargs))
+#print("mainargs={0}".format(mainargs))
 
 fp = open(bin, 'r+b')
 data = fp.read()

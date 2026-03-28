@@ -33,8 +33,7 @@ WP* find_head_wp();
 WP* new_wp();
 void free_wp(WP *wp);
 
-void itrace_push(char *str);
-void itrace_push();
+void itrace_push(char *str1, char *str2);
 
 
 #endif

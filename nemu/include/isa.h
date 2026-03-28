@@ -29,10 +29,19 @@ extern unsigned char isa_logo[];
 void init_isa();
 
 // reg
-extern CPU_state cpu;
+extern volatile CPU_state cpu;
 extern const char *regs[];
 void isa_reg_display();
 word_t isa_reg_str2val(const char *name, bool *success);
+
+/*
+//csr
+#define mepc    0x341
+#define mcause  0x342
+#define mtvec   0x305
+extern uint32_t csr[4096];
+*/
+
 
 // exec
 struct Decode;

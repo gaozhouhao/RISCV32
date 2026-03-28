@@ -44,10 +44,10 @@ void free_wp(WP *wp){
         return;
     }
     else if(wp->NO == head->NO){
-            head = head->next;
-            wp->next = free_;
-            free_ = wp;
-            return;
+        head = head->next;
+        wp->next = free_;
+        free_ = wp;
+        return;
     }
     else{
         for(WP *tmp = head; tmp->next != NULL; tmp = tmp->next){
@@ -64,11 +64,11 @@ void free_wp(WP *wp){
 }
 
 void init_wp_pool() {
-  int i;
-  for (i = 0; i < NR_WP; i ++) {
-    wp_pool[i].NO = i;
-    wp_pool[i].next = (i == NR_WP - 1 ? NULL : &wp_pool[i + 1]);
-  }
+    int i;
+    for (i = 0; i < NR_WP; i ++) {
+        wp_pool[i].NO = i;
+        wp_pool[i].next = (i == NR_WP - 1 ? NULL : &wp_pool[i + 1]);
+    }
 
   head = NULL;
   free_ = wp_pool;

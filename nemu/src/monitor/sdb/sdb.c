@@ -23,6 +23,7 @@
 
 static int is_batch_mode = false;
 
+void itrace_dump();
 void init_regex();
 void init_wp_pool();
 
@@ -101,6 +102,10 @@ static int cmd_x(char *args){
                 printf("%02X\t\n", vaddr_read(addr, 4)&0xff);
                 addr += 4;
             }
+            else {
+                itrace_dump();
+                panic("out of bound");
+            }
         }
     }
     return 0;
@@ -109,11 +114,11 @@ static int cmd_x(char *args){
 static int cmd_p(char *args){
     if(args != NULL){
         bool success = false;
-        printf("%d\n",expr(args, &success));
+        printf("0x%08x\n",expr(args, &success));
     }
     return 0;
-
 }
+
 static int cmd_w(char *args){
     if(args != NULL){
         WP *wp = new_wp();
@@ -203,6 +208,7 @@ void sdb_set_batch_mode() {
 }
 
 void sdb_mainloop() {
+    
   if (is_batch_mode) {
     cmd_c(NULL);
     return;
@@ -240,8 +246,7 @@ void sdb_mainloop() {
   }
 }
 
-void init_sdb() {
-  /* Compile the regular expressions. */
+void init_sdb() { /* Compile the regular expressions. */
   init_regex();
 
   /* Initialize the watchpoint pool. */

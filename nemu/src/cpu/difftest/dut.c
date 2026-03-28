@@ -14,13 +14,12 @@
 ***************************************************************************************/
 
 #include <dlfcn.h>
-
 #include <isa.h>
 #include <cpu/cpu.h>
 #include <memory/paddr.h>
 #include <utils.h>
 #include <difftest-def.h>
-
+void assert_fail_msg();
 void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction) = NULL;
 void (*ref_difftest_regcpy)(void *dut, bool direction) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
@@ -39,7 +38,7 @@ void difftest_skip_ref() {
   // (see below), we end the process of catching up with QEMU's pc to
   // keep the consistent behavior in our best.
   // Note that this is still not perfect: if the packed instructions
-  // already write some memory, and the incoming instruction in NEMU
+
   // will load that memory, we will encounter false negative. But such
   // situation is infrequent.
   skip_dut_nr_inst = 0;
@@ -81,13 +80,13 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
   void (*ref_difftest_init)(int) = dlsym(handle, "difftest_init");
   assert(ref_difftest_init);
 
-  Log("Differential testing: %s", ANSI_FMT("ON", ANSI_FG_GREEN));
-  Log("The result of every instruction will be compared with %s. "
+  printf("Differential testing: %s\n", ANSI_FMT("ON", ANSI_FG_GREEN));
+  printf("The result of every instruction will be compared with %s. "
       "This will help you a lot for debugging, but also significantly reduce the performance. "
-      "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
+      "If it is not necessary, you can turn it off in menuconfig.\n", ref_so_file);
 
   ref_difftest_init(port);
-  ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), img_size, DIFFTEST_TO_REF);
+  ref_difftest_memcpy(0x80000000, guest_to_host(0x80000000), img_size, DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }
 
