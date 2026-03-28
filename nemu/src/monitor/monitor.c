@@ -24,6 +24,8 @@ void init_device();
 void init_sdb();
 void init_disasm();
 
+void init_ftrace(const char *elf_file);
+
 static void welcome() {
   Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
   IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
@@ -45,6 +47,7 @@ static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
+static char *ftrace_elf_file = NULL;
 
 static long load_img() {
   if (img_file == NULL) {
@@ -69,21 +72,26 @@ static long load_img() {
 }
 
 static int parse_args(int argc, char *argv[]) {
+    printf("argv  :%s\n", argv[0]);
   const struct option table[] = {
     {"batch"    , no_argument      , NULL, 'b'},
     {"log"      , required_argument, NULL, 'l'},
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"help"     , no_argument      , NULL, 'h'},
+    {"ftrace"   , required_argument, NULL, 'f'},
     {0          , 0                , NULL,  0 },
   };
+  //make ARCH=minirv-nemu NEMUFLAGS="-b" ALL=dummy run 
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhl:d:p:f:", table, NULL)) != -1) {
+  printf("options:%c\n", o);
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
+      case 'f': ftrace_elf_file = optarg; break;
       case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -91,6 +99,7 @@ static int parse_args(int argc, char *argv[]) {
         printf("\t-l,--log=FILE           output log to FILE\n");
         printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
         printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+        printf("\t-f,--ftrace=ELF_FILE    trace Function\n");
         printf("\n");
         exit(0);
     }
@@ -100,7 +109,7 @@ static int parse_args(int argc, char *argv[]) {
 
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
-
+    cpu.csr[0x300] = 0x1800;
   /* Parse arguments. */
   parse_args(argc, argv);
 
@@ -129,7 +138,7 @@ void init_monitor(int argc, char *argv[]) {
   init_sdb();
 
   IFDEF(CONFIG_ITRACE, init_disasm());
-
+  IFDEF(CONFIG_FTRACE, init_ftrace(ftrace_elf_file));
   /* Display welcome message. */
   welcome();
 }

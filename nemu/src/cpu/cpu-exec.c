@@ -18,6 +18,8 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include "../monitor/sdb/sdb.h"
+#include <memory/vaddr.h>
+
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -26,7 +28,7 @@
  */
 #define MAX_INST_TO_PRINT 10
 
-CPU_state cpu = {};
+volatile CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
@@ -72,6 +74,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #else
   for (i = ilen - 1; i >= 0; i --) {
 #endif
+
     p += snprintf(p, 4, " %02x", inst[i]);
   }
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
@@ -84,6 +87,30 @@ static void exec_once(Decode *s, vaddr_t pc) {
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
+  
+  char space[128];
+    char *next_p = space;
+    next_p += snprintf(next_p, sizeof(space), FMT_WORD ":", cpu.pc);
+    Decode next_s;
+    next_s.snpc = cpu.pc;
+    next_s.isa.inst = vaddr_ifetch(cpu.pc, 4);
+    uint8_t *next_inst = (uint8_t *)&next_s.isa.inst;
+    for (i = ilen -1; i >= 0; i --) {
+        next_p += snprintf(next_p, 4, " %02x", next_inst[i]);
+    }
+    ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
+    space_len = ilen_max - ilen;
+    if (space_len < 0) space_len = 0;
+    space_len = space_len * 3 + 1;
+    memset(next_p, ' ', space_len);
+    next_p += space_len;
+
+    disassemble(next_p, space + sizeof(space) - next_p,
+        cpu.pc, (uint8_t *)&next_s.isa.inst, ilen);
+    itrace_push(s->logbuf, space);
+    //void itrace_dump();
+    //itrace_dump();
+
 #endif
 }
 
