@@ -34,7 +34,7 @@ end
 
 always @(posedge clk) begin
     if(ifu_reqValid) busy1 <= 5;
-    ifu_rdata <= ifu_reqValid ? pmem_read(ifu_raddr) : 32'b0;
+    ifu_rdata <= (~state) ? pmem_read(ifu_raddr) : 32'b0;
     ifu_respValid <= ifu_reqValid;
 end
 
