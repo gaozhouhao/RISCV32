@@ -78,7 +78,7 @@ end
 always @(posedge clk) begin
     if(is_jalr)
         pc <= next_pc & ~32'b1;
-    else if(rf_to_ifu_valid)
+    else if(ifu_respValid)
         pc <= next_pc;
     else 
         pc <= pc;
