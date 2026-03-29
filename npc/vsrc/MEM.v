@@ -20,27 +20,27 @@ import "DPI-C" function void pmem_write (
     input int unsigned  waddr, input int unsigned wdata, input byte wmask
 );
 
+
+parameter IDLE = 1'b0, WAIT = 1'b1;
 reg [7:0] busy1;
-reg state1;
-initial busy1 = 5;
+reg state, next_state;
 always @(posedge clk) begin
-    /*
-    if(state1 == 0) begin
-        if(ifu_reqValid) begin
-            state1 <= ~state1;
-            busy1 <= 8'h5;
-        end
-    end
-    else begin
-        busy1 <= busy1 - 1;
-        if(busy1 == 0) state1 <= ~state1;
-    end
-    
-    ifu_rdata <= (busy1 == 0) ? pmem_read(ifu_raddr) : 32'b0;
-    ifu_respValid <= (busy1 == 0);
-    */
-    ifu_rdata <= ifu_reqValid ? pmem_read(ifu_raddr) : 32'b0;
-    ifu_respValid <= ifu_reqValid;
+    if(state == IDLE) busy1 <= 10;
+    else busy1 <= busy1 - 1;
+    state <= next_state;
+    //if (busy1 != 0) busy1 <= busy1 - 1;
+end
+
+always @(*) begin
+    next_state = (busy1 == 1) ? IDLE : WAIT;
+end
+
+always @(posedge clk) begin
+    //if(ifu_reqValid) busy1 <= 5;
+    ifu_rdata <= (state==IDLE) ? pmem_read(ifu_raddr) : 32'b0;
+    ifu_respValid <= (state==IDLE);
+    //ifu_rdata <= ifu_reqValid ? pmem_read(ifu_raddr) : 32'b0;
+    //ifu_respValid <= ifu_reqValid;
 end
 
 integer busy2 = 0;
