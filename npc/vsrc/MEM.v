@@ -24,9 +24,8 @@ import "DPI-C" function void pmem_write (
 parameter IDLE = 1'b0, WAIT = 1'b1;
 reg [7:0] busy1;
 reg state, next_state;
-initial busy1 = 10;
 always @(posedge clk) begin
-    if(state == IDLE) busy1 <= 5;
+    if(state == IDLE) busy1 <= 10;
     else busy1 <= busy1 - 1;
     state <= next_state;
     //if (busy1 != 0) busy1 <= busy1 - 1;
