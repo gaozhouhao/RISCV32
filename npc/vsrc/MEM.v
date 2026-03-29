@@ -25,25 +25,15 @@ reg state, next_state;
 initial busy1 = 5;
 always @(posedge clk) begin
     state <= next_state;
+    if (busy1 == 0) busy1 <= busy1 - 1;
+end
+
+always @(*) begin
+    next_state = (busy1 == 0) ? 0 : 1;
 end
 
 always @(posedge clk) begin
-    
-    /*
-    if(state1 == 0) begin
-        if(ifu_reqValid) begin
-            state1 <= ~state1;
-            busy1 <= 8'h5;
-        end
-    end
-    else begin
-        busy1 <= busy1 - 1;
-        if(busy1 == 0) state1 <= ~state1;
-    end
-    
-    ifu_rdata <= (busy1 == 0) ? pmem_read(ifu_raddr) : 32'b0;
-    ifu_respValid <= (busy1 == 0);
-    */
+    if(ifu_reqValid) busy1 <= 5;
     ifu_rdata <= ifu_reqValid ? pmem_read(ifu_raddr) : 32'b0;
     ifu_respValid <= ifu_reqValid;
 end
