@@ -25,7 +25,7 @@ reg state, next_state;
 initial busy1 = 5;
 always @(posedge clk) begin
     state <= next_state;
-    if (busy1 == 0) busy1 <= busy1 - 1;
+    if (busy1 != 0) busy1 <= busy1 - 1;
 end
 
 always @(*) begin
