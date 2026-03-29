@@ -21,9 +21,14 @@ import "DPI-C" function void pmem_write (
 );
 
 reg [7:0] busy1;
-reg state1;
+reg state, next_state;
 initial busy1 = 5;
 always @(posedge clk) begin
+    state <= next_state;
+end
+
+always @(posedge clk) begin
+    
     /*
     if(state1 == 0) begin
         if(ifu_reqValid) begin
