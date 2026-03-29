@@ -55,7 +55,7 @@ always @(*) begin
             ifu_reqValid = 1;
         end
         wait_ready: begin
-            ifu_raddr = 0;
+            ifu_raddr = pc;
             ifu_reqValid = 0;
         end
     endcase
