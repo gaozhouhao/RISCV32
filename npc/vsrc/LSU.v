@@ -94,10 +94,7 @@ always @(*) begin
         `NPC_ALU: wb = alu_result;
         `NPC_PC4: wb = pc + 32'h4;
         `NPC_MEM: begin
-            //$display("%x", alu_result);
-            //word = (pmem_read(alu_result) >> (alu_result[1:0]*8));
             word = (lsu_rdata >> (alu_result[1:0]*8));
-            $display("data;%x", lsu_rdata);
             case (funct3)
             3'b000: begin
                 byte1 = word[7:0];

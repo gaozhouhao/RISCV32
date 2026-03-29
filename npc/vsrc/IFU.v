@@ -27,7 +27,6 @@ reg         state, next_state;
 
 initial pc = 32'h80000000;
 
-
 reg fetch_req;
 assign fetch_req = id_done|exe_done|wb_done;
 
@@ -35,12 +34,12 @@ assign fetch_req = id_done|exe_done|wb_done;
 reg ifu_valid;
 initial ifu_valid = 1;
 always @(posedge clk) begin
-    ifu_valid <= 0;
+    if(ifu_respValid) inst <= ifu_rdata;
+    else inst <= inst;
+    ifu_to_idu_valid <= ifu_respValid;
 end
 
 always @(*) begin
-    if(ifu_respValid) inst = ifu_rdata;
-    else inst = inst;
     case(state)
         idle: next_state = wait_ready;
         //wait_ready: next_state = (rf_to_ifu_valid|ifu_valid)?idle:wait_ready;
@@ -78,7 +77,7 @@ end
 always @(posedge clk) begin
     if(is_jalr)
         pc <= next_pc & ~32'b1;
-    else if(ifu_respValid)
+    else if(ifu_to_idu_valid)
         pc <= next_pc;
     else 
         pc <= pc;
