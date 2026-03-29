@@ -33,13 +33,13 @@ always @(posedge clk) begin
 end
 
 always @(*) begin
-    next_state = (busy1 == 0) ? IDLE : WAIT;
+    next_state = (busy1 == 1) ? IDLE : WAIT;
 end
 
 always @(posedge clk) begin
     //if(ifu_reqValid) busy1 <= 5;
-    ifu_rdata <= state ? pmem_read(ifu_raddr) : 32'b0;
-    ifu_respValid <= state;
+    ifu_rdata <= (state==IDLE) ? pmem_read(ifu_raddr) : 32'b0;
+    ifu_respValid <= (state==IDLE);
     //ifu_rdata <= ifu_reqValid ? pmem_read(ifu_raddr) : 32'b0;
     //ifu_respValid <= ifu_reqValid;
 end
