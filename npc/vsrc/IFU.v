@@ -43,7 +43,8 @@ always @(*) begin
     else inst = inst;
     case(state)
         idle: next_state = wait_ready;
-        wait_ready: next_state = (rf_to_ifu_valid|ifu_valid)?idle:wait_ready;
+        //wait_ready: next_state = (rf_to_ifu_valid|ifu_valid)?idle:wait_ready;
+        wait_ready: next_state = (ifu_respValid)?idle:wait_ready;
     endcase
 end
 
