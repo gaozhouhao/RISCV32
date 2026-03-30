@@ -2,6 +2,7 @@ module IFU(
     input                               is_jalr,
     input                               is_load,
     input                               clk,
+    input                               reset,
     input           [31:0]              next_pc,
     output  reg     [31:0]              inst,
     input                               id_done,
@@ -51,6 +52,8 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
+    if(reset == 0) state <= IDLE;
+    else
     state <= next_state;
     if(state == WAIT && next_state == WAIT) begin
         ifu_to_idu_valid <= 1'b1;

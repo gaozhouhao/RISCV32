@@ -85,6 +85,7 @@ IFU ifu(
     .is_jalr(is_jalr),
     .is_load(is_load),
     .clk(clk),
+    .reset(reset),
     .next_pc(next_pc),
     .ifu_to_idu_ready(ifu_to_idu_ready),
     .ifu_to_idu_valid(ifu_to_idu_valid),
