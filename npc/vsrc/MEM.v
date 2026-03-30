@@ -51,7 +51,7 @@ always @(posedge clk)  begin
     state2 <= next_state2;
 end
 always @(*) begin
-    next_state2 = (busy2  == 5) ? IDLE : WAIT;
+    next_state2 = (busy2 == 20) ? IDLE : WAIT;
 end
 always @(posedge clk) begin
     lsu_rdata <= (next_state2 == IDLE && !lsu_wen)? pmem_read(lsu_addr) : 32'b0;
