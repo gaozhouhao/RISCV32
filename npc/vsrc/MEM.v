@@ -26,7 +26,7 @@ reg [7:0] busy1;
 reg [1:0] state1, next_state1;
 always @(posedge clk) begin
     if(ifu_reqValid == 1) busy1 <= 10;
-    else busy1 <= busy1 - 1;
+    else if (state1 == WAIT) busy1 <= busy1 - 1;
     state1 <= next_state1;
 end
 
@@ -48,7 +48,7 @@ reg [7:0] busy2;
 reg [1:0] state2, next_state2;
 always @(posedge clk)  begin
     if(lsu_reqValid == 1) busy2 <= 5;
-    else busy2 <= busy2 - 1;
+    else if (state2 == WAIT) busy2 <= busy2 - 1;
     state2 <= next_state2;
 end
 always @(*) begin
