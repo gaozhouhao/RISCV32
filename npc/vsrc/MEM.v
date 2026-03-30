@@ -47,8 +47,8 @@ end
 reg [7:0] busy2;
 reg [1:0] state2, next_state2;
 always @(posedge clk)  begin
-    if(state2 == IDLE) busy2 <= 1;
-    else busy2 <= busy2 + 1;
+    if(state2 == IDLE) busy2 <= 5;
+    else busy2 <= busy2 - 1;
     state2 <= next_state2;
 end
 always @(*) begin
