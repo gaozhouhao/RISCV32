@@ -37,7 +37,7 @@ initial ifu_valid = 1;
 always @(posedge clk) begin
     if(ifu_respValid) inst <= ifu_rdata;
     else inst <= inst;
-    //ifu_to_idu_valid <= ifu_respValid;
+    ifu_to_idu_valid <= ifu_respValid;
 end
 
 always @(*) begin
@@ -49,7 +49,6 @@ end
 
 always @(*) begin
     ifu_raddr = pc;
-    ifu_to_idu_valid = ifu_respValid;
 end
 
 always @(posedge clk) begin
