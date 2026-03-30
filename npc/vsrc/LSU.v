@@ -76,6 +76,53 @@ always @(posedge clk) begin
     state <= next_state;
 end
 
+reg [7:0] byte1, byte2;
+reg [31:0] word;
+always @(*) begin
+    byte1 = 8'b0;
+    byte2 = 8'b0;
+    next_pc = 32'b0;
+    word = 32'b0;
+    csr_input_data = 32'b0;
+    case (wb_sel)
+        `NPC_ALU: wb = alu_result;
+        `NPC_PC4: wb = pc + 32'h4;
+        `NPC_MEM: begin
+            word = (pmem_read(alu_result) >> (alu_result[1:0]*8));
+            //word = (lsu_rdata >> (alu_result[1:0]*8));
+            case (funct3)
+            3'b000: begin
+                byte1 = word[7:0];
+                wb = {{24{byte1[7]}}, byte1}; //lb
+            end
+            3'b001: begin//lh
+                 {byte2, byte1} = word[15:0];
+                 wb = {{16{byte2[7]}}, byte2, byte1};
+            end
+            3'b010: wb = word; //lw
+            3'b100: wb = word & 32'hff;//lbu
+            3'b101: wb = word & 32'hffff; //lhu
+            default:wb = 32'b0;
+        endcase
+        end
+        `NPC_CSR: begin
+            wb = csr_output_data;
+            if(csr_op_sel == `CSR_WRITE)csr_input_data = src1_data;
+            if(csr_op_sel == `CSR_SET)csr_input_data = csr_output_data | src1_data;
+        end
+        default: wb = 32'b0;
+    endcase
+        case (nextpc_sel)
+            `PCSEL_JALR: next_pc = alu_result;
+            `PCSEL_JAL: next_pc = alu_result;
+            `PCSEL_PC4: next_pc = pc + 32'd4;
+            `PCSEL_BR:  next_pc = branch_taken?alu_result:(pc + 32'd4);
+            `PCSEL_MTVEC:  next_pc = mtvec_data;
+            `PCSEL_MEPC:  next_pc = mepc_data;
+            default: ;
+        endcase
+end
+
 always @(*) begin
     case (funct3)
         3'b000: begin //sb

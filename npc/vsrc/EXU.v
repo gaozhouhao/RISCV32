@@ -104,7 +104,7 @@ always @(*) begin
     exu_to_rf_valid = idu_to_exu_valid && (!is_load && !is_store);
 end
 
-
+/*
 reg [7:0] byte1, byte2;
 reg [31:0] word;
 always @(*) begin
@@ -151,7 +151,7 @@ always @(*) begin
             default: ;
         endcase
 end
-
+*/
 
 import "DPI-C" function void ebreak(input bit is_ebreak);
 
