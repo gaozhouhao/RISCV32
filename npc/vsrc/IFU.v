@@ -22,7 +22,7 @@ module IFU(
     input   reg     [31:0]              ifu_rdata
 );
 
-parameter   idle = 1'b0, wait_ready = 1'b1;
+parameter   IDLE = 1'b0, WAIT = 1'b1;
 reg         state, next_state;
 
 initial pc = 32'h80000000;
@@ -41,35 +41,25 @@ end
 
 always @(*) begin
     case(state)
-        idle: next_state = wait_ready;
-        wait_ready: next_state = (ifu_respValid)?idle:wait_ready;
+        IDLE: next_state = WAIT;
+        WAIT: next_state = (ifu_respValid)? IDLE : WAIT;
     endcase
 end
 
 always @(*) begin
-    case(state)
-        idle: begin
-            ifu_raddr = pc;
-            ifu_reqValid = 1;
-        end
-        wait_ready: begin
-            ifu_raddr = pc;
-            ifu_reqValid = 0;
-        end
-    endcase
+    ifu_raddr = pc;
 end
-
 
 always @(posedge clk) begin
     state <= next_state;
-    case(next_state)
-        wait_ready: begin
-            ifu_to_idu_valid <= 1'b1;
-        end
-        idle: begin
-            ifu_to_idu_valid <= 1'b0;
-        end
-    endcase
+    if(state == WAIT && next_state == WAIT) begin
+        ifu_to_idu_valid <= 1'b1;
+        ifu_reqValid <= 1;
+    end
+    else begin
+        ifu_reqValid <= 0;
+        ifu_to_idu_valid <= 0;
+    end
 end
 
 always @(posedge clk) begin
