@@ -56,8 +56,8 @@ always @(*) begin
             if(exu_to_lsu_valid) begin
                 next_state = WAIT;
                 lsu_reqValid = 1;
-                if(is_load) lsu_wen = 0;
-                else lsu_wen = 1;
+                //if(is_load) lsu_wen = 0;
+                //else lsu_wen = 1;
             end
             else begin
                 next_state = IDLE;
@@ -144,12 +144,12 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    if(exu_to_lsu_valid)
-    lsu_addr <= alu_result;
-end
-
-always @(*) begin
-    lsu_wen = sen;
+    if(exu_to_lsu_valid) begin
+        lsu_addr <= alu_result;
+        if(is_load == 1) lsu_wen <= 0;
+        else lsu_wen <= 1;
+        //lsu_wen <= sen;
+    end
 end
 
 endmodule
