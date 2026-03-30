@@ -67,7 +67,7 @@ reg lsu_is_valid;
 reg state, next_state;
 
 always @(*) begin
-    lsu_to_rf_valid = is_load ? lsu_respValid : exu_to_lsu_valid;
+    lsu_to_rf_valid = is_load ? lsu_respValid : 1'b1;
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
