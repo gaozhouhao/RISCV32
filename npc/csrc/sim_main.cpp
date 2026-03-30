@@ -25,9 +25,9 @@ extern uint32_t memory[1<<28];
 CPUArchState cpu = {.pc=0x80000000};
 
 void exec_once() {
-    top->clk = 0; top->eval(); contextp->timeInc(1);
-    tfp->dump(contextp->time());
     top->clk = 1; top->eval(); contextp->timeInc(1);
+    tfp->dump(contextp->time());
+    top->clk = 0; top->eval(); contextp->timeInc(1);
     tfp->dump(contextp->time());
 #ifdef CONFIG_ITRACE
     printf("0x%08X\n", top->rootp->top__DOT__inst);
