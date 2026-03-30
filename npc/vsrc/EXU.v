@@ -7,7 +7,12 @@ module EXU (
     input   reg     [ 1:0]       alu_src2_sel,
     input   reg     [ 3:0]      ALUop,
     output          [31:0]      alu_result,
-
+    output  reg     [31:0]      next_pc,
+/*
+    output  reg     [31:0]      jalr_target,
+    output  reg     [31:0]      jal_target,
+    output  reg     [31:0]      branch_target,
+    */
     input                       sen,
 
     output  reg                 branch_taken,
@@ -32,7 +37,7 @@ module EXU (
     output  reg     [31:0]      csr_input_data,
     output  reg     [31:0]      csr_output_data,
 
-    output  reg     [31:0]      next_pc,
+    //output  reg     [31:0]      next_pc,
     input                       idu_to_exu_valid,
     output                      idu_to_exu_ready,
     output                      exu_to_rf_valid,
@@ -136,9 +141,8 @@ always @(*) begin
         end
         default: wb = 32'b0;
     endcase
-    
         case (nextpc_sel)
-            `PCSEL_ALU: next_pc = alu_result;
+            `PCSEL_JALR: next_pc = alu_result;
             `PCSEL_JAL: next_pc = alu_result;
             `PCSEL_PC4: next_pc = pc + 32'd4;
             `PCSEL_BR:  next_pc = branch_taken?alu_result:(pc + 32'd4);

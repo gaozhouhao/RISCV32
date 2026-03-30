@@ -72,6 +72,19 @@ always @(posedge clk) begin
     endcase
 end
 
+/*reg [31:0] next_pc;
+always @(*) begin
+    case (nextpc_sel)
+        `PCSEL_ALU: next_pc = alu_result;
+        `PCSEL_JAL: next_pc = alu_result;
+        `PCSEL_PC4: next_pc = pc + 32'd4;
+        `PCSEL_BR:  next_pc = branch_taken?alu_result:(pc + 32'd4);
+        `PCSEL_MTVEC:  next_pc = mtvec_data;
+        `PCSEL_MEPC:  next_pc = mepc_data;
+        default: ;
+    endcase
+end
+*/
 always @(posedge clk) begin
     if(is_jalr)
         pc <= next_pc & ~32'b1;

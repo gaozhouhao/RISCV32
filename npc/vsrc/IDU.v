@@ -74,8 +74,6 @@ end
 
 
 always @(*) begin
-    //$display("valid:%d", ifu_to_idu_valid);
-    //$display("store:%d", is_store);
     ifu_to_idu_ready = 1;
     idu_to_exu_valid = ifu_to_idu_valid;
     is_ecall = 1'b0;
@@ -94,9 +92,7 @@ always @(*) begin
     wen = 0;
     wb_sel = `NPC_ALU;
     nextpc_sel = `PCSEL_PC4;
-        //$display("%d", ifu_to_idu_valid);
     if(ifu_to_idu_valid == 1'b1) begin
-        //$display("IDU");
         if(opcode == 7'b0110011) begin
             wen = 1;
             wb_sel = `NPC_ALU;
@@ -124,7 +120,6 @@ always @(*) begin
             nextpc_sel = `PCSEL_PC4;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
-            //if(funct3 == 3'b000)$display("addi");
             if (funct3 == 3'b000) ALUop = `NPC_ALU_ADD; //addi
             if (funct3 == 3'b001) ALUop = `NPC_ALU_SLL; //slli
             if (funct3 == 3'b010) ALUop = `NPC_ALU_SLT;
@@ -144,7 +139,7 @@ always @(*) begin
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_ALU;
+            nextpc_sel = `PCSEL_JAL;
         end
         if(opcode == 7'b1100111 && funct3 == 3'b000) begin//jalr
             wen = 1;
@@ -152,7 +147,7 @@ always @(*) begin
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_ALU;
+            nextpc_sel = `PCSEL_JALR;
             is_jalr = 1;
         end
         if (opcode == 7'b1100011) begin // branch
@@ -182,7 +177,6 @@ always @(*) begin
             wen = 1;
             wb_sel = `NPC_MEM;
             if(ifu_to_idu_valid == 1'b1)begin
-                //$display("BBB");
                 is_load = 1'b1;
             end
             else is_load = 1'b0;
@@ -229,7 +223,6 @@ always @(*) begin
         end
     end
     else begin
-        //$display("CCC");
         //is_load = 1'b0;
         //wen = 1'b0;
         //csr_wen = 1'b0;
