@@ -25,19 +25,19 @@ parameter IDLE = 1'b0, WAIT = 1'b1;
 reg [7:0] busy1;
 reg state1, next_state1;
 always @(posedge clk) begin
-    if(ifu_reqValid == 1) busy1 <= 10;
-    else busy1 <= busy1 - 1;
+    if(ifu_reqValid == 1) busy1 <= 1;
+    else busy1 <= busy1 + 1;
     state1 <= next_state1;
     //if (busy1 != 0) busy1 <= busy1 - 1;
 end
 
 always @(*) begin
-    next_state1 = (busy1 == 1) ? IDLE : WAIT;
+    next_state1 = (busy1 == 10) ? IDLE : WAIT;
 end
 
 always @(posedge clk) begin
     //if(ifu_reqValid) busy1 <= 5;
-    ifu_rdata <= (next_state1==IDLE) ? pmem_read(ifu_raddr) : 32'b0;
+    ifu_rdata <= (state1==IDLE) ? pmem_read(ifu_raddr) : 32'b0;
     ifu_respValid <= (state1==IDLE);
     //ifu_rdata <= ifu_reqValid ? pmem_read(ifu_raddr) : 32'b0;
     //ifu_respValid <= ifu_reqValid;
