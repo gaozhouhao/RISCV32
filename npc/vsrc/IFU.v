@@ -47,9 +47,9 @@ always @(*) begin
     endcase
 end
 
-always @(*) begin
-    ifu_raddr = pc;
-end
+//always @(*) begin
+    //ifu_raddr = pc;
+//end
 
 always @(posedge clk) begin
     if(reset == 0)
@@ -57,9 +57,10 @@ always @(posedge clk) begin
     else
         state <= next_state;
     
-    if(state == WAIT && next_state == IDLE) begin
+    if(state == IDLE && ifu_to_idu_ready == 1) begin
         ifu_to_idu_valid <= 1'b1;
         ifu_reqValid <= 1;
+        ifu_raddr <= pc;
     end
     else begin
         ifu_reqValid <= 0;
@@ -70,7 +71,7 @@ end
 always @(posedge clk) begin
     if(is_jalr)
         pc <= next_pc & ~32'b1;
-    else if(ifu_to_idu_valid)
+    else if(wb_done)
         pc <= next_pc;
     else 
         pc <= pc;

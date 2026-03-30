@@ -232,6 +232,7 @@ MEM mem(
 
 RegisterFile regfile (
     .clk(clk),
+    .reset(reset),
     .wdata(wb),
     .waddr(rd),
     .lsu_rf_we(lsu_rf_we),
