@@ -72,7 +72,6 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    lsu_to_rf_valid <= lsu_respValid;
     state <= next_state;
 end
 
