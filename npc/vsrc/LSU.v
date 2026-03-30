@@ -144,6 +144,7 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
+    if(exu_to_lsu_valid)
     lsu_addr <= alu_result;
 end
 
