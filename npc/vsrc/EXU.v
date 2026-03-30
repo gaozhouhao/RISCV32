@@ -87,15 +87,17 @@ always @(*) begin
     alu_src2 = src2_data;
 
     case (alu_src1_sel)
-        default: alu_src1 = src1_data;
+        `NPC_RS1_DATA: alu_src1 = src1_data;
         `NPC_CUR_PC:  alu_src1 = pc;
         `NPC_ZERO:  alu_src1 = 32'b0;
+        default:;
     endcase
     
     case (alu_src2_sel)
-        default:    alu_src2 = src2_data;
+        `NPC_RS2_DATA:    alu_src2 = src2_data;
         `NPC_IMM:   alu_src2 = imm;
         `NPC_SHAMT: alu_src2 = shamt;
+        default:;
     endcase
 end
 
