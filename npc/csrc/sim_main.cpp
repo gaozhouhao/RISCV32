@@ -68,6 +68,7 @@ int main(int argc, char** argv){
 #endif
     printf("main-pc:\033[32m0x%08x\033[0m\n", cpu.pc);
     init_monitor(argc, argv);
+
     while (1) {
         sdb_mainloop();
 

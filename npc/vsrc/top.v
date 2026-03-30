@@ -1,5 +1,6 @@
 module top(
     input   clk,
+    input   reset,
     output  [31:0]  pc
 );
 
