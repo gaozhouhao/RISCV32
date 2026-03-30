@@ -23,33 +23,46 @@ import "DPI-C" function void pmem_write (
 
 parameter IDLE = 1'b0, WAIT = 1'b1;
 reg [7:0] busy1;
-reg state, next_state;
+reg state1, next_state1;
 always @(posedge clk) begin
-    if(state == IDLE) busy1 <= 10;
+    if(state1 == IDLE) busy1 <= 10;
     else busy1 <= busy1 - 1;
-    state <= next_state;
+    state1 <= next_state1;
     //if (busy1 != 0) busy1 <= busy1 - 1;
 end
 
 always @(*) begin
-    next_state = (busy1 == 1) ? IDLE : WAIT;
+    next_state1 = (busy1 == 1) ? IDLE : WAIT;
 end
 
 always @(posedge clk) begin
     //if(ifu_reqValid) busy1 <= 5;
-    ifu_rdata <= (state==IDLE) ? pmem_read(ifu_raddr) : 32'b0;
-    ifu_respValid <= (state==IDLE);
+    ifu_rdata <= (state1==IDLE) ? pmem_read(ifu_raddr) : 32'b0;
+    ifu_respValid <= (state1==IDLE);
     //ifu_rdata <= ifu_reqValid ? pmem_read(ifu_raddr) : 32'b0;
     //ifu_respValid <= ifu_reqValid;
 end
 
-integer busy2 = 0;
+reg [7:0] busy2;
+reg state2, next_state2;
+always @(posedge clk)  begin
+    if(state2 == IDLE) busy2 <= 5;
+    else busy2 <= busy2 - 1;
+    state2 <= next_state2;
+end
 always @(posedge clk) begin
-    lsu_rdata <= (lsu_reqValid && !lsu_wen) ? pmem_read(lsu_addr) : 32'b0;
-    if (lsu_reqValid && lsu_wen) begin
-        pmem_write(lsu_addr, lsu_wdata, {4'b0,lsu_wmask});
-    end
-    lsu_respValid <= lsu_reqValid;
+    lsu_rdata <= (state2 == IDLE && !lsu_wen)? pmem_read(lsu_addr) : 32'b0;
+    if(state2 == IDLE && lsu_wen) begin
+        pmem_write(lsu_addr, lsu_wdata, {4'b0, lsu_wmask});
+    end 
+
+    lsu_respValid <= (state2 == IDLE);
+    //lsu_rdata <= (lsu_reqValid && !lsu_wen) ? pmem_read(lsu_addr) : 32'b0;
+    
+    //if (lsu_reqValid && lsu_wen) begin
+    //    pmem_write(lsu_addr, lsu_wdata, {4'b0,lsu_wmask});
+    //end
+    //lsu_respValid <= lsu_reqValid;
 end
 
 endmodule
