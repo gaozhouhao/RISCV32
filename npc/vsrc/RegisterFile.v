@@ -25,7 +25,7 @@ assign rf_to_ifu_valid = exu_to_rf_valid | lsu_to_rf_valid;
     end
 
     always @(posedge clk) begin
-        if(reset == 1) wb_done <= 1;
+        if(reset == 0) wb_done <= 1;
         else if(exu_to_rf_valid || lsu_to_rf_valid)begin
             if (lsu_rf_we) if(waddr != 5'b0) rf[waddr] <= wdata;
             wb_done <= 1;
