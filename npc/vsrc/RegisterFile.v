@@ -18,7 +18,7 @@ module RegisterFile(
     output                      rf_to_ifu_valid
 );
     reg [31:0] rf [31:0];
-assign rf_to_ifu_valid = exu_to_rf_valid | lsu_to_rf_valid;
+assign rf_to_ifu_valid = lsu_to_rf_valid;
     integer i;
     initial begin
         for (i = 0; i < 32; i = i + 1) rf[i] = 32'b0;
@@ -26,7 +26,7 @@ assign rf_to_ifu_valid = exu_to_rf_valid | lsu_to_rf_valid;
 
     always @(posedge clk) begin
         if(reset == 0) wb_done <= 1;
-        else if(exu_to_rf_valid || lsu_to_rf_valid)begin
+        else if(lsu_to_rf_valid)begin
             if (lsu_rf_we) if(waddr != 5'b0) rf[waddr] <= wdata;
             wb_done <= 1;
         end
