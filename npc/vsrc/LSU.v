@@ -59,6 +59,7 @@ always @(*) begin
     end
 end
 always @(posedge clk) begin
+    if(exu_to_lsu_valid)
     lsu_rf_we <= exu_we;
 end
 parameter IDLE = 1'b0, WAIT = 1'b1;
