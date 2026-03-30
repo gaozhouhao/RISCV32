@@ -105,8 +105,9 @@ always @(*) begin
 end
 
 always @(*) begin
-    exu_to_lsu_valid = idu_to_exu_valid && (is_load || is_store);
-    exu_to_rf_valid = idu_to_exu_valid && (!is_load && !is_store);
+    //exu_to_lsu_valid = idu_to_exu_valid && (is_load || is_store);
+    //exu_to_rf_valid = idu_to_exu_valid && (!is_load && !is_store);
+    exu_to_lsu_valid = idu_to_exu_valid;
 end
 
 /*
