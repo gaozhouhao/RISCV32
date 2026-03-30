@@ -52,10 +52,12 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    if(reset == 0) state <= IDLE;
+    if(reset == 0)
+        state <= IDLE;
     else
-    state <= next_state;
-    if(state == WAIT && next_state == WAIT) begin
+        state <= next_state;
+    
+    if(state == WAIT && next_state == IDLE) begin
         ifu_to_idu_valid <= 1'b1;
         ifu_reqValid <= 1;
     end
