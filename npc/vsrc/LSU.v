@@ -50,7 +50,6 @@ reg lsu_is_valid;
 reg state, next_state;
 
 always @(*) begin
-    lsu_to_rf_valid = lsu_respValid;
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
@@ -73,6 +72,7 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
+    lsu_to_rf_valid <= lsu_respValid;
     state <= next_state;
 end
 
