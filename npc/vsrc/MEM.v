@@ -51,7 +51,7 @@ always @(posedge clk)  begin
     state2 <= next_state2;
 end
 always @(posedge clk) begin
-    lsu_rdata <= (next_state2 == IDLE && !lsu_wen)? pmem_read(lsu_addr) : 32'b0;
+    //lsu_rdata <= (next_state2 == IDLE && !lsu_wen)? pmem_read(lsu_addr) : 32'b0;
     if(state2 == IDLE && lsu_wen) begin
         pmem_write(lsu_addr, lsu_wdata, {4'b0, lsu_wmask});
     end 
