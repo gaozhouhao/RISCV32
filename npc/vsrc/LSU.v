@@ -143,13 +143,13 @@ always @(*) begin
         end
     endcase
 end
-
+reg [1:0] lsu_wb_sel;
 always @(posedge clk) begin
     if(exu_to_lsu_valid) begin
         lsu_addr <= alu_result;
         if(is_load == 1) lsu_wen <= 0;
         else lsu_wen <= 1;
-        //lsu_wen <= sen;
+        lsu_wb_sel <= wb_sel;
     end
 end
 endmodule
