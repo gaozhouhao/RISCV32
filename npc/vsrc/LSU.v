@@ -84,7 +84,7 @@ always @(*) begin
     next_pc = 32'b0;
     word = 32'b0;
     csr_input_data = 32'b0;
-    case (wb_sel)
+    case (lsu_wb_sel)
         `NPC_ALU: wb = alu_result;
         `NPC_PC4: wb = pc + 32'h4;
         `NPC_MEM: begin
