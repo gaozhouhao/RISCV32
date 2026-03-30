@@ -71,7 +71,7 @@ end
 always @(posedge clk) begin
     if(is_jalr)
         pc <= next_pc & ~32'b1;
-    else if(wb_done && ifu_respValid)
+    else if(wb_done && state == IDLE)
         pc <= next_pc;
     else 
         pc <= pc;
