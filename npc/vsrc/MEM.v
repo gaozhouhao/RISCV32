@@ -47,20 +47,25 @@ end
 reg [7:0] busy2;
 reg [1:0] state2, next_state2;
 always @(posedge clk)  begin
-    if(state2 == IDLE) busy2 <= 5;
+    if(lsu_reqValid == 1) busy2 <= 5;
     else busy2 <= busy2 - 1;
     state2 <= next_state2;
 end
 always @(*) begin
-    next_state2 = (busy2 == 20) ? IDLE : WAIT;
+    case (state2)
+        IDLE: next_state2 = lsu_reqValid ? WAIT : IDLE;
+        WAIT: next_state2 = (busy2 == 1) ? RESP : WAIT;
+        RESP: next_state2 = IDLE;
+        default:;
+    endcase
 end
 always @(posedge clk) begin
-    lsu_rdata <= (next_state2 == IDLE && !lsu_wen)? pmem_read(lsu_addr) : 32'b0;
-    if(state2 == IDLE && lsu_wen) begin
+    lsu_rdata <= (state2 == RESP && !lsu_wen)? pmem_read(lsu_addr) : 32'b0;
+    if(state2 == RESP && lsu_wen) begin
         pmem_write(lsu_addr, lsu_wdata, {4'b0, lsu_wmask});
     end 
 
-    lsu_respValid <= (state2 == IDLE);
+    lsu_respValid <= (state2 == RESP);
 end
 
 endmodule
