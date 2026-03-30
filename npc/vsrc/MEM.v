@@ -21,9 +21,9 @@ import "DPI-C" function void pmem_write (
 );
 
 
-parameter IDLE = 1'b0, WAIT = 1'b1;
+parameter IDLE = 2'b00, WAIT = 2'b01, RESP = 2'b10;
 reg [7:0] busy1;
-reg state1, next_state1;
+reg [1:0] state1, next_state1;
 always @(posedge clk) begin
     if(ifu_reqValid == 1) busy1 <= 1;
     else busy1 <= busy1 + 1;
@@ -31,16 +31,21 @@ always @(posedge clk) begin
 end
 
 always @(*) begin
-    next_state1 = (busy1 == 10) ? IDLE : WAIT;
+    case (state1) 
+        IDLE: next_state1 = ifu_reqValid ? WAIT : IDLE;
+        WAIT: next_state1 = (busy1 == 1) ? RESP : WAIT;
+        RESP: next_state1 = IDLE;
+        default:;
+    endcase
 end
 
 always @(posedge clk) begin
-    ifu_rdata <= (next_state1==IDLE) ? pmem_read(ifu_raddr) : 32'b0;
-    ifu_respValid <= (next_state1==IDLE);
+    ifu_rdata <= (state1==RESP) ? pmem_read(ifu_raddr) : 32'b0;
+    ifu_respValid <= (next_state1==RESP);
 end
-
+//////////////////////////////////////////////
 reg [7:0] busy2;
-reg state2, next_state2;
+reg [1:0] state2, next_state2;
 always @(posedge clk)  begin
     if(state2 == IDLE) busy2 <= 1;
     else busy2 <= busy2 + 1;
