@@ -37,7 +37,7 @@ initial ifu_valid = 1;
 always @(posedge clk) begin
     if(ifu_respValid) inst <= ifu_rdata;
     else inst <= inst;
-    ifu_to_idu_valid <= ifu_respValid;
+    //ifu_to_idu_valid <= ifu_respValid;
 end
 
 always @(*) begin
@@ -47,9 +47,9 @@ always @(*) begin
     endcase
 end
 
-//always @(*) begin
-    //ifu_raddr = pc;
-//end
+always @(*) begin
+    ifu_to_idu_valid = ifu_respValid;
+end
 
 always @(posedge clk) begin
     if(reset == 0)
@@ -58,13 +58,13 @@ always @(posedge clk) begin
         state <= next_state;
     
     if(state == IDLE && ifu_to_idu_ready == 1) begin
-        ifu_to_idu_valid <= 1'b1;
+        //ifu_to_idu_valid <= 1'b1;
         ifu_reqValid <= 1;
         ifu_raddr <= pc;
     end
     else begin
         ifu_reqValid <= 0;
-        ifu_to_idu_valid <= 0;
+        //ifu_to_idu_valid <= 0;
     end
 end
 
