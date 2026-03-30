@@ -46,7 +46,20 @@ import "DPI-C" function void pmem_write(
     input int unsigned waddr, input int unsigned wdata, input byte wmask);
 
 assign exu_to_lsu_ready = 1'b1;
-
+reg [1:0] lsu_wb_sel;
+always @(*) begin
+    lsu_addr = 0;
+    lsu_wen = 0;
+    lsu_wb_sel= 0;
+    lsu_rf_we = 0;
+    if(exu_to_lsu_valid) begin
+        lsu_addr = alu_result;
+        if(is_load == 1) lsu_wen = 0;
+        else lsu_wen = 1;
+        lsu_wb_sel = wb_sel;
+        lsu_rf_we = exu_we;
+    end
+end
 parameter IDLE = 1'b0, WAIT = 1'b1;
 reg lsu_is_valid;
 reg state, next_state;
@@ -145,14 +158,5 @@ always @(*) begin
         end
     endcase
 end
-reg [1:0] lsu_wb_sel;
-always @(posedge clk) begin
-    if(exu_to_lsu_valid) begin
-        lsu_addr <= alu_result;
-        if(is_load == 1) lsu_wen <= 0;
-        else lsu_wen <= 1;
-        lsu_wb_sel <= wb_sel;
-        lsu_rf_we <= exu_we;
-    end
-end
+
 endmodule
