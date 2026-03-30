@@ -88,8 +88,8 @@ always @(*) begin
         `NPC_ALU: wb = alu_result;
         `NPC_PC4: wb = pc + 32'h4;
         `NPC_MEM: begin
-            word = (pmem_read(alu_result) >> (alu_result[1:0]*8));
-            //word = (lsu_rdata >> (alu_result[1:0]*8));
+            //word = (pmem_read(alu_result) >> (alu_result[1:0]*8));
+            word = (lsu_rdata >> (alu_result[1:0]*8));
             case (funct3)
             3'b000: begin
                 byte1 = word[7:0];
