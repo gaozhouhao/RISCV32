@@ -28,7 +28,6 @@ always @(posedge clk) begin
     if(ifu_reqValid == 1) busy1 <= 1;
     else busy1 <= busy1 + 1;
     state1 <= next_state1;
-    //if (busy1 != 0) busy1 <= busy1 - 1;
 end
 
 always @(*) begin
@@ -36,11 +35,8 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    //if(ifu_reqValid) busy1 <= 5;
     ifu_rdata <= (next_state1==IDLE) ? pmem_read(ifu_raddr) : 32'b0;
     ifu_respValid <= (state1==IDLE);
-    //ifu_rdata <= ifu_reqValid ? pmem_read(ifu_raddr) : 32'b0;
-    //ifu_respValid <= ifu_reqValid;
 end
 
 reg [7:0] busy2;
@@ -60,12 +56,6 @@ always @(posedge clk) begin
     end 
 
     lsu_respValid <= (state2 == IDLE);
-    //lsu_rdata <= (lsu_reqValid && !lsu_wen) ? pmem_read(lsu_addr) : 32'b0;
-    
-    //if (lsu_reqValid && lsu_wen) begin
-    //    pmem_write(lsu_addr, lsu_wdata, {4'b0,lsu_wmask});
-    //end
-    //lsu_respValid <= lsu_reqValid;
 end
 
 endmodule
