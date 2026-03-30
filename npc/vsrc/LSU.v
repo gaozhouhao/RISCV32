@@ -51,14 +51,15 @@ always @(*) begin
     lsu_addr = 0;
     lsu_wen = 0;
     lsu_wb_sel= 0;
-    lsu_rf_we = 0;
     if(exu_to_lsu_valid) begin
         lsu_addr = alu_result;
         if(is_load == 1) lsu_wen = 0;
         else lsu_wen = 1;
         lsu_wb_sel = wb_sel;
-        lsu_rf_we = exu_we;
     end
+end
+always @(posedge clk) begin
+    lsu_rf_we <= exu_we;
 end
 parameter IDLE = 1'b0, WAIT = 1'b1;
 reg lsu_is_valid;
