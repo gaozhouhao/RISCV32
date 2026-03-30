@@ -48,6 +48,7 @@ always @(*) begin
 end
 
 always @(*) begin
+    ifu_raddr = pc;
     ifu_to_idu_valid = ifu_respValid;
 end
 
@@ -60,7 +61,6 @@ always @(posedge clk) begin
     if(state == IDLE && ifu_to_idu_ready == 1) begin
         //ifu_to_idu_valid <= 1'b1;
         ifu_reqValid <= 1;
-        ifu_raddr <= pc;
     end
     else begin
         ifu_reqValid <= 0;
