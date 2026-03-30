@@ -50,6 +50,7 @@ reg lsu_is_valid;
 reg state, next_state;
 
 always @(*) begin
+    lsu_to_rf_valid = lsu_respValid;
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
@@ -150,6 +151,5 @@ always @(posedge clk) begin
         else lsu_wen <= 1;
         //lsu_wen <= sen;
     end
-    lsu_to_rf_valid <= lsu_respValid;
 end
 endmodule
