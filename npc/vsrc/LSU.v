@@ -29,7 +29,7 @@ module LSU(
     input       reg                     lsu_respValid,
     input       reg     [31:0]          lsu_rdata,
     output      reg     [31:0]          lsu_addr,
-    output                              lsu_wen,
+    output      reg                     lsu_wen,
     output      reg     [31:0]          lsu_wdata,
     output      reg     [ 3:0]          lsu_wmask,
     
@@ -143,10 +143,12 @@ always @(*) begin
     endcase
 end
 
-always @(*) begin
-    lsu_addr = alu_result;
-    lsu_wen = sen;
+always @(posedge clk) begin
+    lsu_addr <= alu_result;
 end
 
+always @(*) begin
+    lsu_wen = sen;
+end
 
 endmodule
