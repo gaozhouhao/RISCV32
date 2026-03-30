@@ -2,7 +2,7 @@ module RegisterFile(
     input                       clk,
     input       [31:0]            wdata,
     input       [4:0]             waddr,
-    input                           wen,
+    input                       lsu_rf_we,
     output  reg                   wb_done,
     input       [4:0]             raddr1,
     input       [4:0]             raddr2,
@@ -25,7 +25,7 @@ assign rf_to_ifu_valid = exu_to_rf_valid | lsu_to_rf_valid;
 
     always @(posedge clk) begin
         if(exu_to_rf_valid || lsu_to_rf_valid)begin
-            if (wen) if(waddr != 5'b0) rf[waddr] <= wdata;
+            if (lsu_rf_we) if(waddr != 5'b0) rf[waddr] <= wdata;
             wb_done <= 1;
         end
         else wb_done <= 0;

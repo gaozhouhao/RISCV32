@@ -3,6 +3,8 @@
 module LSU(
     input                               clk,
     input                               sen,
+    input                               exu_we,
+    output      reg                     lsu_rf_we,
     input       reg                     is_load,
     input       reg                     is_store,
     input       reg     [31:0]          pc,
@@ -150,6 +152,7 @@ always @(posedge clk) begin
         if(is_load == 1) lsu_wen <= 0;
         else lsu_wen <= 1;
         lsu_wb_sel <= wb_sel;
+        lsu_rf_we <= exu_we;
     end
 end
 endmodule

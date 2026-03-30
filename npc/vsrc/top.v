@@ -38,7 +38,9 @@ wire            is_jalr;
 wire            is_csr;
 wire            is_load;
 wire            is_store;
-wire            wen;
+wire            idu_we;
+wire            exu_we;
+wire            lsu_rf_we;
 wire            sen;
 wire            csr_wen;
 
@@ -110,7 +112,7 @@ IDU idu(
     //.idu_to_lsu_ready(idu_to_lsu_ready),
     //.idu_to_lsu_valid(idu_to_lsu_valid),
     
-    .wen(wen),
+    .idu_we(idu_we),
     .sen(sen),
     .csr_wen(csr_wen),
     .is_ecall(is_ecall),
@@ -138,6 +140,8 @@ IDU idu(
 EXU exu(
     .clk(clk),
     .nextpc_sel(nextpc_sel),
+    .idu_we(idu_we),
+    .exu_we(exu_we),
     .wb_sel(wb_sel),
     .alu_src1_sel(alu_src1_sel),
     .alu_src2_sel(alu_src2_sel),
@@ -174,6 +178,8 @@ EXU exu(
 LSU lsu(
     .clk(clk),
     .sen(sen),
+    .exu_we(exu_we),
+    .lsu_rf_we(lsu_rf_we),
     .is_load(is_load),
     .is_store(is_store),
     .branch_taken(branch_taken),
@@ -226,7 +232,7 @@ RegisterFile regfile (
     .clk(clk),
     .wdata(wb),
     .waddr(rd),
-    .wen(wen),
+    .lsu_rf_we(lsu_rf_we),
     .wb_done(wb_done),
     .raddr1(src1),
     .raddr2(src2),

@@ -8,6 +8,8 @@ module EXU (
     input   reg     [ 3:0]      ALUop,
     output          [31:0]      alu_result,
     output  reg     [31:0]      next_pc,
+    input   reg                 idu_we,
+    output                      exu_we,
 /*
     output  reg     [31:0]      jalr_target,
     output  reg     [31:0]      jal_target,
@@ -64,6 +66,7 @@ reg     [31:0]  alu_src2;
 reg     [3:0]   alu_flags;
 reg     [7:0]   wmask;
 
+assign exu_we = idu_we;
 
 import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
 import "DPI-C" function void pmem_write(
