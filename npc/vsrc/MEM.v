@@ -25,8 +25,8 @@ parameter IDLE = 2'b00, WAIT = 2'b01, RESP = 2'b10;
 reg [7:0] busy1;
 reg [1:0] state1, next_state1;
 always @(posedge clk) begin
-    if(ifu_reqValid == 1) busy1 <= 1;
-    else busy1 <= busy1 + 1;
+    if(ifu_reqValid == 1) busy1 <= 10;
+    else busy1 <= busy1 - 1;
     state1 <= next_state1;
 end
 
