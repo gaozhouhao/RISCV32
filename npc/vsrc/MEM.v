@@ -41,7 +41,7 @@ end
 
 always @(posedge clk) begin
     ifu_rdata <= (state1==RESP) ? pmem_read(ifu_raddr) : 32'b0;
-    ifu_respValid <= (next_state1==RESP);
+    ifu_respValid <= (state1==RESP);
 end
 //////////////////////////////////////////////
 reg [7:0] busy2;
