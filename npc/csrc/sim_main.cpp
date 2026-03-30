@@ -68,7 +68,7 @@ int main(int argc, char** argv){
 #endif
     printf("main-pc:\033[32m0x%08x\033[0m\n", cpu.pc);
     init_monitor(argc, argv);
-    top->reset = 0; top->eval(); contextp->timeInc(1); 
+    top->reset = 0; top->clk = 0; top->eval(); contextp->timeInc(1); 
     top->clk = 1; top->eval();    contextp->timeInc(1);
     tfp->dump(contextp->time());
     top->clk = 0; top->eval();    contextp->timeInc(1);
