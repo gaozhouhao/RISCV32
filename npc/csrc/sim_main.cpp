@@ -75,6 +75,7 @@ int main(int argc, char** argv){
     top->clk = 0; top->eval();    contextp->timeInc(1);
     tfp->dump(contextp->time());
     top->reset = 1; top->eval(); contextp->timeInc(1);
+    tfp->dump(contextp->time());
     while (1) {
         sdb_mainloop();
 
