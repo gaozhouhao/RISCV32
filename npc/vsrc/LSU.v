@@ -150,6 +150,6 @@ always @(posedge clk) begin
         else lsu_wen <= 1;
         //lsu_wen <= sen;
     end
+    lsu_to_rf_valid <= lsu_respValid;
 end
-
 endmodule
