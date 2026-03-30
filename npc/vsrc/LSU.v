@@ -37,7 +37,6 @@ module LSU(
     output                              exu_to_lsu_ready,
     input                               lsu_to_rf_ready,
     output                              lsu_to_rf_valid
-
 );
 
 import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);
@@ -81,7 +80,7 @@ end
 always @(posedge clk) begin
     state <= next_state;
 end
-
+/*
 reg [7:0] byte1, byte2;
 reg [31:0] word;
 always @(*) begin
@@ -127,6 +126,7 @@ always @(*) begin
             default: ;
         endcase
 end
+*/
 
 always @(*) begin
     case (funct3)

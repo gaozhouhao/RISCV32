@@ -42,7 +42,6 @@ end
 always @(*) begin
     case(state)
         idle: next_state = wait_ready;
-        //wait_ready: next_state = (rf_to_ifu_valid|ifu_valid)?idle:wait_ready;
         wait_ready: next_state = (ifu_respValid)?idle:wait_ready;
     endcase
 end
@@ -62,7 +61,6 @@ end
 
 
 always @(posedge clk) begin
-    //$display("pc:%x", pc);
     state <= next_state;
     case(next_state)
         wait_ready: begin

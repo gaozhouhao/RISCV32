@@ -26,6 +26,9 @@ module EXU (
     input           [31:0]      shamt,
     input   reg     [2:0]       funct3,
     output  reg     [31:0]      wb,
+    
+    input   wire    [31:0]      mtvec_data,
+    input   wire    [31:0]      mepc_data,
     output  reg     [31:0]      csr_input_data,
     output  reg     [31:0]      csr_output_data,
 
@@ -97,7 +100,6 @@ always @(*) begin
 end
 
 
-/*
 reg [7:0] byte1, byte2;
 reg [31:0] word;
 always @(*) begin
@@ -145,7 +147,8 @@ always @(*) begin
             default: ;
         endcase
 end
-*/
+
+
 import "DPI-C" function void ebreak(input bit is_ebreak);
 
 reg    [31:0]  store_data;
