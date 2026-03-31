@@ -61,6 +61,7 @@ static int cmd_x(char *args){
         bool success = false;
         word_t addr = expr(second_para, &success);
         for(int i = 0; i < n; i ++){
+            printf("addr:%x", addr);
             if(addr >= MEM_LEFT && addr < MEM_RIGHT){
                 printf("0x%08X:\t", addr);
                 printf("%02X\t", (pmem_read(addr)>>24)&0xff);
