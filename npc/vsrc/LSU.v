@@ -82,24 +82,25 @@ reg lsu_is_valid;
 reg state, next_state;
 
 always @(*) begin
-    lsu_to_rf_valid = lsu_is_load ? lsu_respValid : exu_to_lsu_valid;
-    lsu_rf_we = lsu_is_load ? lsu_respValid : exu_to_lsu_valid;
+    lsu_to_rf_valid = 0;
+    lsu_rf_we = 0;
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
             if(is_load || is_store) begin
                 next_state = WAIT;
                 lsu_reqValid = 1;
-                //if(is_load) lsu_wen = 0;
-                //else lsu_wen = 1;
             end
             else begin
                 next_state = IDLE;
-                //lsu_to_rf_valid = 0;
+                lsu_to_rf_valid = 1;
+                lsu_rf_we = 1;
             end
         end
         WAIT: begin
             next_state = lsu_respValid? IDLE:WAIT;
+            lsu_to_rf_valid = 1;
+            lsu_rf_we = 1;
         end
         default:;
     endcase
