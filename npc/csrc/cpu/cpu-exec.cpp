@@ -33,8 +33,12 @@ static void execute(uint64_t  n) {
         exec_once();
         //if(top->rootp->top__DOT__ifu__DOT__wait_ready == 1) difftest_skip_ref();
         //if(top->rootp->top__DOT__ifu__DOT__idle == 1) difftest_skip_ref();
+        
+        static int wb_done_r = top->rootp->top__DOT__regfile__DOT__wb_done;
+        if(wb_done_r == 1 && top->rootp->top__DOT__regfile__DOT__wb_done == 0)
+        
         //if(top->rootp->top__DOT__regfile__DOT__wb_done == 1)
-        //trace_and_difftest(top->pc, top->rootp->top__DOT__next_pc, top->rootp->top__DOT__inst);
+        trace_and_difftest(top->pc, top->rootp->top__DOT__next_pc, top->rootp->top__DOT__inst);
         if (npc_state.state != NPC_RUNNING) break;
     }
 }
