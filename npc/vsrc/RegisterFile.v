@@ -38,8 +38,8 @@ module RegisterFile(
             if (lsu_rf_we) 
                 if(waddr != 5'b0) begin
                     rf[waddr] <= wdata;
-                    wb_done_flag <= 1;
                 end
+            wb_done_flag <= 1;
         end
         else wb_done_flag <= 0;
     end
