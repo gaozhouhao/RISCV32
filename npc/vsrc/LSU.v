@@ -100,7 +100,7 @@ always @(*) begin
         WAIT: begin
             next_state = lsu_respValid? IDLE:WAIT;
             lsu_to_rf_valid = 1;
-            lsu_rf_we = exu_we;
+            lsu_rf_we = lsu_is_load;
         end
         default:;
     endcase
