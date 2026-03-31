@@ -34,7 +34,7 @@ module RegisterFile(
 
 
     always @(*) begin
-        wb_done_flag = lsu_to_rf_valid & lsu_rf_we;
+        wb_done_flag = wb_done;
     end
 
     always @(posedge clk) begin

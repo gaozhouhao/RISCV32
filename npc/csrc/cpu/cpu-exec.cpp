@@ -38,7 +38,6 @@ static void execute(uint64_t  n) {
         //if(wb_done_r == 1 && top->rootp->top__DOT__regfile__DOT__wb_done == 0)
         if(top->wb_done_flag == 1)
         {
-            printf("DIFFTEST TRIGGER pc=0x%lx\n", top->pc);
             trace_and_difftest(top->pc, top->rootp->top__DOT__next_pc, top->rootp->top__DOT__inst);
         }
             if (npc_state.state != NPC_RUNNING) break;
