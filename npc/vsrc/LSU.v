@@ -94,13 +94,13 @@ always @(*) begin
             else begin
                 next_state = IDLE;
                 lsu_to_rf_valid = 1;
-                lsu_rf_we = 1;
+                lsu_rf_we = exu_we;
             end
         end
         WAIT: begin
             next_state = lsu_respValid? IDLE:WAIT;
             lsu_to_rf_valid = 1;
-            lsu_rf_we = 1;
+            lsu_rf_we = exu_we;
         end
         default:;
     endcase
