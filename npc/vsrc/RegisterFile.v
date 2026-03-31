@@ -5,6 +5,7 @@ module RegisterFile(
     input       [4:0]             waddr,
     input                       lsu_rf_we,
     output  reg                   wb_done,
+    output  reg                   wb_done_flag,
     input       [4:0]             raddr1,
     input       [4:0]             raddr2,
     output      [31:0]            rdata1,
@@ -32,12 +33,12 @@ module RegisterFile(
     end
 
     always @(posedge clk) begin
-        //if(reset == 0) wb_done <= 0;
+        if(reset == 0) wb_done_flag <= 0;
         if(lsu_to_rf_valid)begin
             if (lsu_rf_we) if(waddr != 5'b0) rf[waddr] <= wdata;
-            //wb_done <= 1;
+            wb_done_flag <= 1;
         end
-        //else wb_done <= 0;
+        else wb_done_flag <= 0;
     end
     
     assign exu_to_rf_ready = 1;

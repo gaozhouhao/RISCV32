@@ -32,6 +32,7 @@ wire            csr_to_ifu_ready;
 
 wire            id_done;
 wire            wb_done;
+wire            wb_done_flag;
 wire            exe_done;
 wire            is_ecall;
 wire            is_ebreak;
@@ -237,6 +238,7 @@ RegisterFile regfile (
     .waddr(rd),
     .lsu_rf_we(lsu_rf_we),
     .wb_done(wb_done),
+    .wb_done_flag(wb_done_flag),
     .raddr1(src1),
     .raddr2(src2),
     .rdata1(src1_data),
