@@ -7,7 +7,14 @@ module EXU (
     input   reg     [ 1:0]       alu_src2_sel,
     input   reg     [ 3:0]      ALUop,
     output          [31:0]      alu_result,
-
+    output  reg     [31:0]      next_pc,
+    input   reg                 idu_we,
+    output                      exu_we,
+/*
+    output  reg     [31:0]      jalr_target,
+    output  reg     [31:0]      jal_target,
+    output  reg     [31:0]      branch_target,
+    */
     input                       sen,
 
     output  reg                 branch_taken,
@@ -26,10 +33,13 @@ module EXU (
     input           [31:0]      shamt,
     input   reg     [2:0]       funct3,
     output  reg     [31:0]      wb,
+    
+    input   wire    [31:0]      mtvec_data,
+    input   wire    [31:0]      mepc_data,
     output  reg     [31:0]      csr_input_data,
     output  reg     [31:0]      csr_output_data,
 
-    output  reg     [31:0]      next_pc,
+    //output  reg     [31:0]      next_pc,
     input                       idu_to_exu_valid,
     output                      idu_to_exu_ready,
     output                      exu_to_rf_valid,
@@ -56,6 +66,7 @@ reg     [31:0]  alu_src2;
 reg     [3:0]   alu_flags;
 reg     [7:0]   wmask;
 
+assign exu_we = idu_we;
 
 import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
 import "DPI-C" function void pmem_write(
@@ -79,23 +90,25 @@ always @(*) begin
     alu_src2 = src2_data;
 
     case (alu_src1_sel)
-        default: alu_src1 = src1_data;
+        `NPC_RS1_DATA: alu_src1 = src1_data;
         `NPC_CUR_PC:  alu_src1 = pc;
         `NPC_ZERO:  alu_src1 = 32'b0;
+        default:;
     endcase
     
     case (alu_src2_sel)
-        default:    alu_src2 = src2_data;
+        `NPC_RS2_DATA:    alu_src2 = src2_data;
         `NPC_IMM:   alu_src2 = imm;
         `NPC_SHAMT: alu_src2 = shamt;
+        default:;
     endcase
 end
 
 always @(*) begin
-    exu_to_lsu_valid = idu_to_exu_valid && (is_load || is_store);
-    exu_to_rf_valid = idu_to_exu_valid && (!is_load && !is_store);
+    //exu_to_lsu_valid = idu_to_exu_valid && (is_load || is_store);
+    //exu_to_rf_valid = idu_to_exu_valid && (!is_load && !is_store);
+    exu_to_lsu_valid = idu_to_exu_valid;
 end
-
 
 /*
 reg [7:0] byte1, byte2;
@@ -134,9 +147,8 @@ always @(*) begin
         end
         default: wb = 32'b0;
     endcase
-    
         case (nextpc_sel)
-            `PCSEL_ALU: next_pc = alu_result;
+            `PCSEL_JALR: next_pc = alu_result;
             `PCSEL_JAL: next_pc = alu_result;
             `PCSEL_PC4: next_pc = pc + 32'd4;
             `PCSEL_BR:  next_pc = branch_taken?alu_result:(pc + 32'd4);
@@ -146,6 +158,7 @@ always @(*) begin
         endcase
 end
 */
+
 import "DPI-C" function void ebreak(input bit is_ebreak);
 
 reg    [31:0]  store_data;

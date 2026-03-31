@@ -69,10 +69,10 @@ static int cmd_x(char *args){
                 printf("%02X\t\n", pmem_read(addr)&0xff);
                 addr += 4;
             }
-            //else {
+            else {
             //    itrace_dump();
-            //    panic("out of bound");
-            //}
+                panic("out of bound");
+            }
         }
     }
     return 0;

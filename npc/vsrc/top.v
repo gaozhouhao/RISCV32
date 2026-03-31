@@ -1,6 +1,9 @@
 module top(
     input   clk,
-    output  [31:0]  pc
+    input   reset,
+    output  [31:0]  pc,
+    output          wb_done_flag,
+    output          inst_done
 );
 
 wire    [31:0]  inst;
@@ -31,6 +34,7 @@ wire            csr_to_ifu_ready;
 
 wire            id_done;
 wire            wb_done;
+//wire            wb_done_flag;
 wire            exe_done;
 wire            is_ecall;
 wire            is_ebreak;
@@ -38,7 +42,9 @@ wire            is_jalr;
 wire            is_csr;
 wire            is_load;
 wire            is_store;
-wire            wen;
+wire            idu_we;
+wire            exu_we;
+wire            lsu_rf_we;
 wire            sen;
 wire            csr_wen;
 
@@ -82,6 +88,7 @@ IFU ifu(
     .is_jalr(is_jalr),
     .is_load(is_load),
     .clk(clk),
+    .reset(reset),
     .next_pc(next_pc),
     .ifu_to_idu_ready(ifu_to_idu_ready),
     .ifu_to_idu_valid(ifu_to_idu_valid),
@@ -89,6 +96,7 @@ IFU ifu(
     .id_done(id_done),
     .exe_done(exe_done),
     .wb_done(wb_done),
+    .inst_done(inst_done),
     .pc(pc),
     .ifu_reqValid(ifu_reqValid),
     .ifu_respValid(ifu_respValid),
@@ -110,7 +118,7 @@ IDU idu(
     //.idu_to_lsu_ready(idu_to_lsu_ready),
     //.idu_to_lsu_valid(idu_to_lsu_valid),
     
-    .wen(wen),
+    .idu_we(idu_we),
     .sen(sen),
     .csr_wen(csr_wen),
     .is_ecall(is_ecall),
@@ -138,6 +146,8 @@ IDU idu(
 EXU exu(
     .clk(clk),
     .nextpc_sel(nextpc_sel),
+    .idu_we(idu_we),
+    .exu_we(exu_we),
     .wb_sel(wb_sel),
     .alu_src1_sel(alu_src1_sel),
     .alu_src2_sel(alu_src2_sel),
@@ -154,8 +164,8 @@ EXU exu(
     .src2_data(src2_data),
     .csr_input_data(csr_input_data),
     .csr_output_data(csr_output_data),
-    //.mtvec_data(mtvec_data),
-    //.mepc_data(mepc_data),
+    .mtvec_data(mtvec_data),
+    .mepc_data(mepc_data),
     .rd(rd),
     .imm(imm),
     .shamt(shamt),
@@ -173,7 +183,10 @@ EXU exu(
 );
 LSU lsu(
     .clk(clk),
+    .reset(reset),
     .sen(sen),
+    .exu_we(exu_we),
+    .lsu_rf_we(lsu_rf_we),
     .is_load(is_load),
     .is_store(is_store),
     .branch_taken(branch_taken),
@@ -224,10 +237,12 @@ MEM mem(
 
 RegisterFile regfile (
     .clk(clk),
+    .reset(reset),
     .wdata(wb),
     .waddr(rd),
-    .wen(wen),
+    .lsu_rf_we(lsu_rf_we),
     .wb_done(wb_done),
+    .wb_done_flag(wb_done_flag),
     .raddr1(src1),
     .raddr2(src2),
     .rdata1(src1_data),

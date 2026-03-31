@@ -25,9 +25,9 @@ extern uint32_t memory[1<<28];
 CPUArchState cpu = {.pc=0x80000000};
 
 void exec_once() {
-    top->clk = 0; top->eval(); contextp->timeInc(1);
-    tfp->dump(contextp->time());
     top->clk = 1; top->eval(); contextp->timeInc(1);
+    tfp->dump(contextp->time());
+    top->clk = 0; top->eval(); contextp->timeInc(1);
     tfp->dump(contextp->time());
 #ifdef CONFIG_ITRACE
     printf("0x%08X\n", top->rootp->top__DOT__inst);
@@ -68,6 +68,14 @@ int main(int argc, char** argv){
 #endif
     printf("main-pc:\033[32m0x%08x\033[0m\n", cpu.pc);
     init_monitor(argc, argv);
+    top->reset = 0; top->clk = 0; top->eval(); contextp->timeInc(1); 
+    tfp->dump(contextp->time());
+    top->clk = 1; top->eval();    contextp->timeInc(1);
+    tfp->dump(contextp->time());
+    top->clk = 0; top->eval();    contextp->timeInc(1);
+    tfp->dump(contextp->time());
+    top->reset = 1; top->eval(); contextp->timeInc(1);
+    tfp->dump(contextp->time());
     while (1) {
         sdb_mainloop();
 

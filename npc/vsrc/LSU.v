@@ -2,7 +2,10 @@
 
 module LSU(
     input                               clk,
+    input                               reset,
     input                               sen,
+    input                               exu_we,
+    output      reg                     lsu_rf_we,
     input       reg                     is_load,
     input       reg                     is_store,
     input       reg     [31:0]          pc,
@@ -29,7 +32,7 @@ module LSU(
     input       reg                     lsu_respValid,
     input       reg     [31:0]          lsu_rdata,
     output      reg     [31:0]          lsu_addr,
-    output                              lsu_wen,
+    output      reg                     lsu_wen,
     output      reg     [31:0]          lsu_wdata,
     output      reg     [ 3:0]          lsu_wmask,
     
@@ -37,42 +40,72 @@ module LSU(
     output                              exu_to_lsu_ready,
     input                               lsu_to_rf_ready,
     output                              lsu_to_rf_valid
-
 );
 
 import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);
 import "DPI-C" function void pmem_write(
     input int unsigned waddr, input int unsigned wdata, input byte wmask);
 
-
 assign exu_to_lsu_ready = 1'b1;
+reg [ 1:0] lsu_wb_sel;
+reg [31:0] lsu_alu_result;
+always @(*) begin
+    lsu_addr = 0;
+    lsu_wen = 0;
+    if(exu_to_lsu_valid) begin
+        lsu_addr = alu_result;
+        if(is_load == 1) lsu_wen = 0;
+        else lsu_wen = 1;
+    end
+end
 
+reg lsu_is_load, lsu_is_store;
+always @(posedge clk) begin
+    if(reset == 0) begin
+        lsu_is_load <= 0;
+        lsu_is_store <= 0;
+        lsu_alu_result <= 0;
+    end
+    else if (exu_to_lsu_valid)begin
+        lsu_is_load <= is_load;
+        lsu_is_store  <= is_store;
+        lsu_alu_result <= alu_result; 
+    end
+end
+/*
+always @(posedge clk) begin
+    if(exu_to_lsu_valid)
+    lsu_rf_we <= exu_we;
+end
+*/
 parameter IDLE = 1'b0, WAIT = 1'b1;
 reg lsu_is_valid;
 reg state, next_state;
+
 always @(*) begin
-    lsu_to_rf_valid = lsu_respValid;
+    lsu_to_rf_valid = 0;
+    lsu_rf_we = 0;
     lsu_reqValid = 0;
+    lsu_wb_sel = 0;
     case (state)
         IDLE: begin
-            if(exu_to_lsu_valid) begin
-                //lsu_to_rf_valid = is_store? 1:0;
+            if(is_load || is_store) begin
                 next_state = WAIT;
                 lsu_reqValid = 1;
-                if(is_load) begin
-                    lsu_wen = 0;
-                end
-                else begin
-                    lsu_wen = 1;
-                end
             end
             else begin
                 next_state = IDLE;
-                //lsu_to_rf_valid = 0;
+                lsu_to_rf_valid = 1;
+                lsu_rf_we = exu_we;
+                lsu_wb_sel = wb_sel;
+                //lsu_alu_result = alu_result;
             end
         end
         WAIT: begin
             next_state = lsu_respValid? IDLE:WAIT;
+            lsu_to_rf_valid = lsu_respValid;
+            lsu_rf_we = lsu_is_load;
+            if(lsu_is_load)lsu_wb_sel = `NPC_MEM;
         end
         default:;
     endcase
@@ -90,11 +123,11 @@ always @(*) begin
     next_pc = 32'b0;
     word = 32'b0;
     csr_input_data = 32'b0;
-    case (wb_sel)
+    case (lsu_wb_sel)
         `NPC_ALU: wb = alu_result;
-        `NPC_PC4: wb = pc + 32'h4;
         `NPC_MEM: begin
-            word = (lsu_rdata >> (alu_result[1:0]*8));
+            //word = (pmem_read(alu_result) >> (alu_result[1:0]*8));
+            word = (lsu_rdata >> (lsu_alu_result[1:0]*8));
             case (funct3)
             3'b000: begin
                 byte1 = word[7:0];
@@ -110,6 +143,7 @@ always @(*) begin
             default:wb = 32'b0;
         endcase
         end
+        `NPC_PC4: wb = pc + 32'h4;
         `NPC_CSR: begin
             wb = csr_output_data;
             if(csr_op_sel == `CSR_WRITE)csr_input_data = src1_data;
@@ -118,7 +152,7 @@ always @(*) begin
         default: wb = 32'b0;
     endcase
         case (nextpc_sel)
-            `PCSEL_ALU: next_pc = alu_result;
+            `PCSEL_JALR: next_pc = alu_result;
             `PCSEL_JAL: next_pc = alu_result;
             `PCSEL_PC4: next_pc = pc + 32'd4;
             `PCSEL_BR:  next_pc = branch_taken?alu_result:(pc + 32'd4);
@@ -148,11 +182,5 @@ always @(*) begin
         end
     endcase
 end
-
-always @(*) begin
-    lsu_addr = alu_result;
-    lsu_wen = sen;
-end
-
 
 endmodule

@@ -8,7 +8,7 @@ module IDU(
     output                              idu_to_exu_valid,
     
     output  reg                         sen, 
-    output  reg                         wen,
+    output  reg                         idu_we,
     output  reg                         csr_wen,
     output  reg     [1:0]               wb_sel,
     output  reg     [2:0]               nextpc_sel,
@@ -74,8 +74,6 @@ end
 
 
 always @(*) begin
-    //$display("valid:%d", ifu_to_idu_valid);
-    //$display("store:%d", is_store);
     ifu_to_idu_ready = 1;
     idu_to_exu_valid = ifu_to_idu_valid;
     is_ecall = 1'b0;
@@ -91,14 +89,12 @@ always @(*) begin
     id_done = 0;
     csr_wen = 0;
     sen = 0;
-    wen = 0;
+    idu_we = 0;
     wb_sel = `NPC_ALU;
     nextpc_sel = `PCSEL_PC4;
-        //$display("%d", ifu_to_idu_valid);
     if(ifu_to_idu_valid == 1'b1) begin
-        //$display("IDU");
         if(opcode == 7'b0110011) begin
-            wen = 1;
+            idu_we = 1;
             wb_sel = `NPC_ALU;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_RS2_DATA;
@@ -119,12 +115,11 @@ always @(*) begin
             if(funct3 == 3'b111) ALUop = `NPC_ALU_AND;
         end
         if(opcode == 7'b0010011) begin
-            wen = 1;
+            idu_we = 1;
             wb_sel = `NPC_ALU;
             nextpc_sel = `PCSEL_PC4;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
-            //if(funct3 == 3'b000)$display("addi");
             if (funct3 == 3'b000) ALUop = `NPC_ALU_ADD; //addi
             if (funct3 == 3'b001) ALUop = `NPC_ALU_SLL; //slli
             if (funct3 == 3'b010) ALUop = `NPC_ALU_SLT;
@@ -139,31 +134,31 @@ always @(*) begin
             if(funct3 == 3'b111) ALUop = `NPC_ALU_AND;
         end
         if(opcode == 7'b1101111)begin // jal
-            wen = 1;
+            idu_we = 1;
             wb_sel = `NPC_PC4;
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_ALU;
+            nextpc_sel = `PCSEL_JAL;
         end
         if(opcode == 7'b1100111 && funct3 == 3'b000) begin//jalr
-            wen = 1;
+            idu_we = 1;
             wb_sel = `NPC_PC4;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_ALU;
+            nextpc_sel = `PCSEL_JALR;
             is_jalr = 1;
         end
         if (opcode == 7'b1100011) begin // branch
-            wen = 0;
+            idu_we = 0;
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
             nextpc_sel = `PCSEL_BR;
         end
 
         if(opcode == 7'b0110111) begin//lui
-            wen = 1;
+            idu_we = 1;
             wb_sel = `NPC_ALU;
             alu_src1_sel = `NPC_ZERO;
             alu_src2_sel = `NPC_IMM;
@@ -171,7 +166,7 @@ always @(*) begin
             nextpc_sel = `PCSEL_PC4;
         end
         if(opcode == 7'b0010111) begin //auipc
-            wen = 1;
+            idu_we = 1;
             wb_sel = `NPC_ALU;
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
@@ -179,10 +174,9 @@ always @(*) begin
             nextpc_sel = `PCSEL_PC4; 
         end
         if (opcode == 7'b0000011) begin// lb/lh/lw/lbu/lhu
-            wen = 1;
+            idu_we = 1;
             wb_sel = `NPC_MEM;
             if(ifu_to_idu_valid == 1'b1)begin
-                //$display("BBB");
                 is_load = 1'b1;
             end
             else is_load = 1'b0;
@@ -213,7 +207,7 @@ always @(*) begin
         if(opcode == 7'b1110011) begin//priortiy
             if(funct3 == 3'b001)begin //CSRRW
                 is_csr = 1;
-                if(rd != 0) wen = 1;
+                if(rd != 0) idu_we = 1;
                 wb_sel = `NPC_CSR;
                 csr_wen = 1;
                 csr_op_sel = `CSR_WRITE;
@@ -221,7 +215,7 @@ always @(*) begin
             if(funct3 == 3'b010)begin //CSRRS
                 is_csr = 1;
                 csr_wen = 1;
-                if(rd != 0) wen = 1;
+                if(rd != 0) idu_we = 1;
                 wb_sel = `NPC_CSR;
                 if(src1 != 0) csr_wen = 0;
                 csr_op_sel = `CSR_SET;
@@ -229,7 +223,6 @@ always @(*) begin
         end
     end
     else begin
-        //$display("CCC");
         //is_load = 1'b0;
         //wen = 1'b0;
         //csr_wen = 1'b0;
