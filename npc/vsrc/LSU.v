@@ -66,7 +66,7 @@ always @(posedge clk) begin
         lsu_is_load <= 0;
         lsu_is_store <= 0;
     end
-    else begin
+    else if (exu_to_lsu_valid)begin
         lsu_is_load <= is_load;
         lsu_is_store  <= is_store; 
     end
