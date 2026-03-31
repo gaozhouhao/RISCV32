@@ -101,6 +101,7 @@ always @(*) begin
             next_state = lsu_respValid? IDLE:WAIT;
             lsu_to_rf_valid = lsu_respValid;
             lsu_rf_we = lsu_is_load;
+            if(is_load)lsu_wb_sel = `NPC_MEM;
         end
         default:;
     endcase
@@ -120,7 +121,6 @@ always @(*) begin
     csr_input_data = 32'b0;
     case (lsu_wb_sel)
         `NPC_ALU: wb = alu_result;
-        `NPC_PC4: wb = pc + 32'h4;
         `NPC_MEM: begin
             //word = (pmem_read(alu_result) >> (alu_result[1:0]*8));
             word = (lsu_rdata >> (alu_result[1:0]*8));
@@ -139,6 +139,7 @@ always @(*) begin
             default:wb = 32'b0;
         endcase
         end
+        `NPC_PC4: wb = pc + 32'h4;
         `NPC_CSR: begin
             wb = csr_output_data;
             if(csr_op_sel == `CSR_WRITE)csr_input_data = src1_data;
