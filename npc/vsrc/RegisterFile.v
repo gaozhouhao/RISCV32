@@ -29,7 +29,7 @@ module RegisterFile(
     end
     
     always @(*) begin
-        wb_done = lsu_to_rf_valid && lsu_rf_we && reset;
+        wb_done = lsu_to_rf_valid && reset;
     end
 
     always @(posedge clk) begin
