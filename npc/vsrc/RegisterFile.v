@@ -35,8 +35,11 @@ module RegisterFile(
     always @(posedge clk) begin
         if(reset == 0) wb_done_flag <= 0;
         if(lsu_to_rf_valid)begin
-            if (lsu_rf_we) if(waddr != 5'b0) rf[waddr] <= wdata;
-            wb_done_flag <= 1;
+            if (lsu_rf_we) 
+                if(waddr != 5'b0) begin
+                    rf[waddr] <= wdata;
+                    wb_done_flag <= 1;
+                end
         end
         else wb_done_flag <= 0;
     end
