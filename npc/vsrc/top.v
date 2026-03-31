@@ -180,6 +180,7 @@ EXU exu(
 );
 LSU lsu(
     .clk(clk),
+    .reset(reset),
     .sen(sen),
     .exu_we(exu_we),
     .lsu_rf_we(lsu_rf_we),

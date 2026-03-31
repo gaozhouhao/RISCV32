@@ -2,6 +2,7 @@
 
 module LSU(
     input                               clk,
+    input                               reset,
     input                               sen,
     input                               exu_we,
     output      reg                     lsu_rf_we,
@@ -58,6 +59,18 @@ always @(*) begin
         lsu_wb_sel = wb_sel;
     end
 end
+
+reg lsu_is_load, lsu_is_store;
+always @(posedge clk) begin
+    if(reset == 0) begin
+        lsu_is_load <= 0;
+        lsu_is_store <= 0;
+    end
+    else begin
+        lsu_is_load <= is_load;
+        lsu_is_store  <= is_store; 
+    end
+end
 /*
 always @(posedge clk) begin
     if(exu_to_lsu_valid)
@@ -69,8 +82,8 @@ reg lsu_is_valid;
 reg state, next_state;
 
 always @(*) begin
-    lsu_to_rf_valid = is_load ? lsu_respValid : exu_to_lsu_valid;
-    lsu_rf_we = is_load ? lsu_respValid : exu_to_lsu_valid;
+    lsu_to_rf_valid = lsu_is_load ? lsu_respValid : exu_to_lsu_valid;
+    lsu_rf_we = lsu_is_load ? lsu_respValid : exu_to_lsu_valid;
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
