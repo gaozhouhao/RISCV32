@@ -99,7 +99,7 @@ always @(*) begin
         end
         WAIT: begin
             next_state = lsu_respValid? IDLE:WAIT;
-            lsu_to_rf_valid = 1;
+            lsu_to_rf_valid = lsu_respValid;
             lsu_rf_we = lsu_is_load;
         end
         default:;
