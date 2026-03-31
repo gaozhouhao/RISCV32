@@ -1,7 +1,8 @@
 module top(
     input   clk,
     input   reset,
-    output  [31:0]  pc
+    output  [31:0]  pc,
+    output          wb_done_flag
 );
 
 wire    [31:0]  inst;
@@ -32,7 +33,7 @@ wire            csr_to_ifu_ready;
 
 wire            id_done;
 wire            wb_done;
-wire            wb_done_flag;
+//wire            wb_done_flag;
 wire            exe_done;
 wire            is_ecall;
 wire            is_ebreak;

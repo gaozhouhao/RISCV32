@@ -37,7 +37,7 @@ static void execute(uint64_t  n) {
         //static int wb_done_r = top->rootp->top__DOT__regfile__DOT__wb_done;
         //if(wb_done_r == 1 && top->rootp->top__DOT__regfile__DOT__wb_done == 0)
             printf("DIFFTEST TRIGGER pc=0x%lx\n", top->rootp->top__DOT__regfile__DOT__wb_done_flag);
-        if(top->rootp->top__DOT__regfile__DOT__wb_done_flag == 1)
+        if(top->wb_done_flag == 1)
         {
             printf("DIFFTEST TRIGGER pc=0x%lx\n", top->pc);
             trace_and_difftest(top->pc, top->rootp->top__DOT__next_pc, top->rootp->top__DOT__inst);
