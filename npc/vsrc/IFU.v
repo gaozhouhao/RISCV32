@@ -42,7 +42,7 @@ end
 
 always @(*) begin
     case(state)
-        IDLE: next_state = WAIT;
+        IDLE: next_state = wb_done ? WAIT : IDLE;
         WAIT: next_state = (ifu_respValid)? IDLE : WAIT;
     endcase
 end
