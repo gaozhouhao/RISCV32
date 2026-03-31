@@ -58,16 +58,19 @@ always @(*) begin
         lsu_wb_sel = wb_sel;
     end
 end
+/*
 always @(posedge clk) begin
     if(exu_to_lsu_valid)
     lsu_rf_we <= exu_we;
 end
+*/
 parameter IDLE = 1'b0, WAIT = 1'b1;
 reg lsu_is_valid;
 reg state, next_state;
 
 always @(*) begin
     lsu_to_rf_valid = is_load ? lsu_respValid : exu_to_lsu_valid;
+    lsu_rf_we = is_load ? lsu_respValid : exu_to_lsu_valid;
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
