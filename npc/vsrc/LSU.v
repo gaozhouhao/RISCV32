@@ -51,12 +51,10 @@ reg [1:0] lsu_wb_sel;
 always @(*) begin
     lsu_addr = 0;
     lsu_wen = 0;
-    lsu_wb_sel= 0;
     if(exu_to_lsu_valid) begin
         lsu_addr = alu_result;
         if(is_load == 1) lsu_wen = 0;
         else lsu_wen = 1;
-        lsu_wb_sel = wb_sel;
     end
 end
 
@@ -85,6 +83,7 @@ always @(*) begin
     lsu_to_rf_valid = 0;
     lsu_rf_we = 0;
     lsu_reqValid = 0;
+    lsu_wb_sel = 0;
     case (state)
         IDLE: begin
             if(is_load || is_store) begin
@@ -95,6 +94,7 @@ always @(*) begin
                 next_state = IDLE;
                 lsu_to_rf_valid = 1;
                 lsu_rf_we = exu_we;
+                lsu_wb_sel = wb_sel;
             end
         end
         WAIT: begin
