@@ -9,6 +9,7 @@ module IFU(
     input                               exe_done,
     input                               wb_done,
     output  reg     [31:0]              pc,
+    output  reg                         inst_done,
 
     input                               ifu_to_idu_ready,
     output                              ifu_to_idu_valid,
@@ -74,6 +75,10 @@ always @(posedge clk) begin
         pc <= next_pc;
     else 
         pc <= pc;
+end
+
+always @(*) begin
+    inst_done = is_jalr || (wb_done && state == IDLE);
 end
 
 endmodule

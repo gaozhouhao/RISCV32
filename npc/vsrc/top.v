@@ -2,7 +2,8 @@ module top(
     input   clk,
     input   reset,
     output  [31:0]  pc,
-    output          wb_done_flag
+    output          wb_done_flag,
+    output          inst_done
 );
 
 wire    [31:0]  inst;
@@ -95,6 +96,7 @@ IFU ifu(
     .id_done(id_done),
     .exe_done(exe_done),
     .wb_done(wb_done),
+    .inst_done(inst_done),
     .pc(pc),
     .ifu_reqValid(ifu_reqValid),
     .ifu_respValid(ifu_respValid),
