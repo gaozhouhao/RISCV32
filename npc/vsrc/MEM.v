@@ -42,8 +42,8 @@ end
 
 always @(*) begin
     case (state1) 
-        //IDLE: next_state1 = ifu_reqValid ? ((busy1 == 0) ? IDLE : WAIT) : IDLE;
-        IDLE: next_state1 = ifu_reqValid ? WAIT : IDLE;
+        IDLE: next_state1 = ifu_reqValid ? ((busy1 == 0) ? IDLE : WAIT) : IDLE;
+        //IDLE: next_state1 = ifu_reqValid ? WAIT : IDLE;
         WAIT: next_state1 = (busy1 == 0) ? RESP : WAIT;
         RESP: next_state1 = IDLE;
         default:;
