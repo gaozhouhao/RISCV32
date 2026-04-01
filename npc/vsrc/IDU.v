@@ -91,7 +91,7 @@ always @(*) begin
     sen = 0;
     idu_we = 0;
     wb_sel = `NPC_ALU;
-    nextpc_sel = `PCSEL_PC4;
+    nextpc_sel = `PCSEL_C_PC;
     if(ifu_to_idu_valid == 1'b1) begin
         if(opcode == 7'b0110011) begin
             idu_we = 1;
