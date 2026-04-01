@@ -53,18 +53,21 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    if(reset == 0)
+    if(reset == 0) begin
         state <= IDLE;
-    else
-        state <= next_state;
-    
-    if(state == IDLE && ifu_to_idu_ready == 1) begin
-        //ifu_to_idu_valid <= 1'b1;
-        ifu_reqValid <= 1;
+        ifu_reqValid <= 0;
     end
     else begin
-        ifu_reqValid <= 0;
-        //ifu_to_idu_valid <= 0;
+        state <= next_state;
+    
+        if(state == IDLE && ifu_to_idu_ready == 1) begin
+            //ifu_to_idu_valid <= 1'b1;
+            ifu_reqValid <= 1;
+        end
+        else begin
+            ifu_reqValid <= 0;
+            //ifu_to_idu_valid <= 0;
+        end
     end
 end
 
