@@ -38,9 +38,9 @@ always @(posedge clk) begin
         busy1 <= busy1 - 1;
 end
 
-always @(posedge clk) begin
-    ifu_rdata <= (busy1 == 1) ? pmem_read(mem_ifu_raddr) : 32'b0;
-    ifu_respValid <= (busy1 == 1);
+always @(*) begin
+    ifu_rdata = (busy1 == 1) ? pmem_read(mem_ifu_raddr) : 32'b0;
+    ifu_respValid = (busy1 == 1);
 end
 //////////////////////////////////////////////
 reg [7:0] busy2;
