@@ -36,7 +36,8 @@ static void execute(uint64_t  n) {
         
         //static int wb_done_r = top->rootp->top__DOT__regfile__DOT__wb_done;
         //if(wb_done_r == 1 && top->rootp->top__DOT__regfile__DOT__wb_done == 0)
-        if(top->inst_done == 1)
+        static int inst_done_r = top->inst_done;
+        if(top->inst_done == 0 && inst_done_r == 1)
         {
             trace_and_difftest(top->pc, top->rootp->top__DOT__next_pc, top->rootp->top__DOT__inst);
         }
