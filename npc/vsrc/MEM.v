@@ -77,7 +77,7 @@ always @(*) begin
 end
 always @(posedge clk) begin
     lsu_rdata <= (state2 == RESP && !mem_lsu_wen)? pmem_read(mem_lsu_addr) : 32'b0;
-    if(state2 == RESP && lsu_wen) begin
+    if(state2 == RESP && mem_lsu_wen) begin
         pmem_write(mem_lsu_addr, mem_lsu_wdata, {4'b0, mem_lsu_wmask});
     end 
 
