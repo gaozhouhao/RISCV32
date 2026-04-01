@@ -51,8 +51,8 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    ifu_rdata <= (state1==WAIT && busy1 == 0) ? pmem_read(mem_ifu_raddr) : 32'b0;
-    ifu_respValid <= (state1 == WAIT && busy1 == 0);
+    ifu_rdata <= (busy1 == 0) ? pmem_read(mem_ifu_raddr) : 32'b0;
+    ifu_respValid <= (busy1 == 0);
 end
 //////////////////////////////////////////////
 reg [7:0] busy2;
