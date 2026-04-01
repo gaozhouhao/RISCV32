@@ -70,7 +70,7 @@ end
 always @(*) begin
     case (state2)
         IDLE: next_state2 = lsu_reqValid ? WAIT : IDLE;
-        WAIT: next_state2 = (busy2 == 1) ? RESP : WAIT;
+        WAIT: next_state2 = (busy2 == 0) ? RESP : WAIT;
         RESP: next_state2 = IDLE;
         default:;
     endcase
