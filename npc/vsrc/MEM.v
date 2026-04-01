@@ -42,7 +42,7 @@ end
 
 always @(*) begin
     case (state1) 
-        //IDLE: next_state1 = ifu_reqValid ? ((busy1 == 0) ? RESP : WAIT) : IDLE;
+        //IDLE: next_state1 = ifu_reqValid ? ((busy1 == 0) ? IDLE : WAIT) : IDLE;
         IDLE: next_state1 = ifu_reqValid ? WAIT : IDLE;
         WAIT: next_state1 = (busy1 == 0) ? RESP : WAIT;
         RESP: next_state1 = IDLE;
@@ -51,8 +51,8 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    ifu_rdata <= (state1==RESP) ? pmem_read(mem_ifu_raddr) : 32'b0;
-    ifu_respValid <= (state1==RESP);
+    ifu_rdata <= (state1==WAIT && busy1 == 0) ? pmem_read(mem_ifu_raddr) : 32'b0;
+    ifu_respValid <= (state1 == WAIT && busy1 == 0);
 end
 //////////////////////////////////////////////
 reg [7:0] busy2;
