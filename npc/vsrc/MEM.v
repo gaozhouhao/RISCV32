@@ -33,7 +33,7 @@ reg [7:0] busy1;
 reg [1:0] state1, next_state1;
 always @(posedge clk) begin
     if(ifu_reqValid == 1) begin
-        busy1 <= 10;
+        busy1 <= 5;
         mem_ifu_raddr <= ifu_raddr;
     end
     else if (state1 == WAIT) busy1 <= busy1 - 1;
