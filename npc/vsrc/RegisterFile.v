@@ -29,8 +29,7 @@ module RegisterFile(
     end
     
     always @(*) begin
-        //wb_done = lsu_to_rf_valid && reset;
-        wb_done = reset ? lsu_to_rf_valid : 1;
+        wb_done = lsu_to_rf_valid && reset;
     end
 
 
