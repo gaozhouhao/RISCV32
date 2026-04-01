@@ -77,14 +77,14 @@ end
 always @(posedge clk) begin
     if(is_jalr)
         pc <= next_pc & ~32'b1;
-    else if(wb_done && state == IDLE)
+    else if(inst_done)
         pc <= next_pc;
     else 
         pc <= pc;
 end
 
 always @(*) begin
-    inst_done = is_jalr || (wb_done && state == IDLE);
+    inst_done = is_jalr || wb_done;
 end
 
 endmodule
