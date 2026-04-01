@@ -95,7 +95,7 @@ always @(*) begin
             end
             else begin
                 next_state = IDLE;
-                lsu_to_rf_valid = 1;
+                lsu_to_rf_valid = exu_to_lsu_valid;
                 lsu_rf_we = exu_we;
                 lsu_wb_sel = wb_sel;
                 //lsu_alu_result = alu_result;
