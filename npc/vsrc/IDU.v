@@ -17,9 +17,12 @@ module IDU(
     output  reg                         is_ecall,
     output  reg                         is_ebreak,
     output  reg                         is_jalr,
+    output  reg                         is_jal,
+    output  reg                         is_branch,
     output  reg                         is_csr,
     output  reg                         is_load,
     output  reg                         is_store,
+    output  reg                         trapValid,
     output  reg                         id_done,
 
     output          [2:0]               funct3,
@@ -83,22 +86,25 @@ always @(*) begin
     alu_src1_sel = `NPC_RS1_DATA;
     alu_src2_sel = 0;
     is_jalr = 0;
+    is_jal = 0;
     is_csr = 0;
     is_load = 0;
     is_store = 0;
+    is_branch = 0;
+    trapValid = 0;
     id_done = 0;
     csr_wen = 0;
     sen = 0;
     idu_we = 0;
     wb_sel = `NPC_ALU;
-    nextpc_sel = `PCSEL_C_PC;
+    //nextpc_sel = `PCSEL_C_PC;
     if(ifu_to_idu_valid == 1'b1) begin
         if(opcode == 7'b0110011) begin
             idu_we = 1;
             wb_sel = `NPC_ALU;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_RS2_DATA;
-            nextpc_sel = `PCSEL_PC4;
+            //nextpc_sel = `PCSEL_PC4;
             if(funct3 == 3'b000)begin
                 if(funct7 == 7'b0000000) ALUop = `NPC_ALU_ADD;
                 if(funct7 == 7'b0100000) ALUop = `NPC_ALU_SUB;
@@ -117,7 +123,7 @@ always @(*) begin
         if(opcode == 7'b0010011) begin
             idu_we = 1;
             wb_sel = `NPC_ALU;
-            nextpc_sel = `PCSEL_PC4;
+            //nextpc_sel = `PCSEL_PC4;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             if (funct3 == 3'b000) ALUop = `NPC_ALU_ADD; //addi
@@ -139,7 +145,8 @@ always @(*) begin
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_JAL;
+            //nextpc_sel = `PCSEL_JAL;
+            is_jal = 1;
         end
         if(opcode == 7'b1100111 && funct3 == 3'b000) begin//jalr
             idu_we = 1;
@@ -147,14 +154,15 @@ always @(*) begin
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_JALR;
+            //nextpc_sel = `PCSEL_JALR;
             is_jalr = 1;
         end
         if (opcode == 7'b1100011) begin // branch
             idu_we = 0;
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
-            nextpc_sel = `PCSEL_BR;
+            //nextpc_sel = `PCSEL_BR;
+            is_branch = 1;
         end
 
         if(opcode == 7'b0110111) begin//lui
@@ -163,7 +171,7 @@ always @(*) begin
             alu_src1_sel = `NPC_ZERO;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_PC4;
+            //nextpc_sel = `PCSEL_PC4;
         end
         if(opcode == 7'b0010111) begin //auipc
             idu_we = 1;
@@ -171,7 +179,7 @@ always @(*) begin
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_PC4; 
+            //nextpc_sel = `PCSEL_PC4; 
         end
         if (opcode == 7'b0000011) begin// lb/lh/lw/lbu/lhu
             idu_we = 1;
@@ -183,7 +191,7 @@ always @(*) begin
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            nextpc_sel = `PCSEL_PC4;
+            //nextpc_sel = `PCSEL_PC4;
         end
         if (opcode == 7'b0100011) begin // sb/sh/sw
             alu_src1_sel = `NPC_RS1_DATA;
@@ -191,18 +199,20 @@ always @(*) begin
             ALUop = `NPC_ALU_ADD;
             sen = 1;
             is_store = 1;
-            nextpc_sel = `PCSEL_PC4;
+            //nextpc_sel = `PCSEL_PC4;
         end
         
         if(inst == 32'b0000_0000_0000_0000_0000_0000_0111_0011) begin
             is_ecall = 1'b1;
-            nextpc_sel = `PCSEL_MTVEC;
+            //nextpc_sel = `PCSEL_MTVEC;
+            trapValid = 1;
         end
         if(inst == 32'b0000_0000_0001_0000_0000_0000_0111_0011) begin
             is_ebreak = 1'b1;
         end
         if(inst == 32'b0011_0000_0010_0000_0000_0000_0111_0011) begin
-            nextpc_sel = `PCSEL_MEPC;
+            //nextpc_sel = `PCSEL_MEPC;
+            trapValid = 1;
         end
         if(opcode == 7'b1110011) begin//priortiy
             if(funct3 == 3'b001)begin //CSRRW

@@ -39,9 +39,12 @@ wire            exe_done;
 wire            is_ecall;
 wire            is_ebreak;
 wire            is_jalr;
+wire            is_jal;
+wire            is_branch;
 wire            is_csr;
 wire            is_load;
 wire            is_store;
+wire            trapValid;
 wire            idu_we;
 wire            exu_we;
 wire            lsu_rf_we;
@@ -124,8 +127,11 @@ IDU idu(
     .is_ecall(is_ecall),
     .is_ebreak(is_ebreak),
     .is_jalr(is_jalr),
+    .is_jal(is_jal),
     .is_load(is_load),
     .is_store(is_store),
+    .is_branch(is_branch),
+    .trapValid(trapValid),
     .is_csr(is_csr),
     .id_done(id_done),
     .wb_sel(wb_sel),
