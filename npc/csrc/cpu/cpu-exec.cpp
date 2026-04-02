@@ -39,7 +39,6 @@ static void execute(uint64_t  n) {
         static int inst_done_r;
         if(top->inst_done == 0 && inst_done_r == 1)
         {
-            printf("difftest\n");
             trace_and_difftest(top->pc, top->rootp->top__DOT__next_pc, top->rootp->top__DOT__inst);
         }
         inst_done_r = top->inst_done;
