@@ -94,6 +94,28 @@ assign redirect_valid =
         | (is_branch && branch_taken)
         | trap_valid;
 
+reg     [31:0]      jalr_target;
+reg     [31:0]      jal_target;
+reg     [31:0]      trap_pc;
+reg     [31:0]      branch_target;
+assign redirect_pc =
+        trap_valid              ? trap_pc       :
+        is_jal                  ? jal_target    :
+        is_jalr                 ? jalr_target   :
+        (is_branch && branch_taken)    ? branch_target :
+                                  32'b0;
+
+
+always @(*) begin
+    jal_target = 0;
+    jalr_target = 1;
+    
+    if(is_jal)
+        jal_target = imm + pc;
+    if(is_jalr)
+        jalr_target = (imm + src1_data) & ~1;
+
+end
 
 
 
