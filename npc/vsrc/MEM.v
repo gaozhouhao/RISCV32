@@ -50,6 +50,7 @@ end
 //////////////////////////////////////////////
 reg [7:0] busy2;
 always @(posedge clk)  begin
+    $display("%d\n", random_num);
     if(lsu_reqValid == 1) begin
         busy2 <= random_num;
         mem_lsu_addr <= lsu_addr;
