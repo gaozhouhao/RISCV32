@@ -22,7 +22,7 @@ module IDU(
     output  reg                         is_csr,
     output  reg                         is_load,
     output  reg                         is_store,
-    output  reg                         trapValid,
+    output  reg                         trap_valid,
     output  reg                         id_done,
 
     output          [2:0]               funct3,
@@ -91,7 +91,7 @@ always @(*) begin
     is_load = 0;
     is_store = 0;
     is_branch = 0;
-    trapValid = 0;
+    trap_valid = 0;
     id_done = 0;
     csr_wen = 0;
     sen = 0;
@@ -205,14 +205,14 @@ always @(*) begin
         if(inst == 32'b0000_0000_0000_0000_0000_0000_0111_0011) begin
             is_ecall = 1'b1;
             //nextpc_sel = `PCSEL_MTVEC;
-            trapValid = 1;
+            trap_valid = 1;
         end
         if(inst == 32'b0000_0000_0001_0000_0000_0000_0111_0011) begin
             is_ebreak = 1'b1;
         end
         if(inst == 32'b0011_0000_0010_0000_0000_0000_0111_0011) begin
             //nextpc_sel = `PCSEL_MEPC;
-            trapValid = 1;
+            trap_valid = 1;
         end
         if(opcode == 7'b1110011) begin//priortiy
             if(funct3 == 3'b001)begin //CSRRW

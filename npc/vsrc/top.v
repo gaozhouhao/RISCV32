@@ -44,7 +44,9 @@ wire            is_branch;
 wire            is_csr;
 wire            is_load;
 wire            is_store;
-wire            trapValid;
+wire            trap_valid;
+wire            redirect_valid;
+wire    [31:0]  redirect_pc;
 wire            idu_we;
 wire            exu_we;
 wire            lsu_rf_we;
@@ -118,8 +120,6 @@ IDU idu(
     .ifu_to_idu_ready(ifu_to_idu_ready),
     .idu_to_exu_ready(idu_to_exu_ready),
     .idu_to_exu_valid(idu_to_exu_valid),
-    //.idu_to_lsu_ready(idu_to_lsu_ready),
-    //.idu_to_lsu_valid(idu_to_lsu_valid),
     
     .idu_we(idu_we),
     .sen(sen),
@@ -131,7 +131,7 @@ IDU idu(
     .is_load(is_load),
     .is_store(is_store),
     .is_branch(is_branch),
-    .trapValid(trapValid),
+    .trap_valid(trap_valid),
     .is_csr(is_csr),
     .id_done(id_done),
     .wb_sel(wb_sel),
@@ -161,6 +161,12 @@ EXU exu(
     .alu_result(alu_result),
     .branch_taken(branch_taken),
     .csr_op_sel(csr_op_sel),
+    .is_jal(is_jal),
+    .is_jalr(is_jalr),
+    .is_branch(is_branch),
+    .redirect_valid(redirect_valid),
+    .redirect_pc(redirect_pc),
+    .trap_valid(trap_valid),
     .is_ebreak(is_ebreak),
     .is_csr(is_csr),
     .is_load(is_load),
@@ -181,8 +187,6 @@ EXU exu(
     .next_pc(next_pc),
     .idu_to_exu_ready(idu_to_exu_ready),
     .idu_to_exu_valid(idu_to_exu_valid),
-    .exu_to_rf_ready(exu_to_rf_ready),
-    .exu_to_rf_valid(exu_to_rf_valid),
     .exu_to_lsu_ready(exu_to_lsu_ready),
     .exu_to_lsu_valid(exu_to_lsu_valid)
 

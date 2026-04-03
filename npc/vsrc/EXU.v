@@ -24,7 +24,12 @@ module EXU (
     input   reg                 is_csr,
     input   reg                 is_load,
     input   reg                 is_store,
-        
+    input   reg                 is_branch,
+    input   reg                 is_jalr,
+    input   reg                 is_jal,
+
+    input   reg                 trap_valid,
+
     input   reg     [31:0]      pc,
     input   wire    [31:0]      src1_data,
     input   wire    [31:0]      src2_data,
@@ -38,12 +43,11 @@ module EXU (
     input   wire    [31:0]      mepc_data,
     output  reg     [31:0]      csr_input_data,
     output  reg     [31:0]      csr_output_data,
+    output                      redirect_valid,
+    output  reg     [31:0]      redirect_pc,
 
-    //output  reg     [31:0]      next_pc,
     input                       idu_to_exu_valid,
     output                      idu_to_exu_ready,
-    output                      exu_to_rf_valid,
-    input                       exu_to_rf_ready,
     input                       exu_to_lsu_ready,
     output                      exu_to_lsu_valid
 );
@@ -84,6 +88,14 @@ always @(*) begin
     endcase
 end
 
+assign redirect_valid =
+           is_jal
+        |  is_jalr
+        | (is_branch && branch_taken)
+        | trap_valid;
+
+
+
 
 always @(*) begin
     alu_src1 = src1_data;
@@ -105,8 +117,6 @@ always @(*) begin
 end
 
 always @(*) begin
-    //exu_to_lsu_valid = idu_to_exu_valid && (is_load || is_store);
-    //exu_to_rf_valid = idu_to_exu_valid && (!is_load && !is_store);
     exu_to_lsu_valid = idu_to_exu_valid;
 end
 
