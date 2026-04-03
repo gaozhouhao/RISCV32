@@ -1,20 +1,13 @@
 `include "params.vh"
 module EXU (
     input                       clk,
-    input   wire    [2:0]       nextpc_sel, 
     input   wire    [1:0]       wb_sel,
     input   wire    [1:0]       alu_src1_sel,
     input   reg     [ 1:0]       alu_src2_sel,
     input   reg     [ 3:0]      ALUop,
     output          [31:0]      alu_result,
-    output  reg     [31:0]      next_pc,
     input   reg                 idu_we,
     output                      exu_we,
-/*
-    output  reg     [31:0]      jalr_target,
-    output  reg     [31:0]      jal_target,
-    output  reg     [31:0]      branch_target,
-    */
     input                       sen,
 
     output  reg                 branch_taken,
@@ -24,7 +17,12 @@ module EXU (
     input   reg                 is_csr,
     input   reg                 is_load,
     input   reg                 is_store,
-        
+    input   reg                 is_branch,
+    input   reg                 is_jalr,
+    input   reg                 is_jal,
+
+    input   reg                 trap_valid,
+
     input   reg     [31:0]      pc,
     input   wire    [31:0]      src1_data,
     input   wire    [31:0]      src2_data,
@@ -38,12 +36,11 @@ module EXU (
     input   wire    [31:0]      mepc_data,
     output  reg     [31:0]      csr_input_data,
     output  reg     [31:0]      csr_output_data,
+    output                      redirect_valid,
+    output  reg     [31:0]      redirect_pc,
 
-    //output  reg     [31:0]      next_pc,
     input                       idu_to_exu_valid,
     output                      idu_to_exu_ready,
-    output                      exu_to_rf_valid,
-    input                       exu_to_rf_ready,
     input                       exu_to_lsu_ready,
     output                      exu_to_lsu_valid
 );
@@ -84,6 +81,37 @@ always @(*) begin
     endcase
 end
 
+assign redirect_valid =
+           is_jal
+        |  is_jalr
+        | (is_branch && branch_taken)
+        | trap_valid;
+
+reg     [31:0]      jalr_target;
+reg     [31:0]      jal_target;
+reg     [31:0]      trap_pc;
+reg     [31:0]      branch_target;
+assign redirect_pc =
+        trap_valid              ? trap_pc       :
+        is_jal                  ? jal_target    :
+        is_jalr                 ? jalr_target   :
+        (is_branch && branch_taken)    ? branch_target :
+                                  32'b0;
+
+
+always @(*) begin
+    jal_target = 0;
+    jalr_target = 0;
+    branch_target = 0; 
+    if(is_jal)
+        jal_target = imm + pc;
+    if(is_jalr)
+        jalr_target = (imm + src1_data) & ~1;
+    if(is_branch)
+        branch_target = imm + pc;
+end
+
+
 
 always @(*) begin
     alu_src1 = src1_data;
@@ -105,8 +133,6 @@ always @(*) begin
 end
 
 always @(*) begin
-    //exu_to_lsu_valid = idu_to_exu_valid && (is_load || is_store);
-    //exu_to_rf_valid = idu_to_exu_valid && (!is_load && !is_store);
     exu_to_lsu_valid = idu_to_exu_valid;
 end
 

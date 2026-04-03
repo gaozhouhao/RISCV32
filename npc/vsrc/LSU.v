@@ -12,8 +12,6 @@ module LSU(
 
     input               [ 1:0]          wb_sel, 
     input       reg     [ 2:0]          funct3,
-    input       wire    [ 2:0]          nextpc_sel,
-    output      reg     [31:0]          next_pc,
     input       reg                     branch_taken,
     
     input               [31:0]          alu_result,
@@ -29,7 +27,9 @@ module LSU(
     output      reg     [31:0]          wb,
 
     output      reg                     lsu_reqValid,
+    input       reg                     lsu_reqReady,
     input       reg                     lsu_respValid,
+    output      reg                     lsu_respReady,
     input       reg     [31:0]          lsu_rdata,
     output      reg     [31:0]          lsu_addr,
     output      reg                     lsu_wen,
@@ -72,15 +72,10 @@ always @(posedge clk) begin
         lsu_alu_result <= alu_result; 
     end
 end
-/*
-always @(posedge clk) begin
-    if(exu_to_lsu_valid)
-    lsu_rf_we <= exu_we;
-end
-*/
-parameter IDLE = 1'b0, WAIT = 1'b1;
-reg lsu_is_valid;
-reg state, next_state;
+
+parameter IDLE = 2'b00, WAIT_READY = 2'b01, WAIT = 2'b10;
+reg             lsu_is_valid;
+reg     [1:0]   state, next_state;
 
 always @(*) begin
     lsu_to_rf_valid = 0;
@@ -90,16 +85,18 @@ always @(*) begin
     case (state)
         IDLE: begin
             if(is_load || is_store) begin
-                next_state = WAIT;
+                next_state = WAIT_READY;
                 lsu_reqValid = 1;
             end
             else begin
                 next_state = IDLE;
-                lsu_to_rf_valid = 1;
+                lsu_to_rf_valid = exu_to_lsu_valid;
                 lsu_rf_we = exu_we;
                 lsu_wb_sel = wb_sel;
-                //lsu_alu_result = alu_result;
             end
+        end
+        WAIT_READY: begin
+           next_state = lsu_reqReady ? WAIT : WAIT_READY; 
         end
         WAIT: begin
             next_state = lsu_respValid? IDLE:WAIT;
@@ -112,7 +109,10 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    state <= next_state;
+    if(reset == 0)
+        state <= IDLE;
+    else
+        state <= next_state;
 end
 
 reg [7:0] byte1, byte2;
@@ -120,13 +120,11 @@ reg [31:0] word;
 always @(*) begin
     byte1 = 8'b0;
     byte2 = 8'b0;
-    next_pc = 32'b0;
     word = 32'b0;
     csr_input_data = 32'b0;
     case (lsu_wb_sel)
         `NPC_ALU: wb = alu_result;
         `NPC_MEM: begin
-            //word = (pmem_read(alu_result) >> (alu_result[1:0]*8));
             word = (lsu_rdata >> (lsu_alu_result[1:0]*8));
             case (funct3)
             3'b000: begin
@@ -151,15 +149,6 @@ always @(*) begin
         end
         default: wb = 32'b0;
     endcase
-        case (nextpc_sel)
-            `PCSEL_JALR: next_pc = alu_result;
-            `PCSEL_JAL: next_pc = alu_result;
-            `PCSEL_PC4: next_pc = pc + 32'd4;
-            `PCSEL_BR:  next_pc = branch_taken?alu_result:(pc + 32'd4);
-            `PCSEL_MTVEC:  next_pc = mtvec_data;
-            `PCSEL_MEPC:  next_pc = mepc_data;
-            default: ;
-        endcase
 end
 
 always @(*) begin

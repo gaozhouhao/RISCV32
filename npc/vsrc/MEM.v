@@ -7,12 +7,20 @@ module MEM(
     output      reg     [31:0]          ifu_rdata,
     
     output      reg                     lsu_respValid,
+    input       reg                     lsu_respReady,
     input       reg                     lsu_reqValid,
+    output      reg                     lsu_reqReady,
     input               [31:0]          lsu_addr,
     input                               lsu_wen,
     input               [31:0]          lsu_wdata,
     input               [ 3:0]          lsu_wmask,
     output      reg     [31:0]          lsu_rdata
+);
+
+reg     [7:0]   random_num;
+LFSR lfsr(
+    .clk(clk),
+    .random_num(random_num)
 );
 
 reg     [31:0]  mem_ifu_raddr;
@@ -27,62 +35,89 @@ import "DPI-C" function void pmem_write (
     input int unsigned  waddr, input int unsigned wdata, input byte wmask
 );
 
-
-parameter IDLE = 2'b00, WAIT = 2'b01, RESP = 2'b10;
 reg [7:0] busy1;
-reg [1:0] state1, next_state1;
 always @(posedge clk) begin
     if(ifu_reqValid == 1) begin
-        busy1 <= 10;
+        busy1 <= random_num + 1;
         mem_ifu_raddr <= ifu_raddr;
     end
-    else if (state1 == WAIT) busy1 <= busy1 - 1;
-    state1 <= next_state1;
+    else if (busy1 > 0)
+        busy1 <= busy1 - 1;
 end
 
 always @(*) begin
-    case (state1) 
-        IDLE: next_state1 = ifu_reqValid ? WAIT : IDLE;
-        WAIT: next_state1 = (busy1 == 1) ? RESP : WAIT;
-        RESP: next_state1 = IDLE;
-        default:;
+    ifu_rdata = (busy1 == 1) ? pmem_read(mem_ifu_raddr) : 32'b0;
+    ifu_respValid = (busy1 == 1);
+end
+//////////////////////////////////////////////
+parameter IDLE = 2'b00, WAIT = 2'b01, WAIT_READY = 2'b10, BUSY = 2'b11;
+reg     [1:0]   state, next_state;
+
+reg [7:0] busy2;
+reg [7:0] busy3;
+
+always @(*) begin
+    case(state) 
+        IDLE: begin
+            next_state = lsu_reqValid ? BUSY : IDLE;
+        end
+        BUSY: begin
+            next_state = (busy2 == 1) ? WAIT : BUSY;
+        end
+        WAIT: begin
+            next_state = (busy3 == 1) ? WAIT_READY : WAIT;
+        end
+        WAIT_READY: begin
+            next_state = lsu_respReady ? IDLE : WAIT_READY;
+        end
     endcase
 end
 
 always @(posedge clk) begin
-    ifu_rdata <= (state1==RESP) ? pmem_read(mem_ifu_raddr) : 32'b0;
-    ifu_respValid <= (state1==RESP);
-end
-//////////////////////////////////////////////
-reg [7:0] busy2;
-reg [1:0] state2, next_state2;
-always @(posedge clk)  begin
-    if(lsu_reqValid == 1) begin
-        busy2 <= 5;
+    if(lsu_reqValid && state == IDLE)   busy2 <= random_num + 1;    
+    if(busy2 > 0) busy2 <= busy2 - 1;
+    if(busy2 == 1) begin
+        lsu_reqReady <= 1;
+        busy3 <= random_num + 1;
         mem_lsu_addr <= lsu_addr;
         mem_lsu_wen <= lsu_wen;
         mem_lsu_wdata <= lsu_wdata;
         mem_lsu_wmask <= lsu_wmask;
     end
-    else if (state2 == WAIT) busy2 <= busy2 - 1;
-    state2 <= next_state2;
+    if(busy2 == 1) busy3 <= random_num + 1;
+    if(busy3 > 0) busy3 <= busy3 - 1;
+    lsu_respValid <= (busy3 == 1);
+    if(lsu_respReady == 1) lsu_respValid <= 0;
 end
+/*
+always @(posedge clk)  begin
+    if(lsu_reqValid == 1) begin
+        busy2 <= random_num + 1;
+
+    end
+    if(busy2 == 1) begin
+        busy3 <= random_num + 1;
+        lsu_reqReady <= 1;
+        mem_lsu_addr <= lsu_addr;
+        mem_lsu_wen <= lsu_wen;
+        mem_lsu_wdata <= lsu_wdata;
+        mem_lsu_wmask <= lsu_wmask;
+    end
+    else begin
+        lsu_reqReady <= 0;
+    end
+    if(busy2 > 0) busy2 <= busy2 - 1;
+    if(busy3 > 0) busy3 <= busy3 - 1;
+end
+
 always @(*) begin
-    case (state2)
-        IDLE: next_state2 = lsu_reqValid ? WAIT : IDLE;
-        WAIT: next_state2 = (busy2 == 1) ? RESP : WAIT;
-        RESP: next_state2 = IDLE;
-        default:;
-    endcase
-end
-always @(posedge clk) begin
-    lsu_rdata <= (state2 == RESP && !mem_lsu_wen)? pmem_read(mem_lsu_addr) : 32'b0;
-    if(state2 == RESP && lsu_wen) begin
+    lsu_rdata = (!mem_lsu_wen && busy2 == 1) ? pmem_read(mem_lsu_addr) : 32'b0;
+    if(busy2 == 1 && mem_lsu_wen) begin
         pmem_write(mem_lsu_addr, mem_lsu_wdata, {4'b0, mem_lsu_wmask});
     end 
 
-    lsu_respValid <= (state2 == RESP);
+    lsu_respValid = (busy2 == 1);
 end
-
+*/
 endmodule
 

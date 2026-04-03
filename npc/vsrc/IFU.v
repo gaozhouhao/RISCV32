@@ -3,13 +3,15 @@ module IFU(
     input                               is_load,
     input                               clk,
     input                               reset,
-    input           [31:0]              next_pc,
     output  reg     [31:0]              inst,
     input                               id_done,
     input                               exe_done,
     input                               wb_done,
     output  reg     [31:0]              pc,
     output  reg                         inst_done,
+
+    input   reg     [31:0]              redirect_pc,
+    input   reg                         redirect_valid,
 
     input                               ifu_to_idu_ready,
     output                              ifu_to_idu_valid,
@@ -52,33 +54,40 @@ always @(*) begin
     ifu_raddr = pc;
 end
 
+reg start_up;
 always @(posedge clk) begin
-    if(reset == 0)
+    if(reset == 0) begin
         state <= IDLE;
-    else
-        state <= next_state;
-    
-    if(state == IDLE && ifu_to_idu_ready == 1) begin
-        //ifu_to_idu_valid <= 1'b1;
-        ifu_reqValid <= 1;
+        ifu_reqValid <= 0;
+        start_up <= 0;
     end
     else begin
-        ifu_reqValid <= 0;
-        //ifu_to_idu_valid <= 0;
+        state <= next_state;
+    
+        if((state == IDLE && ifu_to_idu_ready == 1 && wb_done) || start_up == 0) begin
+            //ifu_to_idu_valid <= 1'b1;
+            start_up <= 1;
+            ifu_reqValid <= 1;
+        end
+        else begin
+            ifu_reqValid <= 0;
+            //ifu_to_idu_valid <= 0;
+        end
     end
 end
 
+wire    [31:0]  next_pc;
+assign next_pc = redirect_valid ? redirect_pc : pc + 4;
+
 always @(posedge clk) begin
-    if(is_jalr)
-        pc <= next_pc & ~32'b1;
-    else if(wb_done && state == IDLE)
+    if(inst_done)
         pc <= next_pc;
     else 
         pc <= pc;
 end
 
 always @(*) begin
-    inst_done = is_jalr || (wb_done && state == IDLE);
+    inst_done = is_jalr || wb_done;
 end
 
 endmodule
