@@ -109,7 +109,10 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    state <= next_state;
+    if(reset == 0)
+        state <= IDLE;
+    else
+        state <= next_state;
 end
 
 reg [7:0] byte1, byte2;
