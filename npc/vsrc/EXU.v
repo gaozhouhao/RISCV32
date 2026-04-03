@@ -108,13 +108,14 @@ assign redirect_pc =
 
 always @(*) begin
     jal_target = 0;
-    jalr_target = 1;
-    
+    jalr_target = 0;
+    branch_target = 0; 
     if(is_jal)
         jal_target = imm + pc;
     if(is_jalr)
         jalr_target = (imm + src1_data) & ~1;
-
+    if(is_branch)
+        branch_target = imm + pc;
 end
 
 
