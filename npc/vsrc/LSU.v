@@ -73,7 +73,7 @@ always @(posedge clk) begin
     end
 end
 
-parameter IDLE = 2'b00, WAIT = 2'b01, WAIT_READY = 2'b10;
+parameter IDLE = 2'b00, WAIT_READY = 2'b01, WAIT = 2'b10;
 reg             lsu_is_valid;
 reg     [1:0]   state, next_state;
 
@@ -89,14 +89,14 @@ always @(*) begin
                 lsu_reqValid = 1;
             end
             else begin
-                next_state = IDLE;
+                next_state = WAIT_READY;
                 lsu_to_rf_valid = exu_to_lsu_valid;
                 lsu_rf_we = exu_we;
                 lsu_wb_sel = wb_sel;
             end
         end
         WAIT_READY: begin
-
+           next_state = lsu_reqReady ? WAIT : WAIT_READY; 
         end
         WAIT: begin
             next_state = lsu_respValid? IDLE:WAIT;
