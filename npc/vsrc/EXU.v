@@ -1,20 +1,13 @@
 `include "params.vh"
 module EXU (
     input                       clk,
-    input   wire    [2:0]       nextpc_sel, 
     input   wire    [1:0]       wb_sel,
     input   wire    [1:0]       alu_src1_sel,
     input   reg     [ 1:0]       alu_src2_sel,
     input   reg     [ 3:0]      ALUop,
     output          [31:0]      alu_result,
-    output  reg     [31:0]      next_pc,
     input   reg                 idu_we,
     output                      exu_we,
-/*
-    output  reg     [31:0]      jalr_target,
-    output  reg     [31:0]      jal_target,
-    output  reg     [31:0]      branch_target,
-    */
     input                       sen,
 
     output  reg                 branch_taken,

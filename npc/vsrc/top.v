@@ -53,7 +53,6 @@ wire            lsu_rf_we;
 wire            sen;
 wire            csr_wen;
 
-wire    [2:0]   nextpc_sel;
 wire    [1:0]   wb_sel;
 wire            csr_op_sel;
 wire    [1:0]   alu_src1_sel;
@@ -76,7 +75,9 @@ reg     [31:0]  csr_output_data;
 reg     [31:0]  csr_input_data;
 
 wire            lsu_reqValid;
+wire            lsu_reqReady;
 wire            lsu_respValid;
+wire            lsu_respReady;
 reg     [31:0]  lsu_rdata;
 reg     [31:0]  lsu_addr;
 wire            lsu_wen;
@@ -138,7 +139,6 @@ IDU idu(
     .id_done(id_done),
     .wb_sel(wb_sel),
     .csr_op_sel(csr_op_sel),
-    .nextpc_sel(nextpc_sel),
     .alu_src1_sel(alu_src1_sel),
     .alu_src2_sel(alu_src2_sel),
     .ALUop(ALUop),
@@ -153,7 +153,6 @@ IDU idu(
 
 EXU exu(
     .clk(clk),
-    .nextpc_sel(nextpc_sel),
     .idu_we(idu_we),
     .exu_we(exu_we),
     .wb_sel(wb_sel),
@@ -186,7 +185,6 @@ EXU exu(
     .wb(wb),
     .sen(sen),
     .funct3(funct3),
-    .next_pc(next_pc),
     .idu_to_exu_ready(idu_to_exu_ready),
     .idu_to_exu_valid(idu_to_exu_valid),
     .exu_to_lsu_ready(exu_to_lsu_ready),
@@ -204,8 +202,6 @@ LSU lsu(
     .branch_taken(branch_taken),
 
     .pc(pc),
-    .next_pc(next_pc),
-    .nextpc_sel(nextpc_sel),
     .funct3(funct3),
     .alu_result(alu_result),
     .wb(wb),
@@ -219,7 +215,9 @@ LSU lsu(
     .mtvec_data(mtvec_data),
     .mepc_data(mepc_data),
     .lsu_reqValid(lsu_reqValid),
+    .lsu_reqReady(lsu_reqReady),
     .lsu_respValid(lsu_respValid),
+    .lsu_respReady(lsu_respReady),
     .lsu_rdata(lsu_rdata),
     .lsu_addr(lsu_addr),
     .lsu_wen(lsu_wen),
@@ -239,7 +237,9 @@ MEM mem(
     .ifu_raddr(ifu_raddr),
     .ifu_rdata(ifu_rdata),
     .lsu_reqValid(lsu_reqValid),
+    .lsu_reqReady(lsu_reqReady),
     .lsu_respValid(lsu_respValid),
+    .lsu_respReady(lsu_respReady),
     .lsu_rdata(lsu_rdata),
     .lsu_addr(lsu_addr),
     .lsu_wen(lsu_wen),

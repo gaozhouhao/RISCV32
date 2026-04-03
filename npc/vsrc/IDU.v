@@ -11,7 +11,6 @@ module IDU(
     output  reg                         idu_we,
     output  reg                         csr_wen,
     output  reg     [1:0]               wb_sel,
-    output  reg     [2:0]               nextpc_sel,
     output  reg                         csr_op_sel,
     
     output  reg                         is_ecall,

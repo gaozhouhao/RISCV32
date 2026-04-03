@@ -7,7 +7,9 @@ module MEM(
     output      reg     [31:0]          ifu_rdata,
     
     output      reg                     lsu_respValid,
+    input       reg                     lsu_respReady,
     input       reg                     lsu_reqValid,
+    output      reg                     lsu_reqReady,
     input               [31:0]          lsu_addr,
     input                               lsu_wen,
     input               [31:0]          lsu_wdata,
@@ -49,19 +51,30 @@ always @(*) begin
 end
 //////////////////////////////////////////////
 reg [7:0] busy2;
+reg [7:0] busy3;
 always @(posedge clk)  begin
-    $display("%d\n", random_num);
+    
     if(lsu_reqValid == 1) begin
-        //busy2 <= random_num;
         busy2 <= random_num + 1;
+
+    end
+    if(busy2 == 1) begin
+        busy3 <= random_num + 1;
+        lsu_reqReady <= 1;
         mem_lsu_addr <= lsu_addr;
         mem_lsu_wen <= lsu_wen;
         mem_lsu_wdata <= lsu_wdata;
         mem_lsu_wmask <= lsu_wmask;
     end
+    else begin
+        lsu_reqReady <= 0;
+    end
 
     if(busy2 > 0) busy2 <= busy2 - 1;
+
+    if(busy3 > 0) busy3 <= busy3 - 1;
 end
+
 
 always @(*) begin
     lsu_rdata = (!mem_lsu_wen && busy2 == 1) ? pmem_read(mem_lsu_addr) : 32'b0;
