@@ -85,11 +85,11 @@ always @(*) begin
     case (state)
         IDLE: begin
             if(is_load || is_store) begin
-                next_state = WAIT;
+                next_state = WAIT_READY;
                 lsu_reqValid = 1;
             end
             else begin
-                next_state = WAIT_READY;
+                next_state = IDLE;
                 lsu_to_rf_valid = exu_to_lsu_valid;
                 lsu_rf_we = exu_we;
                 lsu_wb_sel = wb_sel;
