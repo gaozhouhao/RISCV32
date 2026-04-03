@@ -97,14 +97,12 @@ always @(*) begin
     sen = 0;
     idu_we = 0;
     wb_sel = `NPC_ALU;
-    //nextpc_sel = `PCSEL_C_PC;
     if(ifu_to_idu_valid == 1'b1) begin
         if(opcode == 7'b0110011) begin
             idu_we = 1;
             wb_sel = `NPC_ALU;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_RS2_DATA;
-            //nextpc_sel = `PCSEL_PC4;
             if(funct3 == 3'b000)begin
                 if(funct7 == 7'b0000000) ALUop = `NPC_ALU_ADD;
                 if(funct7 == 7'b0100000) ALUop = `NPC_ALU_SUB;
@@ -123,7 +121,6 @@ always @(*) begin
         if(opcode == 7'b0010011) begin
             idu_we = 1;
             wb_sel = `NPC_ALU;
-            //nextpc_sel = `PCSEL_PC4;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             if (funct3 == 3'b000) ALUop = `NPC_ALU_ADD; //addi
@@ -145,7 +142,6 @@ always @(*) begin
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            //nextpc_sel = `PCSEL_JAL;
             is_jal = 1;
         end
         if(opcode == 7'b1100111 && funct3 == 3'b000) begin//jalr
@@ -154,14 +150,12 @@ always @(*) begin
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            //nextpc_sel = `PCSEL_JALR;
             is_jalr = 1;
         end
         if (opcode == 7'b1100011) begin // branch
             idu_we = 0;
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
-            //nextpc_sel = `PCSEL_BR;
             is_branch = 1;
         end
 
@@ -171,7 +165,6 @@ always @(*) begin
             alu_src1_sel = `NPC_ZERO;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            //nextpc_sel = `PCSEL_PC4;
         end
         if(opcode == 7'b0010111) begin //auipc
             idu_we = 1;
@@ -179,7 +172,6 @@ always @(*) begin
             alu_src1_sel = `NPC_CUR_PC;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            //nextpc_sel = `PCSEL_PC4; 
         end
         if (opcode == 7'b0000011) begin// lb/lh/lw/lbu/lhu
             idu_we = 1;
@@ -191,7 +183,6 @@ always @(*) begin
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             ALUop = `NPC_ALU_ADD;
-            //nextpc_sel = `PCSEL_PC4;
         end
         if (opcode == 7'b0100011) begin // sb/sh/sw
             alu_src1_sel = `NPC_RS1_DATA;
@@ -199,19 +190,16 @@ always @(*) begin
             ALUop = `NPC_ALU_ADD;
             sen = 1;
             is_store = 1;
-            //nextpc_sel = `PCSEL_PC4;
         end
         
         if(inst == 32'b0000_0000_0000_0000_0000_0000_0111_0011) begin
             is_ecall = 1'b1;
-            //nextpc_sel = `PCSEL_MTVEC;
             trap_valid = 1;
         end
         if(inst == 32'b0000_0000_0001_0000_0000_0000_0111_0011) begin
             is_ebreak = 1'b1;
         end
         if(inst == 32'b0011_0000_0010_0000_0000_0000_0111_0011) begin
-            //nextpc_sel = `PCSEL_MEPC;
             trap_valid = 1;
         end
         if(opcode == 7'b1110011) begin//priortiy
@@ -233,11 +221,8 @@ always @(*) begin
         end
     end
     else begin
-        //is_load = 1'b0;
-        //wen = 1'b0;
-        //csr_wen = 1'b0;
-        //sen = 1'b0;
-        //idu_to_exu_valid = 1'b0;
+    //
+    //
     end
 end
 

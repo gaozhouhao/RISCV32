@@ -45,7 +45,7 @@ end
 reg [7:0] busy2;
 always @(posedge clk)  begin
     if(lsu_reqValid == 1) begin
-        busy2 <= 1;
+        busy2 <= 10;
         mem_lsu_addr <= lsu_addr;
         mem_lsu_wen <= lsu_wen;
         mem_lsu_wdata <= lsu_wdata;
