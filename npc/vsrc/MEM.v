@@ -72,6 +72,15 @@ always @(*) begin
         end
     endcase
 end
+
+always @(posedge clk) begin
+    if(lsu_reqValid && state == IDLE)   busy2 <= random_num + 1;    
+    if(busy2 > 0) busy2 <= busy2 - 1;
+    lsu_reqReady <= (busy2 == 1);
+    if(busy2 == 1) busy3 <= random_num + 1;
+    lsu_respValid <= (busy3 == 1);
+    if(lsu_respReady == 1) lsu_respValid <= 0;
+end
 /*
 always @(posedge clk)  begin
     if(lsu_reqValid == 1) begin
