@@ -36,7 +36,7 @@ import "DPI-C" function void pmem_write (
 reg [7:0] busy1;
 always @(posedge clk) begin
     if(ifu_reqValid == 1) begin
-        busy1 <= random_num;
+        busy1 <= random_num + 1;
         mem_ifu_raddr <= ifu_raddr;
     end
     else if (busy1 > 0)
@@ -52,7 +52,8 @@ reg [7:0] busy2;
 always @(posedge clk)  begin
     $display("%d\n", random_num);
     if(lsu_reqValid == 1) begin
-        busy2 <= random_num;
+        //busy2 <= random_num;
+        busy2 <= random_num + 1;
         mem_lsu_addr <= lsu_addr;
         mem_lsu_wen <= lsu_wen;
         mem_lsu_wdata <= lsu_wdata;
