@@ -3,13 +3,17 @@ module IFU(
     input                               is_load,
     input                               clk,
     input                               reset,
-    input           [31:0]              next_pc,
     output  reg     [31:0]              inst,
     input                               id_done,
     input                               exe_done,
     input                               wb_done,
     output  reg     [31:0]              pc,
     output  reg                         inst_done,
+
+    input   reg     [31:0]              redirect_pc,
+    input   reg                         redirect_valid,
+
+
 
     input                               ifu_to_idu_ready,
     output                              ifu_to_idu_valid,
@@ -74,10 +78,11 @@ always @(posedge clk) begin
     end
 end
 
+wire    [31:0]  next_pc;
+assign next_pc = redirect_valid ? redirect_pc : pc + 4;
+
 always @(posedge clk) begin
-    if(is_jalr)
-        pc <= next_pc & ~32'b1;
-    else if(inst_done)
+    if(inst_done)
         pc <= next_pc;
     else 
         pc <= pc;

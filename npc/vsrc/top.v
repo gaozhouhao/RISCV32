@@ -94,7 +94,6 @@ IFU ifu(
     .is_load(is_load),
     .clk(clk),
     .reset(reset),
-    .next_pc(next_pc),
     .ifu_to_idu_ready(ifu_to_idu_ready),
     .ifu_to_idu_valid(ifu_to_idu_valid),
     .inst(inst),
@@ -103,6 +102,9 @@ IFU ifu(
     .wb_done(wb_done),
     .inst_done(inst_done),
     .pc(pc),
+    .redirect_pc(redirect_pc),
+    .redirect_valid(redirect_valid),
+    
     .ifu_reqValid(ifu_reqValid),
     .ifu_respValid(ifu_respValid),
     .ifu_raddr(ifu_raddr),
