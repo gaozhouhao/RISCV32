@@ -13,8 +13,6 @@ module IFU(
     input   reg     [31:0]              redirect_pc,
     input   reg                         redirect_valid,
 
-
-
     input                               ifu_to_idu_ready,
     output                              ifu_to_idu_valid,
     output                              rf_to_ifu_ready,
