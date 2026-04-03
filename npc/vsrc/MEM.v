@@ -50,10 +50,30 @@ always @(*) begin
     ifu_respValid = (busy1 == 1);
 end
 //////////////////////////////////////////////
+parameter IDLE = 2'b00, WAIT = 2'b01, WAIT_READY = 2'b10, BUSY = 2'b11;
+reg     [1:0]   state, next_state;
+
 reg [7:0] busy2;
 reg [7:0] busy3;
+
+always @(*) begin
+    case(state) 
+        IDLE: begin
+            next_state = lsu_reqValid ? BUSY : IDLE;
+        end
+        BUSY: begin
+            next_state = (busy2 == 1) ? WAIT : BUSY;
+        end
+        WAIT: begin
+            next_state = (busy3 == 1) ? WAIT_READY : WAIT;
+        end
+        WAIT_READY: begin
+            next_state = lsu_respReady ? IDLE : WAIT_READY;
+        end
+    endcase
+end
+/*
 always @(posedge clk)  begin
-    
     if(lsu_reqValid == 1) begin
         busy2 <= random_num + 1;
 
@@ -69,12 +89,9 @@ always @(posedge clk)  begin
     else begin
         lsu_reqReady <= 0;
     end
-
     if(busy2 > 0) busy2 <= busy2 - 1;
-
     if(busy3 > 0) busy3 <= busy3 - 1;
 end
-
 
 always @(*) begin
     lsu_rdata = (!mem_lsu_wen && busy2 == 1) ? pmem_read(mem_lsu_addr) : 32'b0;
@@ -84,6 +101,6 @@ always @(*) begin
 
     lsu_respValid = (busy2 == 1);
 end
-
+*/
 endmodule
 
