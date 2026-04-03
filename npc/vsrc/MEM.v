@@ -15,6 +15,12 @@ module MEM(
     output      reg     [31:0]          lsu_rdata
 );
 
+reg     [7:0]   busy;
+LFSR lfsr(
+    .clk(clk),
+    .random_num(busy)
+);
+
 reg     [31:0]  mem_ifu_raddr;
 reg     [31:0]  mem_lsu_addr;
 reg             mem_lsu_wen;
@@ -30,7 +36,8 @@ import "DPI-C" function void pmem_write (
 reg [7:0] busy1;
 always @(posedge clk) begin
     if(ifu_reqValid == 1) begin
-        busy1 <= 1;
+        //busy1 <= 1;
+        busy1 <= busy;
         mem_ifu_raddr <= ifu_raddr;
     end
     else if (busy1 > 0)
