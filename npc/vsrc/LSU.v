@@ -68,7 +68,7 @@ end
 */
 reg lsu_is_load, lsu_is_store;
 always @(posedge clk) begin
-    if(reset == 0) begin
+    if(reset == 0 || lsu_to_rf_valid) begin
         lsu_is_load <= 0;
         lsu_is_store <= 0;
         lsu_alu_result <= 0;
