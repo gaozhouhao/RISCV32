@@ -152,7 +152,7 @@ always @(*) begin
     byte2 = 8'b0;
     word = 32'b0;
     csr_input_data = 32'b0;
-    if(is_load) begin
+    if(lsu_is_load) begin
         word = (lsu_rdata >> (lsu_alu_result[1:0]*8));
         case (funct3)
         3'b000: begin
