@@ -74,10 +74,12 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
+    state <= next_state;
     //if(lsu_reqValid && state == IDLE)   busy2 <= random_num + 1;    
     if(lsu_reqValid && state == IDLE)   req_busy2 <= random_num + 1; 
     
     if(req_busy2 > 0) req_busy2 <= req_busy2 - 1;
+    
     if(req_busy2 == 1) begin
         lsu_reqReady <= 1;
         busy3 <= random_num + 1;
@@ -88,6 +90,7 @@ always @(posedge clk) begin
     end
     else
         lsu_reqReady <= 0;
+    
     if(req_busy2 == 1) busy3 <= random_num + 1;
     if(busy3 > 0) busy3 <= busy3 - 1;
     lsu_respValid <= (busy3 == 1);
