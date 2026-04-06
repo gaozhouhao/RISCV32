@@ -125,6 +125,8 @@ always @(posedge clk) begin
         resp_busy <= random_num + 1;
     if(resp_busy > 0)
         resp_busy <= resp_busy - 1;
+    lsu_respReady <= (resp_busy == 1);
+
 end
 
 
