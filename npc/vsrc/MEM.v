@@ -93,7 +93,7 @@ always @(posedge clk) begin
     
     if(req_busy2 == 1) busy3 <= random_num + 1;
     if(busy3 > 0) busy3 <= busy3 - 1;
-    lsu_respValid <= (busy3 == 1);
+    if(busy3 == 1) lsu_respValid <= 1;
     if(lsu_respReady == 1) lsu_respValid <= 0;
 end
 /*
