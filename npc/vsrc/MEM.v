@@ -71,6 +71,7 @@ always @(*) begin
             next_state = lsu_respReady ? IDLE : WAIT_READY;
         end
     endcase
+    lsu_rdata = (state == WAIT_READY) ? pmem_read(lsu_addr) : 0;
 end
 
 always @(posedge clk) begin
