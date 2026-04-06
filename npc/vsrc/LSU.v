@@ -109,12 +109,13 @@ always @(*) begin
         end
         WAIT: begin
             next_state = lsu_respValid ? BUSY:WAIT;
-            lsu_to_rf_valid = lsu_respValid;
-            lsu_rf_we = lsu_is_load;
+            //lsu_to_rf_valid = lsu_respValid;
                if(lsu_is_load)lsu_wb_sel = `NPC_MEM;
         end
         BUSY: begin
             next_state = (resp_busy == 1) ? IDLE : BUSY;
+            lsu_to_rf_valid = (resp_busy == 1);
+            lsu_rf_we = lsu_is_load;
         end
         default:;
     endcase
