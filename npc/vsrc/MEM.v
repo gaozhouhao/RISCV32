@@ -55,14 +55,14 @@ reg     [1:0]   state, next_state;
 
 reg [7:0] busy2;
 reg [7:0] busy3;
-
+reg [7:0]   req_busy2;
 always @(*) begin
     case(state) 
         IDLE: begin
             next_state = lsu_reqValid ? BUSY : IDLE;
         end
         BUSY: begin
-            next_state = (busy2 == 1) ? WAIT : BUSY;
+            next_state = (req_busy2 == 1) ? WAIT : BUSY;
         end
         WAIT: begin
             next_state = (busy3 == 1) ? WAIT_READY : WAIT;
@@ -74,9 +74,11 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    if(lsu_reqValid && state == IDLE)   busy2 <= random_num + 1;    
-    if(busy2 > 0) busy2 <= busy2 - 1;
-    if(busy2 == 1) begin
+    //if(lsu_reqValid && state == IDLE)   busy2 <= random_num + 1;    
+    if(lsu_reqValid && state == IDLE)   req_busy2 <= random_num + 1; 
+    
+    if(req_busy2 > 0) req_busy2 <= req_busy2 - 1;
+    if(req_busy2 == 1) begin
         lsu_reqReady <= 1;
         busy3 <= random_num + 1;
         mem_lsu_addr <= lsu_addr;
@@ -84,7 +86,7 @@ always @(posedge clk) begin
         mem_lsu_wdata <= lsu_wdata;
         mem_lsu_wmask <= lsu_wmask;
     end
-    if(busy2 == 1) busy3 <= random_num + 1;
+    if(req_busy2 == 1) busy3 <= random_num + 1;
     if(busy3 > 0) busy3 <= busy3 - 1;
     lsu_respValid <= (busy3 == 1);
     if(lsu_respReady == 1) lsu_respValid <= 0;

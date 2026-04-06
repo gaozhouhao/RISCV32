@@ -46,6 +46,12 @@ import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);
 import "DPI-C" function void pmem_write(
     input int unsigned waddr, input int unsigned wdata, input byte wmask);
 
+reg     [7:0]   random_num;
+LFSR lfsr(
+    .clk(clk),
+    .random_num(random_num)
+);
+
 assign exu_to_lsu_ready = 1'b1;
 reg [ 1:0] lsu_wb_sel;
 reg [31:0] lsu_alu_result;
@@ -73,7 +79,9 @@ always @(posedge clk) begin
     end
 end
 
-parameter IDLE = 2'b00, WAIT_READY = 2'b01, WAIT = 2'b10;
+
+reg [7:0]   resp_busy;
+parameter IDLE = 2'b00, WAIT_READY = 2'b01, WAIT = 2'b10, BUSY = 2'b11;
 reg             lsu_is_valid;
 reg     [1:0]   state, next_state;
 
@@ -100,14 +108,25 @@ always @(*) begin
             lsu_reqValid = 1;
         end
         WAIT: begin
-            next_state = lsu_respValid? IDLE:WAIT;
+            next_state = lsu_respValid ? BUSY:WAIT;
             lsu_to_rf_valid = lsu_respValid;
             lsu_rf_we = lsu_is_load;
                if(lsu_is_load)lsu_wb_sel = `NPC_MEM;
         end
+        BUSY: begin
+            next_state = (resp_busy == 1) ? IDLE : BUSY;
+        end
         default:;
     endcase
 end
+
+always @(posedge clk) begin
+    if(lsu_respValid)
+        resp_busy <= random_num + 1;
+    if(resp_busy > 0)
+        resp_busy <= resp_busy - 1;
+end
+
 
 always @(posedge clk) begin
     if(reset == 0)
