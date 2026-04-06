@@ -83,7 +83,13 @@ always @(posedge clk) begin
     
     if(req_busy2 == 1) begin
         lsu_reqReady <= 1;
-        busy3 <= random_num + 1;
+        if(lsu_wen == 0) begin
+            busy3 <= random_num + 1;
+        end
+        else begin
+            busy3 <= 1;
+            pmem_write(mem_lsu_addr, mem_lsu_wdata, {4'b0, mem_lsu_wmask});
+        end
         mem_lsu_addr <= lsu_addr;
         mem_lsu_wen <= lsu_wen;
         mem_lsu_wdata <= lsu_wdata;
