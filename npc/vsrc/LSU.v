@@ -74,6 +74,7 @@ always @(posedge clk) begin
         lsu_alu_result <= 0;
         lsu_addr <= 0;
         lsu_wen <= 0;
+        lsu_wb_sel <= 0;
     end
     else if (exu_to_lsu_valid)begin
         lsu_is_load <= is_load;
@@ -82,6 +83,7 @@ always @(posedge clk) begin
         lsu_addr <= alu_result;
         if(is_load == 1) lsu_wen <= 0;
         else lsu_wen <= 1;
+        lsu_wb_sel <= wb_sel;
     end
 end
 
@@ -95,7 +97,6 @@ always @(*) begin
     lsu_to_rf_valid = 0;
     lsu_rf_we = 0;
     lsu_reqValid = 0;
-    lsu_wb_sel = 0;
     case (state)
         IDLE: begin
             if(is_load || is_store) begin
@@ -106,7 +107,7 @@ always @(*) begin
                 next_state = IDLE;
                 lsu_to_rf_valid = exu_to_lsu_valid;
                 lsu_rf_we = exu_we;
-                lsu_wb_sel = wb_sel;
+                //lsu_wb_sel = wb_sel;
             end
         end
         WAIT_READY: begin
@@ -116,7 +117,7 @@ always @(*) begin
         WAIT: begin
             next_state = lsu_respValid ? BUSY:WAIT;
             //lsu_to_rf_valid = lsu_respValid;
-               if(lsu_is_load)lsu_wb_sel = `NPC_MEM;
+               //if(lsu_is_load)lsu_wb_sel = `NPC_MEM;
         end
         BUSY: begin
             next_state = (resp_busy == 1) ? IDLE : BUSY;
@@ -151,9 +152,26 @@ always @(*) begin
     byte2 = 8'b0;
     word = 32'b0;
     csr_input_data = 32'b0;
-    case (lsu_wb_sel)
+    if(is_load) begin
+        word = (lsu_rdata >> (lsu_alu_result[1:0]*8));
+        case (funct3)
+        3'b000: begin
+            byte1 = word[7:0];
+            wb = {{24{byte1[7]}}, byte1}; //lb
+        end
+        3'b001: begin//lh
+             {byte2, byte1} = word[15:0];
+             wb = {{16{byte2[7]}}, byte2, byte1};
+        end
+        3'b010: wb = word; //lw
+        3'b100: wb = word & 32'hff;//lbu
+        3'b101: wb = word & 32'hffff; //lhu
+        default:wb = 32'b0;
+    endcase
+    end
+    else case (wb_sel)
         `NPC_ALU: wb = alu_result;
-        `NPC_MEM: begin
+        /*`NPC_MEM: begin
             word = (lsu_rdata >> (lsu_alu_result[1:0]*8));
             case (funct3)
             3'b000: begin
@@ -169,7 +187,7 @@ always @(*) begin
             3'b101: wb = word & 32'hffff; //lhu
             default:wb = 32'b0;
         endcase
-        end
+        end*/
         `NPC_PC4: wb = pc + 32'h4;
         `NPC_CSR: begin
             wb = csr_output_data;
