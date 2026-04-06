@@ -50,7 +50,7 @@ always @(*) begin
     ifu_respValid = (busy1 == 1);
 end
 //////////////////////////////////////////////
-parameter IDLE = 2'b00, WAIT = 2'b01, WAIT_READY = 2'b10, BUSY = 2'b11;
+parameter IDLE = 2'b00, BUSY = 2'b01, WAIT = 2'b10, WAIT_READY = 2'b11;
 reg     [1:0]   state, next_state;
 
 reg [7:0] busy2;
