@@ -55,6 +55,7 @@ LFSR lfsr(
 assign exu_to_lsu_ready = 1'b1;
 reg [ 1:0] lsu_wb_sel;
 reg [31:0] lsu_alu_result;
+/*
 always @(*) begin
     lsu_addr = 0;
     lsu_wen = 0;
@@ -64,18 +65,23 @@ always @(*) begin
         else lsu_wen = 1;
     end
 end
-
+*/
 reg lsu_is_load, lsu_is_store;
 always @(posedge clk) begin
     if(reset == 0) begin
         lsu_is_load <= 0;
         lsu_is_store <= 0;
         lsu_alu_result <= 0;
+        lsu_addr <= 0;
+        lsu_wen <= 0;
     end
     else if (exu_to_lsu_valid)begin
         lsu_is_load <= is_load;
         lsu_is_store  <= is_store;
         lsu_alu_result <= alu_result; 
+        lsu_addr <= alu_result;
+        if(is_load == 1) lsu_wen <= 0;
+        else lsu_wen <= 1;
     end
 end
 
@@ -174,23 +180,24 @@ always @(*) begin
     endcase
 end
 
-always @(*) begin
+always @(posedge clk) begin
+    if(exu_to_lsu_valid)
     case (funct3)
         3'b000: begin //sb
-            lsu_wdata = {4{src2_data[7:0]}};
-            lsu_wmask = 4'h01 << alu_result[1:0];
+            lsu_wdata <= {4{src2_data[7:0]}};
+            lsu_wmask <= 4'h01 << alu_result[1:0];
         end
         3'b001: begin //sh
-            lsu_wdata = {16'b0, src2_data[15:0]} << (alu_result[1:0] * 8);
-            lsu_wmask = 4'h03 << alu_result[1:0];
+            lsu_wdata <= {16'b0, src2_data[15:0]} << (alu_result[1:0] * 8);
+            lsu_wmask <= 4'h03 << alu_result[1:0];
         end
         3'b010: begin
-            lsu_wdata = src2_data;
-            lsu_wmask = 4'h0f;//sw
+            lsu_wdata <= src2_data;
+            lsu_wmask <= 4'h0f;//sw
         end
         default: begin
-            lsu_wmask = 4'b0;
-            lsu_wdata = src2_data;
+            lsu_wmask <= 4'b0;
+            lsu_wdata <= src2_data;
         end
     endcase
 end
