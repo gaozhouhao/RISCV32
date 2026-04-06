@@ -96,13 +96,14 @@ always @(*) begin
             end
         end
         WAIT_READY: begin
-           next_state = lsu_reqReady ? WAIT : WAIT_READY; 
+            next_state = lsu_reqReady ? WAIT : WAIT_READY; 
+            lsu_reqValid = 1;
         end
         WAIT: begin
             next_state = lsu_respValid? IDLE:WAIT;
             lsu_to_rf_valid = lsu_respValid;
             lsu_rf_we = lsu_is_load;
-            if(lsu_is_load)lsu_wb_sel = `NPC_MEM;
+               if(lsu_is_load)lsu_wb_sel = `NPC_MEM;
         end
         default:;
     endcase
