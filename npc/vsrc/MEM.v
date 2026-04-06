@@ -86,6 +86,8 @@ always @(posedge clk) begin
         mem_lsu_wdata <= lsu_wdata;
         mem_lsu_wmask <= lsu_wmask;
     end
+    else
+        lsu_reqReady <= 0;
     if(req_busy2 == 1) busy3 <= random_num + 1;
     if(busy3 > 0) busy3 <= busy3 - 1;
     lsu_respValid <= (busy3 == 1);
