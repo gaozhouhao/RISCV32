@@ -121,7 +121,7 @@ always @(*) begin
 end
 
 always @(posedge clk) begin
-    if(lsu_respValid)
+    if(lsu_respValid && state == WAIT)
         resp_busy <= random_num + 1;
     if(resp_busy > 0)
         resp_busy <= resp_busy - 1;
