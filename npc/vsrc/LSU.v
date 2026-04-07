@@ -56,9 +56,10 @@ assign exu_to_lsu_ready = 1'b1;
 reg [ 1:0] lsu_wb_sel;
 reg [31:0] lsu_alu_result;
 
-
+reg exu_to_lsu_valid_r;
 reg lsu_is_load, lsu_is_store;
 always @(posedge clk) begin
+    exu_to_lsu_valid_r <= exu_to_lsu_valid;
     if(reset == 0 || exu_to_lsu_valid) begin
         lsu_is_load <= 0;
         lsu_is_store <= 0;
@@ -96,7 +97,7 @@ always @(*) begin
             end
             else begin
                 next_state = IDLE;
-                lsu_to_rf_valid = exu_to_lsu_valid;
+                lsu_to_rf_valid = exu_to_lsu_valid_r;
                 lsu_rf_we = exu_we;
             end
         end
