@@ -60,10 +60,16 @@ end
 always @(posedge clk) begin
     if(ifu_reqValid == 1) begin
         req_busy1 <= random_num + 1;
-        mem_ifu_raddr <= ifu_raddr;
+        //mem_ifu_raddr <= ifu_raddr;
     end
-    else if (req_busy1 > 0)
-        req_busy1 <= req_busy1 - 1;
+    if (req_busy1 > 0)  req_busy1 <= req_busy1 - 1;
+    if(req_busy1 == 1) begin
+        ifu_reqReady <= 1;
+        mem_ifu_raddr <= ifu_raddr;
+        busy1 <= random_num + 1;
+    end
+    else
+        ifu_reqReady <= 0;
 end
 
 always @(*) begin
