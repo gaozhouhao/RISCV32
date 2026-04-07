@@ -85,14 +85,13 @@ always @(posedge clk) begin
     end
     else begin
         state <= next_state;
-    
+    if(state == WAIT && ifu_respValid) resp_busy <= random_num + 1;
+    if(resp_busy > 1) resp_busy <= resp_busy - 1; 
         if((state == IDLE && ifu_to_idu_ready == 1 && wb_done) || start_up == 0) begin
             //ifu_to_idu_valid <= 1'b1;
             start_up <= 1;
-            //ifu_reqValid <= 1;
         end
         else begin
-            //ifu_reqValid <= 0;
             //ifu_to_idu_valid <= 0;
         end
     end
