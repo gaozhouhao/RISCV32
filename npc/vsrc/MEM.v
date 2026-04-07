@@ -70,6 +70,7 @@ always @(posedge clk) begin
     end
     else
         ifu_reqReady <= 0;
+    if(busy1 > 0) busy1 <= busy1 - 1;
 end
 
 always @(*) begin
