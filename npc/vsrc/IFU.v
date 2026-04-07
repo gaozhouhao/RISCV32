@@ -53,6 +53,7 @@ end
 
 always @(*) begin
     ifu_reqValid = 0;
+    ifu_to_idu_valid = 0;
     case(state)
         IDLE: begin
             next_state = (wb_done || start_up == 0) ? WAIT_READY : IDLE;
@@ -67,6 +68,7 @@ always @(*) begin
         end
         BUSY: begin
             next_state = (resp_busy == 1) ? IDLE : BUSY;
+            ifu_to_idu_valid = (resp_busy == 1);
         end
     endcase
 end
@@ -88,7 +90,6 @@ always @(posedge clk) begin
     if(state == WAIT && ifu_respValid) resp_busy <= 1;
     if(resp_busy > 0) resp_busy <= resp_busy - 1; 
     ifu_respReady <= (resp_busy == 1);
-    ifu_to_idu_valid <= (resp_busy == 1);
         if((state == IDLE && ifu_to_idu_ready == 1 && wb_done) || start_up == 0) begin
             //ifu_to_idu_valid <= 1'b1;
             start_up <= 1;
