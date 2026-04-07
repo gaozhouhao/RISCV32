@@ -58,9 +58,9 @@ always @(*) begin
     ifu_rdata = (mem_ifu_state == WAIT_READY) ? pmem_read(mem_ifu_raddr) : 0;
 end
 always @(posedge clk) begin
+    mem_ifu_state <= mem_ifu_next_state;
     if(ifu_reqValid == 1 && mem_ifu_state == IDLE) begin
         req_busy1 <= random_num + 1;
-        //mem_ifu_raddr <= ifu_raddr;
     end
     if (req_busy1 > 0)  req_busy1 <= req_busy1 - 1;
     if(req_busy1 == 1) begin
