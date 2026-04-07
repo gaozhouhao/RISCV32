@@ -52,7 +52,11 @@ always @(posedge clk) begin
         ifu_to_idu_valid <= 1;
         ifu_respReady <= 1;
     end
-    else inst <= inst;
+    else begin
+        inst <= inst;
+        ifu_to_idu_valid <= 0;
+        ifu_respReady <= 0;
+    end
 end
 
 always @(*) begin
