@@ -88,7 +88,6 @@ always @(posedge clk) begin
     end
     else begin
         state <= next_state;
-    resp_busy <= 1;
     if(state == WAIT && ifu_respValid) resp_busy <= 1;
     //if(state == WAIT && ifu_respValid) resp_busy <= random_num + 1;
     if(resp_busy > 0) resp_busy <= resp_busy - 1; 
