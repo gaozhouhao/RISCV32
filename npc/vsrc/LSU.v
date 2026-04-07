@@ -39,7 +39,12 @@ module LSU(
     output                              exu_to_lsu_valid,
     output                              exu_to_lsu_ready,
     input                               lsu_to_rf_ready,
-    output                              lsu_to_rf_valid
+    output                              lsu_to_rf_valid,
+
+    input       reg     [31:0]          redirect_pc,
+    input       reg                     redirect_valid,
+    output      reg     [31:0]          redirect_pc_r,
+    output      reg                     redirect_valid_r
 );
 
 import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);

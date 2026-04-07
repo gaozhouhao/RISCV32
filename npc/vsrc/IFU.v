@@ -10,8 +10,8 @@ module IFU(
     output  reg     [31:0]              pc,
     output  reg                         inst_done,
 
-    input   reg     [31:0]              redirect_pc,
-    input   reg                         redirect_valid,
+    input   reg     [31:0]              redirect_pc_r,
+    input   reg                         redirect_valid_r,
 
     input                               ifu_to_idu_ready,
     output                              ifu_to_idu_valid,
@@ -102,7 +102,7 @@ always @(posedge clk) begin
 end
 
 wire    [31:0]  next_pc;
-assign next_pc = redirect_valid ? redirect_pc : pc + 4;
+assign next_pc = redirect_valid_r ? redirect_pc_r : pc + 4;
 
 always @(posedge clk) begin
     if(inst_done)
