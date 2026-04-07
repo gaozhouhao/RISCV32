@@ -73,6 +73,8 @@ always @(posedge clk) begin
         lsu_wen <= 0;
         lsu_wb_sel <= 0;
         lsu_rf_we <= 0;
+        redirect_pc_r <= 0;
+        redirect_valid_r <= 0;
     end
     else if (exu_to_lsu_valid)begin
         lsu_is_load <= is_load;
@@ -83,6 +85,8 @@ always @(posedge clk) begin
         else lsu_wen <= 1;
         lsu_wb_sel <= wb_sel;
         lsu_rf_we <= exu_we | is_load;
+        redirect_pc_r <= redirect_pc;
+        redirect_valid_r <= redirect_valid;
     end
 end
 
