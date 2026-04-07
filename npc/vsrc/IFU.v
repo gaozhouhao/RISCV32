@@ -81,7 +81,8 @@ end
 
 always @(*) begin
     ifu_raddr = pc;
-    inst_done = is_jalr || wb_done;
+    //inst_done = is_jalr || wb_done;
+    inst_done = wb_done;
 end
 
 reg start_up;
