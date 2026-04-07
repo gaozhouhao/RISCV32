@@ -58,7 +58,7 @@ always @(*) begin
     case(state)
         IDLE: begin
             next_state = (wb_done || start_up == 0) ? WAIT_READY : IDLE;
-            ifu_reqValid = 1;
+            ifu_reqValid = (wb_done || start_up);
         end
         WAIT_READY: begin
             next_state = ifu_reqReady ? WAIT : WAIT_READY;
@@ -88,8 +88,8 @@ always @(posedge clk) begin
     end
     else begin
         state <= next_state;
-    //if(state == WAIT && ifu_respValid) resp_busy <= random_num + 1;
-    if(state == WAIT && ifu_respValid) resp_busy <= 1;
+    if(state == WAIT && ifu_respValid) resp_busy <= random_num + 1;
+    //if(state == WAIT && ifu_respValid) resp_busy <= 1;
     if(resp_busy > 0) resp_busy <= resp_busy - 1; 
         if((state == IDLE && ifu_to_idu_ready == 1 && wb_done) || start_up == 0) begin
             //ifu_to_idu_valid <= 1'b1;
