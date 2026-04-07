@@ -32,12 +32,31 @@ reg     [31:0]  mem_lsu_wdata;
 reg     [ 3:0]  mem_lsu_wmask;
 
 
+parameter IDLE = 2'b00, BUSY = 2'b01, WAIT = 2'b10, WAIT_READY = 2'b11;
 import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
 import "DPI-C" function void pmem_write (
     input int unsigned  waddr, input int unsigned wdata, input byte wmask
 );
 
-reg [7:0] busy1;
+reg     [1:0]   mem_ifu_state, mem_ifu_next_state;
+reg [7:0] req_busy1, busy1;
+always @(*) begin
+    case(mem_ifu_state) 
+        IDLE: begin
+            mem_ifu_next_state = ifu_reqValid ? BUSY : IDLE;
+        end
+        BUSY: begin
+            mem_ifu_next_state = (req_busy1 == 1) ? WAIT : BUSY;
+        end
+        WAIT: begin
+            mem_ifu_next_state = (busy1 == 1) ? WAIT_READY : WAIT;
+        end
+        WAIT_READY: begin
+            mem_ifu_next_state = ifu_respReady ? IDLE : WAIT_READY;
+        end
+    endcase
+    ifu_rdata = (mem_ifu_state == WAIT_READY) ? pmem_read(mem_ifu_raddr) : 0;
+end
 always @(posedge clk) begin
     if(ifu_reqValid == 1) begin
         busy1 <= random_num + 1;
@@ -52,7 +71,6 @@ always @(*) begin
     ifu_respValid = (busy1 == 1);
 end
 //////////////////////////////////////////////
-parameter IDLE = 2'b00, BUSY = 2'b01, WAIT = 2'b10, WAIT_READY = 2'b11;
 reg     [1:0]   mem_lsu_state, mem_lsu_next_state;
 
 reg [7:0] busy2;
