@@ -75,6 +75,7 @@ end
 
 always @(*) begin
     ifu_raddr = pc;
+    inst_done = is_jalr || wb_done;
 end
 
 reg start_up;
@@ -85,7 +86,8 @@ always @(posedge clk) begin
     end
     else begin
         state <= next_state;
-    if(state == WAIT && ifu_respValid) resp_busy <= random_num + 1;
+    //if(state == WAIT && ifu_respValid) resp_busy <= random_num + 1;
+    if(state == WAIT && ifu_respValid) resp_busy <= 1;
     if(resp_busy > 0) resp_busy <= resp_busy - 1; 
     ifu_respReady <= (resp_busy == 1);
         if((state == IDLE && ifu_to_idu_ready == 1 && wb_done) || start_up == 0) begin
@@ -106,10 +108,6 @@ always @(posedge clk) begin
         pc <= next_pc;
     else 
         pc <= pc;
-end
-
-always @(*) begin
-    inst_done = is_jalr || wb_done;
 end
 
 endmodule
