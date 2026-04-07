@@ -67,6 +67,7 @@ always @(posedge clk) begin
         lsu_addr <= 0;
         lsu_wen <= 0;
         lsu_wb_sel <= 0;
+        lsu_rf_we <= 0;
     end
     else if (exu_to_lsu_valid)begin
         lsu_is_load <= is_load;
@@ -76,6 +77,7 @@ always @(posedge clk) begin
         if(is_load == 1) lsu_wen <= 0;
         else lsu_wen <= 1;
         lsu_wb_sel <= wb_sel;
+        lsu_rf_we <= exu_we | is_load;
     end
 end
 
@@ -87,7 +89,6 @@ reg     [1:0]   state, next_state;
 
 always @(*) begin
     lsu_to_rf_valid = 0;
-    lsu_rf_we = 0;
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
@@ -98,7 +99,6 @@ always @(*) begin
             else begin
                 next_state = IDLE;
                 lsu_to_rf_valid = exu_to_lsu_valid_r;
-                lsu_rf_we = exu_we;
             end
         end
         WAIT_READY: begin
@@ -110,7 +110,7 @@ always @(*) begin
         end
         BUSY: begin
             next_state = (resp_busy == 1) ? IDLE : BUSY;
-            lsu_rf_we = lsu_is_load;
+            //lsu_rf_we = lsu_is_load;
             lsu_to_rf_valid = (resp_busy == 1);
         end
         default:;
