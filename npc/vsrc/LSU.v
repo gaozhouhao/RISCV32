@@ -90,7 +90,7 @@ always @(*) begin
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
-            if(is_load || is_store) begin
+            if(lsu_is_load || lsu_is_store) begin
                 next_state = WAIT_READY;
                 lsu_reqValid = 1;
             end
@@ -98,6 +98,7 @@ always @(*) begin
                 next_state = IDLE;
                 lsu_to_rf_valid = exu_to_lsu_valid;
                 lsu_rf_we = exu_we;
+                lsu_to_rf_valid = (resp_busy == 1);
             end
         end
         WAIT_READY: begin
@@ -109,7 +110,6 @@ always @(*) begin
         end
         BUSY: begin
             next_state = (resp_busy == 1) ? IDLE : BUSY;
-            lsu_to_rf_valid = (resp_busy == 1);
             lsu_rf_we = lsu_is_load;
         end
         default:;
