@@ -158,8 +158,8 @@ always @(*) begin
         default:wb = 32'b0;
     endcase
     end
-    else case (wb_sel)
-        `NPC_ALU: wb = alu_result;
+    else case (lsu_wb_sel)
+        `NPC_ALU: wb = lsu_alu_result;
         `NPC_PC4: wb = pc + 32'h4;
         `NPC_CSR: begin
             wb = csr_output_data;
