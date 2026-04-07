@@ -56,7 +56,7 @@ always @(*) begin
     ifu_to_idu_valid  = 0;
     case(state)
         IDLE: begin
-            next_state = wb_done ? WAIT_READY : IDLE;
+            next_state = (wb_done || start_up == 0) ? WAIT_READY : IDLE;
             ifu_reqValid = 1;
         end
         WAIT_READY: begin
