@@ -21,13 +21,22 @@ module IFU(
     input                               csr_to_ifu_valid,
     
     input   reg                         ifu_respValid,
+    output  reg                         ifu_respReady,
     output  reg                         ifu_reqValid,
+    input   reg                         ifu_reqReady,
     output  reg     [31:0]              ifu_raddr,
     input   reg     [31:0]              ifu_rdata
 );
 
-parameter   IDLE = 1'b0, WAIT = 1'b1;
-reg         state, next_state;
+reg     [7:0]   random_num;
+LFSR lfsr(
+    .clk(clk),
+    .random_num(random_num)
+);
+
+reg     [7:0]   resp_busy;
+parameter   IDLE = 2'b00, WAIT_READY = 2'b01, WAIT = 2'b10, BUSY = 2'b11;
+reg     [1:0]        state, next_state;
 
 initial pc = 32'h80000000;
 
@@ -40,13 +49,27 @@ initial ifu_valid = 1;
 always @(posedge clk) begin
     if(ifu_respValid) inst <= ifu_rdata;
     else inst <= inst;
-    ifu_to_idu_valid <= ifu_respValid;
 end
 
 always @(*) begin
+    ifu_reqValid = 0;
+    ifu_to_idu_valid  = 0;
     case(state)
-        IDLE: next_state = wb_done ? WAIT : IDLE;
-        WAIT: next_state = (ifu_respValid)? IDLE : WAIT;
+        IDLE: begin
+            next_state = wb_done ? WAIT_READY : IDLE;
+            ifu_reqValid = 1;
+        end
+        WAIT_READY: begin
+            next_state = ifu_reqReady ? WAIT : WAIT_READY;
+            ifu_reqValid = 1;
+        end
+        WAIT: begin
+            next_state = (ifu_respValid)? BUSY : WAIT;
+        end
+        BUSY: begin
+            next_state = (resp_busy == 1) ? IDLE : BUSY;
+            ifu_to_idu_valid = (resp_busy == 1);
+        end
     endcase
 end
 
@@ -58,7 +81,6 @@ reg start_up;
 always @(posedge clk) begin
     if(reset == 0) begin
         state <= IDLE;
-        ifu_reqValid <= 0;
         start_up <= 0;
     end
     else begin
@@ -67,10 +89,10 @@ always @(posedge clk) begin
         if((state == IDLE && ifu_to_idu_ready == 1 && wb_done) || start_up == 0) begin
             //ifu_to_idu_valid <= 1'b1;
             start_up <= 1;
-            ifu_reqValid <= 1;
+            //ifu_reqValid <= 1;
         end
         else begin
-            ifu_reqValid <= 0;
+            //ifu_reqValid <= 0;
             //ifu_to_idu_valid <= 0;
         end
     end

@@ -55,17 +55,8 @@ LFSR lfsr(
 assign exu_to_lsu_ready = 1'b1;
 reg [ 1:0] lsu_wb_sel;
 reg [31:0] lsu_alu_result;
-/*
-always @(*) begin
-    lsu_addr = 0;
-    lsu_wen = 0;
-    if(exu_to_lsu_valid) begin
-        lsu_addr = alu_result;
-        if(is_load == 1) lsu_wen = 0;
-        else lsu_wen = 1;
-    end
-end
-*/
+
+
 reg lsu_is_load, lsu_is_store;
 always @(posedge clk) begin
     if(reset == 0 || lsu_to_rf_valid) begin
@@ -107,7 +98,6 @@ always @(*) begin
                 next_state = IDLE;
                 lsu_to_rf_valid = exu_to_lsu_valid;
                 lsu_rf_we = exu_we;
-                //lsu_wb_sel = wb_sel;
             end
         end
         WAIT_READY: begin
@@ -116,8 +106,6 @@ always @(*) begin
         end
         WAIT: begin
             next_state = lsu_respValid ? BUSY:WAIT;
-            //lsu_to_rf_valid = lsu_respValid;
-               //if(lsu_is_load)lsu_wb_sel = `NPC_MEM;
         end
         BUSY: begin
             next_state = (resp_busy == 1) ? IDLE : BUSY;
@@ -171,23 +159,6 @@ always @(*) begin
     end
     else case (wb_sel)
         `NPC_ALU: wb = alu_result;
-        /*`NPC_MEM: begin
-            word = (lsu_rdata >> (lsu_alu_result[1:0]*8));
-            case (funct3)
-            3'b000: begin
-                byte1 = word[7:0];
-                wb = {{24{byte1[7]}}, byte1}; //lb
-            end
-            3'b001: begin//lh
-                 {byte2, byte1} = word[15:0];
-                 wb = {{16{byte2[7]}}, byte2, byte1};
-            end
-            3'b010: wb = word; //lw
-            3'b100: wb = word & 32'hff;//lbu
-            3'b101: wb = word & 32'hffff; //lhu
-            default:wb = 32'b0;
-        endcase
-        end*/
         `NPC_PC4: wb = pc + 32'h4;
         `NPC_CSR: begin
             wb = csr_output_data;

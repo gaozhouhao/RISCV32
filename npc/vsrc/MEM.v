@@ -2,7 +2,9 @@ module MEM(
     input                               clk,
 
     output      reg                     ifu_respValid,
+    input       reg                     ifu_respReady,
     input       reg                     ifu_reqValid,
+    output      reg                     ifu_reqReady,
     input               [31:0]          ifu_raddr,
     output      reg     [31:0]          ifu_rdata,
     
@@ -76,7 +78,6 @@ end
 
 always @(posedge clk) begin
     state <= next_state;
-    //if(lsu_reqValid && state == IDLE)   busy2 <= random_num + 1;    
     if(lsu_reqValid && state == IDLE)   req_busy2 <= random_num + 1; 
     
     if(req_busy2 > 0) req_busy2 <= req_busy2 - 1;
@@ -104,35 +105,6 @@ always @(posedge clk) begin
     if(busy3 == 1) lsu_respValid <= 1;
     if(lsu_respReady == 1) lsu_respValid <= 0;
 end
-/*
-always @(posedge clk)  begin
-    if(lsu_reqValid == 1) begin
-        busy2 <= random_num + 1;
 
-    end
-    if(busy2 == 1) begin
-        busy3 <= random_num + 1;
-        lsu_reqReady <= 1;
-        mem_lsu_addr <= lsu_addr;
-        mem_lsu_wen <= lsu_wen;
-        mem_lsu_wdata <= lsu_wdata;
-        mem_lsu_wmask <= lsu_wmask;
-    end
-    else begin
-        lsu_reqReady <= 0;
-    end
-    if(busy2 > 0) busy2 <= busy2 - 1;
-    if(busy3 > 0) busy3 <= busy3 - 1;
-end
-
-always @(*) begin
-    lsu_rdata = (!mem_lsu_wen && busy2 == 1) ? pmem_read(mem_lsu_addr) : 32'b0;
-    if(busy2 == 1 && mem_lsu_wen) begin
-        pmem_write(mem_lsu_addr, mem_lsu_wdata, {4'b0, mem_lsu_wmask});
-    end 
-
-    lsu_respValid = (busy2 == 1);
-end
-*/
 endmodule
 
