@@ -98,7 +98,6 @@ always @(*) begin
                 next_state = IDLE;
                 lsu_to_rf_valid = exu_to_lsu_valid;
                 lsu_rf_we = exu_we;
-                lsu_to_rf_valid = (resp_busy == 1);
             end
         end
         WAIT_READY: begin
@@ -111,6 +110,7 @@ always @(*) begin
         BUSY: begin
             next_state = (resp_busy == 1) ? IDLE : BUSY;
             lsu_rf_we = lsu_is_load;
+            lsu_to_rf_valid = (resp_busy == 1);
         end
         default:;
     endcase
