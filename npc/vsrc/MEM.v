@@ -53,32 +53,32 @@ always @(*) begin
 end
 //////////////////////////////////////////////
 parameter IDLE = 2'b00, BUSY = 2'b01, WAIT = 2'b10, WAIT_READY = 2'b11;
-reg     [1:0]   state, next_state;
+reg     [1:0]   mem_lsu_state, mem_lsu_next_state;
 
 reg [7:0] busy2;
 reg [7:0] busy3;
 reg [7:0]   req_busy2;
 always @(*) begin
-    case(state) 
+    case(mem_lsu_state) 
         IDLE: begin
-            next_state = lsu_reqValid ? BUSY : IDLE;
+            mem_lsu_next_state = lsu_reqValid ? BUSY : IDLE;
         end
         BUSY: begin
-            next_state = (req_busy2 == 1) ? WAIT : BUSY;
+            mem_lsu_next_state = (req_busy2 == 1) ? WAIT : BUSY;
         end
         WAIT: begin
-            next_state = (busy3 == 1) ? WAIT_READY : WAIT;
+            mem_lsu_next_state = (busy3 == 1) ? WAIT_READY : WAIT;
         end
         WAIT_READY: begin
-            next_state = lsu_respReady ? IDLE : WAIT_READY;
+            mem_lsu_next_state = lsu_respReady ? IDLE : WAIT_READY;
         end
     endcase
-    lsu_rdata = (state == WAIT_READY) ? pmem_read(mem_lsu_addr) : 0;
+    lsu_rdata = (mem_lsu_state == WAIT_READY) ? pmem_read(mem_lsu_addr) : 0;
 end
 
 always @(posedge clk) begin
-    state <= next_state;
-    if(lsu_reqValid && state == IDLE)   req_busy2 <= random_num + 1; 
+    mem_lsu_state <= mem_lsu_next_state;
+    if(lsu_reqValid && mem_lsu_state == IDLE)   req_busy2 <= random_num + 1; 
     
     if(req_busy2 > 0) req_busy2 <= req_busy2 - 1;
     
