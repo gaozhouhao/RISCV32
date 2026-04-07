@@ -47,7 +47,7 @@ assign fetch_req = id_done|exe_done|wb_done;
 reg ifu_valid;
 initial ifu_valid = 1;
 always @(posedge clk) begin
-    if(ifu_respValid) inst <= ifu_rdata;
+    if(state == BUSY && resp_busy == 1) inst <= ifu_rdata;
     else inst <= inst;
 end
 
