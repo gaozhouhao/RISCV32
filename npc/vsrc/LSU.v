@@ -65,7 +65,7 @@ reg exu_to_lsu_valid_r;
 reg lsu_is_load, lsu_is_store;
 always @(posedge clk) begin
     exu_to_lsu_valid_r <= exu_to_lsu_valid;
-    if(reset == 0 || exu_to_lsu_valid == 0) begin
+    if(reset == 0) begin
         lsu_is_load <= 0;
         lsu_is_store <= 0;
         lsu_alu_result <= 0;
@@ -89,7 +89,6 @@ always @(posedge clk) begin
         redirect_valid_r <= redirect_valid;
     end
 end
-
 
 reg [7:0]   resp_busy;
 parameter IDLE = 2'b00, WAIT_READY = 2'b01, WAIT = 2'b10, BUSY = 2'b11;
