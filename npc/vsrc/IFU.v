@@ -47,7 +47,7 @@ assign fetch_req = id_done|exe_done|wb_done;
 reg ifu_valid;
 initial ifu_valid = 1;
 always @(posedge clk) begin
-    if(state == BUSY && resp_busy == 1) inst <= ifu_rdata;
+    if(ifu_respValid && resp_busy == 1) inst <= ifu_rdata;
     else inst <= inst;
 end
 
@@ -88,7 +88,7 @@ always @(posedge clk) begin
     end
     else begin
         state <= next_state;
-    if(state == WAIT && ifu_respValid) resp_busy <= random_num + 1;
+    resp_busy <= random_num + 1;
     //if(state == WAIT && ifu_respValid) resp_busy <= 1;
     if(resp_busy > 0) resp_busy <= resp_busy - 1; 
         if((state == IDLE && ifu_to_idu_ready == 1 && wb_done) || start_up == 0) begin
