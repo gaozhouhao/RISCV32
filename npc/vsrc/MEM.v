@@ -71,12 +71,10 @@ always @(posedge clk) begin
     else
         ifu_reqReady <= 0;
     if(busy1 > 0) busy1 <= busy1 - 1;
+    if(busy1 == 1) ifu_respValid <= 1;
+    if(ifu_respReady == 1) ifu_respValid <= 0;
 end
 
-always @(*) begin
-    ifu_rdata = (busy1 == 1) ? pmem_read(mem_ifu_raddr) : 32'b0;
-    ifu_respValid = (busy1 == 1);
-end
 //////////////////////////////////////////////
 reg     [1:0]   mem_lsu_state, mem_lsu_next_state;
 
