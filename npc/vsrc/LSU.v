@@ -141,8 +141,10 @@ always @(posedge clk) begin
             lsu_to_rf_valid <= 1;
         end
     end
-    if(is_load_store)
+    else if(is_load_store)
         lsu_to_rf_valid <= (lsu_respValid && resp_busy == 1);
+    else
+        lsu_to_rf_valid <= 0;
 end
 
 
