@@ -101,7 +101,7 @@ always @(*) begin
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
-            if(lsu_is_load || lsu_is_store) begin
+            if(exu_to_lsu_valid_r && lsu_is_load || lsu_is_store) begin
                 next_state = WAIT_READY;
                 lsu_reqValid = 1;
             end
