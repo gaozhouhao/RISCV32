@@ -95,8 +95,9 @@ parameter IDLE = 2'b00, WAIT_READY = 2'b01, WAIT = 2'b10, BUSY = 2'b11;
 reg             lsu_is_valid;
 reg     [1:0]   state, next_state;
 
+reg     is_load_store;
 always @(*) begin
-    lsu_to_rf_valid = 0;
+    //lsu_to_rf_valid = 0;
     lsu_reqValid = 0;
     case (state)
         IDLE: begin
@@ -106,7 +107,7 @@ always @(*) begin
             end
             else begin
                 next_state = IDLE;
-                lsu_to_rf_valid = exu_to_lsu_valid_r;
+                //lsu_to_rf_valid = exu_to_lsu_valid_r;
             end
         end
         WAIT_READY: begin
@@ -119,7 +120,7 @@ always @(*) begin
         BUSY: begin
             next_state = (resp_busy == 1) ? IDLE : BUSY;
             //lsu_rf_we = lsu_is_load;
-            lsu_to_rf_valid = (resp_busy == 1);
+            //lsu_to_rf_valid = (resp_busy == 1);
         end
         default:;
     endcase
@@ -131,7 +132,17 @@ always @(posedge clk) begin
     if(resp_busy > 0)
         resp_busy <= resp_busy - 1;
     lsu_respReady <= (resp_busy == 1 && lsu_respValid);
-
+    if(exu_to_lsu_valid) begin
+        if(is_load || is_store) begin
+            is_load_store <= 1;
+        end
+        else begin
+            is_load_store <= 0;
+            lsu_to_rf_valid <= 1;
+        end
+    end
+    if(is_load_store)
+        lsu_to_rf_valid <= (lsu_respValid && resp_busy == 1);
 end
 
 
