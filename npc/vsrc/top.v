@@ -10,7 +10,9 @@ wire    [31:0]  inst;
 wire    [31:0]  next_pc;
 
 wire            ifu_reqValid;
+wire            ifu_reqReady;
 wire            ifu_respValid;
+wire            ifu_respReady;
 wire    [31:0]  ifu_raddr;
 wire    [31:0]  ifu_rdata;
 
@@ -46,7 +48,9 @@ wire            is_load;
 wire            is_store;
 wire            trap_valid;
 wire            redirect_valid;
+wire            redirect_valid_r;
 wire    [31:0]  redirect_pc;
+wire    [31:0]  redirect_pc_r;
 wire            idu_we;
 wire            exu_we;
 wire            lsu_rf_we;
@@ -103,11 +107,13 @@ IFU ifu(
     .wb_done(wb_done),
     .inst_done(inst_done),
     .pc(pc),
-    .redirect_pc(redirect_pc),
-    .redirect_valid(redirect_valid),
+    .redirect_pc_r(redirect_pc_r),
+    .redirect_valid_r(redirect_valid_r),
     
     .ifu_reqValid(ifu_reqValid),
+    .ifu_reqReady(ifu_reqReady),
     .ifu_respValid(ifu_respValid),
+    .ifu_respReady(ifu_respReady),
     .ifu_raddr(ifu_raddr),
     .ifu_rdata(ifu_rdata),
     .rf_to_ifu_valid(rf_to_ifu_valid),
@@ -227,13 +233,20 @@ LSU lsu(
     .exu_to_lsu_valid(exu_to_lsu_valid),
     .exu_to_lsu_ready(exu_to_lsu_ready),
     .lsu_to_rf_valid(lsu_to_rf_valid),
-    .lsu_to_rf_ready(lsu_to_rf_ready)
+    .lsu_to_rf_ready(lsu_to_rf_ready),
+
+    .redirect_pc(redirect_pc),
+    .redirect_pc_r(redirect_pc_r),
+    .redirect_valid(redirect_valid),
+    .redirect_valid_r(redirect_valid_r)
 );
 
 MEM mem(
     .clk(clk),
     .ifu_reqValid(ifu_reqValid),
+    .ifu_reqReady(ifu_reqReady),
     .ifu_respValid(ifu_respValid),
+    .ifu_respReady(ifu_respReady),
     .ifu_raddr(ifu_raddr),
     .ifu_rdata(ifu_rdata),
     .lsu_reqValid(lsu_reqValid),

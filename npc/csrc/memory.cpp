@@ -58,7 +58,7 @@ uint32_t memory[N] = {
 
 
 unsigned int pmem_read(unsigned int raddr) {
-    assert(raddr >= START_ADDR);
+    if(raddr >= START_ADDR);
     raddr -= START_ADDR;
     uint32_t idx = (raddr & ~0x3u) >> 2;
     
