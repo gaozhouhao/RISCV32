@@ -26,6 +26,7 @@ module LSU(
 
     output      reg     [31:0]          wb,
 
+    AXI_IF.master                       axi,
     output      reg                     lsu_reqValid,
     input       reg                     lsu_reqReady,
     input       reg                     lsu_respValid,
