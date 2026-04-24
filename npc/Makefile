@@ -11,6 +11,7 @@ INC_PATH += $(abspath ./include)
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc -Wall\
 					-O3 --x-assign fast --x-initial fast --noassert
+VERILATOR_CFLAGS += -j 8
 ifeq ($(CONFIG_GTKWAVE), y)
 VERILATOR_CFLAGS += --trace-fst
 endif
