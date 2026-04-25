@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <npc_include.h>
-const int N = 1 << 28;
+const int N = 1 << 24;
 uint32_t memory[N] = {
 0b10110000000000000010010101110011,
 0b10110000000000000010010101110011,
@@ -29,9 +29,6 @@ uint32_t memory[N] = {
     0x238b8b93,
     0x238b8b93,
     0x238b8b93,
-
-  
-  
   
 /*    
     0x01400513,
@@ -58,11 +55,11 @@ uint32_t memory[N] = {
 
 
 unsigned int pmem_read(unsigned int raddr) {
-    if(raddr >= START_ADDR);
-    raddr -= START_ADDR;
+    //if(raddr >= START_ADDR)
+    //    raddr -= START_ADDR;
     uint32_t idx = (raddr & ~0x3u) >> 2;
     
-    if (idx >= 1 << 28) {
+    if (idx >= 1 << 24) {
         printf("OOB READ: raddr=0x%08x idx=%08x pc? (print in sim) \n", raddr+START_ADDR, idx);
         exit(1);
     }
@@ -73,9 +70,6 @@ extern "C" void pmem_write(unsigned int waddr, unsigned int wdata, char wmask) {
         putchar(wdata & 0xff); 
         return;
     };
-    
-    assert(waddr >= START_ADDR);
-    waddr -= START_ADDR;
     
     if(wmask & 0x01){
         memory[waddr >> 2] &= ~0x000000ff;
