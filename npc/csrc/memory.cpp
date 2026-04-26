@@ -87,7 +87,7 @@ extern "C" void pmem_write(unsigned int waddr, unsigned int wdata, char wmask) {
         memory[waddr >> 2] &= ~0xff000000;
         memory[waddr >> 2] |= wdata & 0xff000000;
     }
-#ifdef CONFIG_MTRACE_COND
+#ifdef CONFIG_MTRACE
     printf("%s-write:\t%08x\t[0x%08x]\n", "memory", wdata, waddr+START_ADDR);
 #endif
 }

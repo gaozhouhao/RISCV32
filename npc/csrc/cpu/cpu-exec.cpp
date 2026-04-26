@@ -31,18 +31,18 @@ static void trace_and_difftest(uint32_t pc, uint32_t dnpc, uint32_t inst) {
 static void execute(uint64_t  n) {
     for (;n > 0; n --) {
         exec_once();
-        //if(top->rootp->top__DOT__ifu__DOT__wait_ready == 1) difftest_skip_ref();
-        //if(top->rootp->top__DOT__ifu__DOT__idle == 1) difftest_skip_ref();
         
-        //static int wb_done_r = top->rootp->top__DOT__regfile__DOT__wb_done;
-        //if(wb_done_r == 1 && top->rootp->top__DOT__regfile__DOT__wb_done == 0)
         static int inst_done_r;
+        static int owner_rd_r, owner_wr_r;
         if(top->inst_done == 0 && inst_done_r == 1)
         {
+            if(owner_wr_r == 2 || owner_rd_r == 2)
             trace_and_difftest(top->pc, top->rootp->top__DOT__next_pc, top->rootp->top__DOT__inst);
         }
         inst_done_r = top->inst_done;
-            if (npc_state.state != NPC_RUNNING) break;
+        owner_rd_r = top->rootp->top__DOT__xbar__DOT__owner_rd;
+        owner_wr_r = top->rootp->top__DOT__xbar__DOT__owner_wr;
+        if (npc_state.state != NPC_RUNNING) break;
     }
 }
 

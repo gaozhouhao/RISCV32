@@ -79,7 +79,6 @@ void init_monitor(int argc, char *argv[]){
     printf("diff_so_file:\033[32m%s\033[0m\n", diff_so_file);
     init_difftest(diff_so_file, img_size, difftest_port);
 #endif    
-    
     init_sdb();
 }
 

@@ -3,7 +3,7 @@
 
 #define NPC_WATCHPOINT  1
 #define NPC_ITRACE_COND 1
-#define NPC_MTRACE_COND 1
+//#define NPC_MTRACE_COND 1
 
 
 #define START_ADDR 0x80000000
