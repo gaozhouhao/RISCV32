@@ -10,14 +10,14 @@ const char *regs[] = {
 void reg_display() {
 
     for(int i = 0; i < 32; i ++){
-        printf("%-3s:  %02x", regs[i], top->rootp->top__DOT__regfile__DOT__rf[i]);
+        printf("%-3s:  %02x", regs[i], top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile__DOT__rf[i]);
         if (i % 4 == 3) printf("\n");
         else printf("\t");
     }
     printf("mstatus: %02x,\tmtvec: %02x,\tmepc: %02x,\tmcause: %02x\n",
-         top->rootp->top__DOT__csr__DOT__mstatus,
-         top->rootp->top__DOT__csr__DOT__mtvec,
-         top->rootp->top__DOT__csr__DOT__mepc,
-         top->rootp->top__DOT__csr__DOT__mcause);
+         top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__csr__DOT__mstatus,
+         top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__csr__DOT__mtvec,
+         top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__csr__DOT__mepc,
+         top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__csr__DOT__mcause);
 }
 

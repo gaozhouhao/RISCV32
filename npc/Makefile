@@ -2,7 +2,7 @@
 -include $(NPC_HOME)/include/config/auto.conf
 -include $(NPC_HOME)/include/config/auto.conf.cmd
 
-TOPNAME = top
+TOPNAME = ysyxSoCFull
 NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 INC_PATH += $(NPC_HOME)/include
@@ -12,10 +12,21 @@ VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc -Wall\
 					-O3 --x-assign fast --x-initial fast --noassert
 VERILATOR_CFLAGS += -j 8
+VERILATOR_CFLAGS += --timescale "1ns/1ns"
+VERILATOR_CFLAGS += --no-timing
+VERILATOR_CFLAGS += -Wno-PINCONNECTEMPTY \
+  					-Wno-DECLFILENAME \
+  					-Wno-SYNCASYNCNET \
+  					-Wno-UNUSEDPARAM \
+  					-Wno-DEFPARAM \
+  					-Wno-ASSIGNDLY \
+					-Wno-PROCASSINIT
 ifeq ($(CONFIG_GTKWAVE), y)
 VERILATOR_CFLAGS += --trace-fst
 endif
 VERILATOR_CFLAGS += -I$(abspath ./vsrc)
+VERILATOR_CFLAGS += -I$(abspath ../ysyxSoC/perip/uart16550/rtl)
+VERILATOR_CFLAGS += -I$(abspath ../ysyxSoC/perip/spi/rtl)
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -32,7 +43,11 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 
 # project source
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
+VSRCS := $(filter-out %Xbar.sv, $(VSRCS))
 VHDRS = $(shell find $(abspath ./vsrc) -name "*.vh")
+VSRCS += $(shell find $(abspath ../ysyxSoC/perip) -name "*.v")
+VSRCS += $(abspath ../ysyxSoC/build/ysyxSoCFull.v)
+
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
 
@@ -45,6 +60,8 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 # rules for velilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
+CXXFLAGS += $(INCFLAGS) -DTOP_ROOT="\"V$(TOPNAME)___024root\""
+CXXFLAGS += $(INCFLAGS) -DTOP_DPI="\"V$(TOPNAME)__Dpi\""
 CXXFLAGS += -g
 
 //DIFFTEST ?= 0

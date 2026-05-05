@@ -13,10 +13,11 @@
 
 
 extern const char *regs[];
-
-#include <Vtop.h>
-#include <Vtop___024root.h>
-#include "Vtop__Dpi.h"
+#define STR1(x)     #x
+#define STR(x)      STR1(x)
+#include STR(TOP_NAME.h)
+#include STR(TOP_ROOT.h)
+#include STR(TOP_DPI.h)
 #include <debug.h>
 
 typedef struct {
@@ -29,7 +30,7 @@ extern CPUArchState cpu;
 
 
 extern const std::unique_ptr<VerilatedContext> contextp;
-extern const std::unique_ptr<Vtop> top;
+extern const std::unique_ptr<TOP_NAME> top;
 uint32_t pmem_read(uint32_t pc);
 void nvboard_bind_all_pins(TOP_NAME* top);
 

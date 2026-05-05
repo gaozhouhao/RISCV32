@@ -65,7 +65,7 @@ unsigned int pmem_read(unsigned int raddr) {
     }
     return memory[idx]; 
 }
-extern "C" void pmem_write(unsigned int waddr, unsigned int wdata, char wmask) {
+void pmem_write(unsigned int waddr, unsigned int wdata, char wmask) {
     if (waddr == 0xa00003f8) {
         putchar(wdata & 0xff); 
         return;

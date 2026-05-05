@@ -1,4 +1,4 @@
-STUID = ysyx_22040000
+STUID = ysyx_25120302
 STUNAME = Gao Zhouhao
 
 # DO NOT modify the following code!!!

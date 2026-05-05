@@ -29,7 +29,7 @@ module RegisterFile(
     end
     
     always @(*) begin
-        wb_done = lsu_to_rf_valid && reset;
+        wb_done = lsu_to_rf_valid && ~reset;
     end
 
 
@@ -38,12 +38,10 @@ module RegisterFile(
     end
 
     always @(posedge clk) begin
-        //if(reset == 0) wb_done_flag <= 0;
         if(lsu_to_rf_valid)begin
             if (lsu_rf_we) 
                 if(waddr != 5'b0) begin
                     rf[waddr] <= wdata;
-                    //wb_done_flag <= 1;
                 end
             //else
                 //wb_done_flag <= 0;

@@ -34,14 +34,15 @@ static void execute(uint64_t  n) {
         
         static int inst_done_r;
         static int owner_rd_r, owner_wr_r;
-        if(top->inst_done == 0 && inst_done_r == 1)
+        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done == 0 && inst_done_r == 1)
         {
-            if(owner_wr_r == 2 || owner_rd_r == 2)
-            trace_and_difftest(top->pc, top->rootp->top__DOT__next_pc, top->rootp->top__DOT__inst);
+            //if(owner_wr_r == 2 || owner_rd_r == 2)
+            trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst);
         }
-        inst_done_r = top->inst_done;
-        owner_rd_r = top->rootp->top__DOT__xbar__DOT__owner_rd;
-        owner_wr_r = top->rootp->top__DOT__xbar__DOT__owner_wr;
+        inst_done_r = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done;
+        //owner_rd_r = top->rootp->ysyx_25120302__DOT__xbar__DOT__owner_rd;
+        //owner_wr_r = top->rootp->ysyx_25120302__DOT__xbar__DOT__owner_wr;
+        //TODO
         if (npc_state.state != NPC_RUNNING) break;
     }
 }
@@ -68,7 +69,7 @@ void cpu_exec(uint64_t n) {
                 (npc_state.state == NPC_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
                 (npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
                      ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
-                    top->pc - 4);
+                    top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc - 4);
        // fall through
        case NPC_QUIT: 
             //statistic();

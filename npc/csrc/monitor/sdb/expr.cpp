@@ -127,7 +127,6 @@ static bool make_token(char *e) {
          */
         
         switch (rules[i].token_type) {
-          //default: TODO();
           case TK_HEX:  tokens[nr_token].type = TK_HEX;
                         strncpy(tokens[nr_token].str, substr_start, substr_len%32);
                         tokens[nr_token].str[substr_len%32] = '\0';
@@ -248,10 +247,12 @@ uint32_t eval(int p, int q) {
         return (uint32_t)strtol(tokens[p].str, NULL, 0);
     }
     if(tokens[p].type == '$'){
-        if(strcmp(tokens[p].str+1, "pc") == 0) return top->pc;
+        if(strcmp(tokens[p].str+1, "pc") == 0) return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc;
         else{
             for(int i = 0; i < 32; i ++){
-                if(strcmp(tokens[p].str+1, regs[i]) == 0) return top->rootp->top__DOT__regfile__DOT__rf[i]; 
+                if(strcmp(tokens[p].str+1, regs[i]) == 0) 
+                    return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile__DOT__rf[i]; 
+                //TODO
             }
         }
     }
