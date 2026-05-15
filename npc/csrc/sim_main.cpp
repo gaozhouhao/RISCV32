@@ -3,6 +3,7 @@
 #include <verilated_fst_c.h>
 //#include <nvboard.h>
 #include "npc_include.h"
+#include "npc_memory.h"
 #include "svdpi.h"
 #include <debug.h>
 #include "npc_utils.h"
@@ -23,8 +24,8 @@ int is_exit_status_bad();
 extern uint32_t memory[1<<28];
 extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
 extern "C" void mrom_read(int32_t addr, int32_t *data) { 
-    *data = 0x00100073;//ebreak
-    //assert(0); 
+    //*data = 0x00100073;//ebreak
+    *data = mrom[(addr-0x20000000) >> 2];
 }
 CPUArchState cpu = {.pc=0x20000000};
 
@@ -58,6 +59,10 @@ void exec_once() {
 static void reset() {
     top->reset = 1; top->clock = 0; top->eval(); contextp->timeInc(1); 
     tfp->dump(contextp->time());
+    for(int i = 0; i < 9; i ++){
+        top->clock = 1; top->eval();    contextp->timeInc(1);
+        top->clock = 0; top->eval();    contextp->timeInc(1);
+    }
     top->clock = 1; top->eval();    contextp->timeInc(1);
     tfp->dump(contextp->time());
     top->clock = 0; top->eval();    contextp->timeInc(1);

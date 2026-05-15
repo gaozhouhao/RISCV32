@@ -100,7 +100,7 @@ assign  axi_arb.arready = io_master_arready;
 assign  io_master_arvalid = axi_arb.arvalid;
 assign  io_master_araddr = axi_arb.araddr;
 
-assign  axi_arb.rready = io_master_rready;
+assign  io_master_rready = axi_arb.rready;
 assign  axi_arb.rresp = io_master_rresp;
 assign  axi_arb.rvalid = io_master_rvalid;
 assign  axi_arb.rdata = io_master_rdata;

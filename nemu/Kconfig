@@ -221,8 +221,8 @@ config DIFFTEST_REF_NAME
   default "none"
 
 config WATCHPOINT
-    string "Enable watchpoint"
-    default y
+  string "Enable watchpoint"
+  default y
 
 
 endmenu

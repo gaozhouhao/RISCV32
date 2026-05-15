@@ -6,6 +6,8 @@
 
 extern uint32_t memory[];
 
+extern uint32_t mrom[];
+
 #ifdef __cplusplus
 extern "C"{
 #endif

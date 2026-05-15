@@ -16,6 +16,7 @@
 #include <memory/host.h>
 #include <memory/paddr.h>
 #include <device/mmio.h>
+#include <device/map.h>
 #include <isa.h>
 
 #if   defined(CONFIG_PMEM_MALLOC)
@@ -31,9 +32,19 @@ paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
+#ifdef CONFIG_MTRACE_COND
+    static int flag = 0;
+#ifdef CONFIG_ITRACE
+    flag = !flag;
+#endif
+    if(flag)
+        printf("%s-read:\t%08x\t[0x%08x]\n", "memory", ret, addr);
+#endif
 
 #ifdef CONFIG_DTRACE_COND
-  printf("%s-read:\t%08x\t[0x%08x]\n", "memory", ret, addr);
+    IOMap* map = fetch_mmio_map(addr);
+    if(map != NULL)
+        printf("%s-read:\t%08x\t[0x%08x]\n", map->name, ret, addr);
 #endif
   return ret;
 }
@@ -41,7 +52,17 @@ static word_t pmem_read(paddr_t addr, int len) {
 static void pmem_write(paddr_t addr, int len, word_t data) {
   host_write(guest_to_host(addr), len, data);
 #ifdef CONFIG_MTRACE_COND
-    printf("%s-write:\t%08x\t[0x%08x]\n", "memory", data, addr);
+    static int flag = 0;
+#ifdef CONFIG_ITRACE
+    flag = !flag;
+#endif
+    if(flag)
+        printf("%s-write:\t%08x\t[0x%08x]\n", "memory", data, addr);
+#endif
+#ifdef CONFIG_DTRACE_COND
+    IOMap* map = fetch_mmio_map(addr);
+    if(map != NULL)
+        printf("%s-write:\t%08x\t[0x%08x]\n", map->name, data, addr);
 #endif
 }
 
