@@ -49,14 +49,14 @@ static int parse_args(int argc, char *argv[]) {
 
 static long load_img() {
     printf("img:\033[32m%s\033[0m\n", img_file);
-    /*
+    
     if (img_file == NULL) {
         printf("No image is given. Use the default build-in image.\n");
         return 4096; // built-in image size
     }
-    */
-    //FILE *fp = fopen(img_file, "rb");
-    FILE *fp = fopen("./char-test.bin", "rb");
+    
+    FILE *fp = fopen(img_file, "rb");
+    //FILE *fp = fopen("./char-test.bin", "rb");
     Assert(fp, "Can not open '%s'\n", img_file);
 
     fseek(fp, 0, SEEK_END);
@@ -68,10 +68,10 @@ static long load_img() {
     fseek(fp, 0, SEEK_SET);
     //int ret = fread(memory, size, 1, fp);
     int ret = fread(mrom, size, 1, fp);
-    printf("%x %x %x %x\n", mrom[0], mrom[1], mrom[2], mrom[3]);
+    printf("%08x %08x %08x %08x\n", mrom[0], mrom[1], mrom[2], mrom[3]);
     assert(ret == 1);
     fclose(fp);
-    printf("inst 1: %08x\n", memory[0]);
+    //printf("inst 1: %08x\n", memory[0]);
     return size;
 }
 
