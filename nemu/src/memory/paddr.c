@@ -25,10 +25,14 @@ static uint8_t *pmem = NULL;
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #endif
 
+static uint8_t mrom[CONFIG_MROM_SIZE];
+static uint8_t sram[CONFIG_SRAM_SIZE];
+
 void itrace_dump();
 
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
+uint8_t* mrom_guest_to_host(paddr_t paddr) { return mrom + paddr - CONFIG_MROM_BASE; }
 
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
@@ -49,6 +53,16 @@ static word_t pmem_read(paddr_t addr, int len) {
   return ret;
 }
 
+static word_t mrom_read(paddr_t addr, int len) {
+    word_t ret = host_read(mrom + addr - CONFIG_MROM_BASE, len);
+    return ret;
+}
+
+static word_t sram_read(paddr_t addr, int len) {
+    word_t ret = host_read(sram + addr - CONFIG_SRAM_BASE, len);
+    return ret;
+}
+
 static void pmem_write(paddr_t addr, int len, word_t data) {
   host_write(guest_to_host(addr), len, data);
 #ifdef CONFIG_MTRACE_COND
@@ -64,6 +78,10 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
     if(map != NULL)
         printf("%s-write:\t%08x\t[0x%08x]\n", map->name, data, addr);
 #endif
+}
+
+static void sram_write(paddr_t addr, int len, word_t data) {
+    host_write(sram + addr - CONFIG_SRAM_BASE, len, data);
 }
 
 static void out_of_bound(paddr_t addr) {
@@ -82,6 +100,8 @@ void init_mem() {
 
 word_t paddr_read(paddr_t addr, int len) {
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
+  if (likely(in_mrom(addr))) return mrom_read(addr, len);
+  if (likely(in_sram(addr))) return sram_read(addr, len);
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   itrace_dump();
   out_of_bound(addr);
@@ -90,6 +110,8 @@ word_t paddr_read(paddr_t addr, int len) {
 
 void paddr_write(paddr_t addr, int len, word_t data) {
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+  if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
+  if (likely(in_sram(addr))) { sram_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   itrace_dump();
   out_of_bound(addr);

@@ -73,9 +73,9 @@ module ysyx_25120302(
     output          io_slave_rlast,
     output  [ 3:0]  io_slave_rid
 );
-wire    [31:0]  inst;
-wire    [31:0]  next_pc;
-wire    [31:0]  pc;
+wire    [31:0]  inst/* verilator public_flat_rd */;
+wire    [31:0]  next_pc/* verilator public_flat_rd */;
+wire    [31:0]  pc/* verilator public_flat_rd */;
 AXI_IF          axi_lsu();
 AXI_IF          axi_ifu();
 AXI_IF          axi_arb();
@@ -133,7 +133,7 @@ wire            csr_to_ifu_ready;
 
 wire            id_done;
 wire            wb_done;
-wire            inst_done;
+wire            inst_done/* verilator public_flat_rd */;
 wire            wb_done_flag;
 wire            exe_done;
 wire            is_ecall;

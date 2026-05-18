@@ -30,9 +30,9 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
 CPUArchState cpu = {.pc=0x20000000};
 
 void exec_once() {
-    top->clock = 1; top->eval(); contextp->timeInc(1);
-    tfp->dump(contextp->time());
     top->clock = 0; top->eval(); contextp->timeInc(1);
+    tfp->dump(contextp->time());
+    top->clock = 1; top->eval(); contextp->timeInc(1);
     tfp->dump(contextp->time());
 #ifdef CONFIG_ITRACE
     printf("0x%08X\n", top->rootp->top__DOT__inst);
@@ -40,7 +40,7 @@ void exec_once() {
 
     for (int i = 0; i < 32; i ++){
         //TODO
-        //cpu.gpr[i] = top->rootp->top__DOT__regfile__DOT__rf[i];
+        cpu.gpr[i] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile__DOT__rf[i];
         cpu.gpr[0] = 0;
     }
     /*TODO
@@ -60,13 +60,15 @@ static void reset() {
     top->reset = 1; top->clock = 0; top->eval(); contextp->timeInc(1); 
     tfp->dump(contextp->time());
     for(int i = 0; i < 9; i ++){
-        top->clock = 1; top->eval();    contextp->timeInc(1);
-        top->clock = 0; top->eval();    contextp->timeInc(1);
+        top->clock = 1; top->eval();    contextp->timeInc(1); tfp->dump(contextp->time());
+        top->clock = 0; top->eval();    contextp->timeInc(1); tfp->dump(contextp->time());
     }
     top->clock = 1; top->eval();    contextp->timeInc(1);
     tfp->dump(contextp->time());
+    /*
     top->clock = 0; top->eval();    contextp->timeInc(1);
     tfp->dump(contextp->time());
+    */
     top->reset = 0; top->eval(); contextp->timeInc(1);
     tfp->dump(contextp->time());
 }

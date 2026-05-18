@@ -10,7 +10,6 @@ void exec_once();
 
 static void trace_and_difftest(uint32_t pc, uint32_t dnpc, uint32_t inst) {
     IFDEF(CONFIG_DIFFTEST, difftest_step(pc, dnpc));
-
 #ifdef CONFIG_WATCHPOINT
     WP* wp = find_head_wp();
     while(wp != NULL){
@@ -34,6 +33,7 @@ static void execute(uint64_t  n) {
         
         static int inst_done_r;
         static int owner_rd_r, owner_wr_r;
+    //printf("%d, %d\n", top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done, inst_done_r);
         if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done == 0 && inst_done_r == 1)
         {
             //if(owner_wr_r == 2 || owner_rd_r == 2)

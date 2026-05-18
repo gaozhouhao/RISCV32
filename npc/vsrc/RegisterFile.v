@@ -21,7 +21,7 @@ module RegisterFile(
 
     assign rf_to_ifu_valid = lsu_to_rf_valid;
     
-    reg [31:0] rf [31:0];
+    reg [31:0] rf [31:0]/* verilator public_flat_rd */;
 
     integer i;
     initial begin

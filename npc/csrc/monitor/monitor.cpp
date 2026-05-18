@@ -29,7 +29,9 @@ static int parse_args(int argc, char *argv[]) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       //case 'l': log_file = optarg; break;
-      case 'd': diff_so_file = optarg; break;
+      case 'd': diff_so_file = optarg; 
+    printf("diff_so_file ptr = %p\n", (void *)diff_so_file);
+                break;
       //case 'f': ftrace_elf_file = optarg; break;
       case 1: img_file = optarg; return 0;
       default:
