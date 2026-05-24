@@ -67,11 +67,12 @@ unsigned int pmem_read(unsigned int raddr) {
     return memory[idx]; 
 }
 void pmem_write(unsigned int waddr, unsigned int wdata, char wmask) {
+    /*
     if (waddr == 0x100003f8) {
         putchar(wdata & 0xff); 
         return;
     };
-    
+    */
     if(wmask & 0x01){
         memory[waddr >> 2] &= ~0x000000ff;
         memory[waddr >> 2] |= (wdata & 0xff) << 0;

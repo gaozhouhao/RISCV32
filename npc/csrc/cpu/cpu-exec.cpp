@@ -9,7 +9,17 @@
 void exec_once();
 
 static void trace_and_difftest(uint32_t pc, uint32_t dnpc, uint32_t inst) {
-    IFDEF(CONFIG_DIFFTEST, difftest_step(pc, dnpc));
+    //IFDEF(CONFIG_DIFFTEST, difftest_step(pc, dnpc));
+#ifdef CONFIG_DIFFTEST
+    if(pc >= MROM_ADDR && pc < MROM_ADDR + MROM_SIZE){
+        difftest_skip_ref();
+    }
+    if(pc >= SRAM_ADDR && pc < SRAM_ADDR + SRAM_SIZE){
+        difftest_skip_ref();
+    }
+    difftest_step(pc, dnpc);
+#endif
+
 #ifdef CONFIG_WATCHPOINT
     WP* wp = find_head_wp();
     while(wp != NULL){
