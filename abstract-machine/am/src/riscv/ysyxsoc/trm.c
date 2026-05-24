@@ -44,6 +44,16 @@ void _trm_init() {
     printf("arch: %x\n", arch);
     */
     bootloader();
+
+    uint8_t tmp = inb(0x10000003);
+    tmp |= 0x80;
+    outb(0x10000003, tmp);
+    outb(0x10000000, 0x01);
+    outb(0x10000001, 0x00);
+    tmp = inb(0x10000003);
+    tmp &= ~0x80;
+    outb(0x10000003, tmp);
+
     int ret = main(mainargs);
     halt(ret);
 }
