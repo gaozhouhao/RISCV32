@@ -10,6 +10,13 @@ extern char _pmem_start;
 #define PMEM_SIZE (128 * 1024 * 1024)
 #define PMEM_END  ((uintptr_t)&_pmem_start + PMEM_SIZE)
 
+extern uint8_t _data_lma; 
+extern uint8_t _data_start; 
+extern uint8_t _data_end; 
+
+extern uint8_t _bss_start; 
+extern uint8_t _bss_end; 
+
 Area heap = RANGE(&_heap_start, PMEM_END);
 static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 
@@ -23,6 +30,11 @@ void halt(int code) {
     while (1);
 }
 
+static void bootloader(){
+    memcpy(&_data_start, &_data_lma, &_data_end - &_data_start);
+    memset(&_bss_start, 0, &_bss_end - &_bss_start);
+}
+
 void _trm_init() {
     /*
     uint32_t vendor, arch;
@@ -31,6 +43,7 @@ void _trm_init() {
     printf("mvendorid: %x\n", vendor);
     printf("arch: %x\n", arch);
     */
+    bootloader();
     int ret = main(mainargs);
     halt(ret);
 }
