@@ -22,10 +22,13 @@ void sdb_mainloop();
 void init_monitor(int, char *[]);
 int is_exit_status_bad();
 extern uint32_t memory[1<<28];
-extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+
+extern "C" void flash_read(int32_t addr, int32_t *data) {
+    *data = flash[addr >> 2];
+}
 extern "C" void mrom_read(int32_t addr, int32_t *data) { 
     //*data = 0x00100073;//ebreak
-    *data = mrom[(addr-0x20000000) >> 2];
+    *data = mrom[(addr - MROM_ADDR) >> 2];
 }
 CPUArchState cpu = {.pc=0x20000000};
 
@@ -49,7 +52,6 @@ void exec_once() {
     cpu.csr[0x342] = top->rootp->top__DOT__csr__DOT__mcause;
     */
     cpu.pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc;
-    //cpu.pc = top->pc;
     static int cnt = 0;
     cnt ++;
     if(flag) npc_state.state = NPC_END;
@@ -75,6 +77,9 @@ static void reset() {
 int main(int argc, char** argv){
     int ret = 0;
     FILE *fp = NULL; 
+    for(uint32_t i = 0; i < (1<<22); i ++){
+        flash[i] = i;
+    }
     //nvboard_bind_all_pins(top.get());
     //nvboard_init();
     Verilated::commandArgs(argc, argv);

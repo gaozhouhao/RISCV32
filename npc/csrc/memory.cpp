@@ -4,6 +4,7 @@
 #include <npc_include.h>
 const int N = 1 << 24;
 uint32_t mrom[1<<12] = {};
+uint32_t flash[1<<22] = {};
 uint32_t memory[N] = {
 0b10110000000000000010010101110011,
 0b10110000000000000010010101110011,

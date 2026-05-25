@@ -7,6 +7,7 @@
 extern uint32_t memory[];
 
 extern uint32_t mrom[];
+extern uint32_t flash[];
 
 #ifdef __cplusplus
 extern "C"{

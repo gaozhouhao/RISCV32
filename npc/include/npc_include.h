@@ -6,15 +6,17 @@
 //#define NPC_MTRACE_COND 1
 
 
-#define START_ADDR 0x80000000
+#define START_ADDR  0x80000000
 
-#define MROM_ADDR 0x20000000
-#define MROM_SIZE 0x1000
-#define SRAM_ADDR 0x0f000000
-#define SRAM_SIZE 0x2000
+#define MROM_ADDR   0x20000000
+#define MROM_SIZE   0x1000
+#define FLASH_ADDR  0x30000000
+#define FLASH_SIZE  0x1000000
+#define SRAM_ADDR   0x0f000000
+#define SRAM_SIZE   0x2000
 
-#define MEM_LEFT 0x80000000
-#define MEM_RIGHT 0x88000000
+#define MEM_LEFT    0x80000000
+#define MEM_RIGHT   0x88000000
 
 
 extern const char *regs[];
