@@ -30,6 +30,8 @@ void putch(char ch) {
 void halt(int code) {
     if(code == 0)
         asm volatile("ebreak");
+    
+    putch('W');
     while (1);
 }
 
@@ -38,7 +40,7 @@ static void bootloader(){
     memset(&_bss_start, 0, &_bss_end - &_bss_start);
 }
 
-void _trm_init() {
+int _trm_init() {
     /*
     uint32_t vendor, arch;
     asm volatile("csrr %0, mvendorid" : "=r"(vendor));
@@ -59,4 +61,5 @@ void _trm_init() {
 
     int ret = main(mainargs);
     halt(ret);
+    //return ret;
 }
