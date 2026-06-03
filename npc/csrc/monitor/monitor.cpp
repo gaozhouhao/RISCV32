@@ -70,7 +70,7 @@ static long load_img() {
     fseek(fp, 0, SEEK_SET);
     //int ret = fread(memory, size, 1, fp);
     int ret = fread(mrom, size, 1, fp);
-    printf("%08x %08x %08x %08x\n", mrom[0], mrom[1], mrom[2], mrom[3]);
+    //printf("%08x %08x %08x %08x\n", mrom[0], mrom[1], mrom[2], mrom[3]);
     assert(ret == 1);
     fclose(fp);
     //printf("inst 1: %08x\n", memory[0]);

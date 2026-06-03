@@ -78,7 +78,8 @@ int main(int argc, char** argv){
     int ret = 0;
     FILE *fp = NULL; 
     for(uint32_t i = 0; i < (1<<22); i ++){
-        flash[i] = i;
+        flash[i] = i * 4;
+        //flash[i] = 0x55AA55AA;
     }
     //nvboard_bind_all_pins(top.get());
     //nvboard_init();
