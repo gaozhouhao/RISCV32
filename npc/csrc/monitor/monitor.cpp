@@ -56,20 +56,30 @@ static long load_img() {
         printf("No image is given. Use the default build-in image.\n");
         return 4096; // built-in image size
     }
-    
-    FILE *fp = fopen(img_file, "rb");
-    //FILE *fp = fopen("./char-test.bin", "rb");
+    //***************
+    //load image into falsh
+    //***************
+    FILE *fp = fopen("./char-test.bin", "rb");
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    int ret = fread(flash, size, 1, fp);
+    fclose(fp);
+    //***************
+    //load image into mrom
+    //***************
+    fp = fopen(img_file, "rb");
     Assert(fp, "Can not open '%s'\n", img_file);
 
     fseek(fp, 0, SEEK_END);
-    long size = ftell(fp);
+    size = ftell(fp);
 
     printf("The image is %s, size = %ld\n", img_file, size);
     assert(memory != NULL);
     assert(size <= 1<<22);
     fseek(fp, 0, SEEK_SET);
     //int ret = fread(memory, size, 1, fp);
-    int ret = fread(mrom, size, 1, fp);
+    ret = fread(mrom, size, 1, fp);
     //printf("%08x %08x %08x %08x\n", mrom[0], mrom[1], mrom[2], mrom[3]);
     assert(ret == 1);
     fclose(fp);
