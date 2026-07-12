@@ -57,7 +57,7 @@ static long load_img() {
         return 4096; // built-in image size
     }
     //***************
-    //load image into falsh
+    //load image into flash
     //***************
     FILE *fp = fopen("./char-test.bin", "rb");
     fseek(fp, 0, SEEK_END);
@@ -65,6 +65,12 @@ static long load_img() {
     fseek(fp, 0, SEEK_SET);
     int ret = fread(flash, size, 1, fp);
     fclose(fp);
+    
+    //used for am test "flash-test", "flash-read" and "xip-test"
+    //for (int i = 0; i < 0x10000; i += 1){
+    //    flash[i] = 0x30000000 + i*4;
+    //}
+
     //***************
     //load image into mrom
     //***************

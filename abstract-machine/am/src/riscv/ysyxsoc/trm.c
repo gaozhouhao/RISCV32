@@ -32,6 +32,11 @@ void halt(int code) {
         asm volatile("ebreak");
     
     putch('W');
+    putch('R');
+    putch('O');
+    putch('N');
+    putch('G');
+    putch('\n');
     while (1);
 }
 
