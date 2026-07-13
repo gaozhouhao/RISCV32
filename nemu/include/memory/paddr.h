@@ -28,6 +28,7 @@ uint8_t* guest_to_host(paddr_t paddr);
 paddr_t host_to_guest(uint8_t *haddr);
 
 uint8_t* mrom_guest_to_host(paddr_t paddr);
+uint8_t* flash_guest_to_host(paddr_t paddr);
 
 static inline bool in_pmem(paddr_t addr) {
   return addr - CONFIG_MBASE < CONFIG_MSIZE;

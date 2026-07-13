@@ -45,6 +45,17 @@ static void bootloader(){
     memset(&_bss_start, 0, &_bss_end - &_bss_start);
 }
 
+void uart_init(){
+    uint8_t tmp = inb(0x10000003);
+    tmp |= 0x80;
+    outb(0x10000003, tmp);
+    outb(0x10000000, 0x01);
+    outb(0x10000001, 0x00);
+    tmp = inb(0x10000003);
+    tmp &= ~0x80;
+    outb(0x10000003, tmp);
+}
+
 int _trm_init() {
     /*
     uint32_t vendor, arch;
@@ -55,14 +66,7 @@ int _trm_init() {
     */
     bootloader();
 
-    uint8_t tmp = inb(0x10000003);
-    tmp |= 0x80;
-    outb(0x10000003, tmp);
-    outb(0x10000000, 0x01);
-    outb(0x10000001, 0x00);
-    tmp = inb(0x10000003);
-    tmp &= ~0x80;
-    outb(0x10000003, tmp);
+    uart_init();
 
     int ret = main(mainargs);
     halt(ret);

@@ -17,6 +17,9 @@ static void trace_and_difftest(uint32_t pc, uint32_t dnpc, uint32_t inst) {
     if(pc >= SRAM_ADDR && pc < SRAM_ADDR + SRAM_SIZE){
         difftest_skip_ref();
     }
+    if(pc >= FLASH_ADDR && pc <= FLASH_ADDR + FLASH_SIZE){
+        difftest_skip_ref();
+    }
     difftest_step(pc, dnpc);
 #endif
 

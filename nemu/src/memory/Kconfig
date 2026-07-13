@@ -51,4 +51,12 @@ config SRAM_SIZE
     hex "SRAM size"
     default 0x2000
 
+config FLASH_BASE
+    hex "FLASH base address"
+    default 0x30000000
+
+config FLASH_SIZE
+    hex "FLASH size"
+    default 0x10000000
+
 endmenu #MEMORY

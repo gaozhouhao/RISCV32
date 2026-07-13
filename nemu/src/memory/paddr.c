@@ -27,12 +27,14 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
 static uint8_t mrom[CONFIG_MROM_SIZE];
 static uint8_t sram[CONFIG_SRAM_SIZE];
+static uint8_t flash[CONFIG_FLASH_SIZE];
 
 void itrace_dump();
 
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 uint8_t* mrom_guest_to_host(paddr_t paddr) { return mrom + paddr - CONFIG_MROM_BASE; }
+uint8_t* flash_guest_to_host(paddr_t paddr) { return flash + paddr - CONFIG_FLASH_BASE; }
 
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);

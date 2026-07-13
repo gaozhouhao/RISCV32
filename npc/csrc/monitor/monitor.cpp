@@ -56,39 +56,44 @@ static long load_img() {
         printf("No image is given. Use the default build-in image.\n");
         return 4096; // built-in image size
     }
+
     //***************
     //load image into flash
     //***************
+#if 0
     FILE *fp = fopen("./char-test.bin", "rb");
     fseek(fp, 0, SEEK_END);
     long size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
     int ret = fread(flash, size, 1, fp);
-    fclose(fp);
-    
+    fclose(fp);    
     //used for am test "flash-test", "flash-read" and "xip-test"
     //for (int i = 0; i < 0x10000; i += 1){
     //    flash[i] = 0x30000000 + i*4;
     //}
+#endif
 
     //***************
     //load image into mrom
     //***************
-    fp = fopen(img_file, "rb");
+    FILE *fp = fopen(img_file, "rb");
     Assert(fp, "Can not open '%s'\n", img_file);
 
     fseek(fp, 0, SEEK_END);
-    size = ftell(fp);
+    long size = ftell(fp);
 
     printf("The image is %s, size = %ld\n", img_file, size);
-    assert(memory != NULL);
+    //assert(memory != NULL);
     assert(size <= 1<<22);
     fseek(fp, 0, SEEK_SET);
     //int ret = fread(memory, size, 1, fp);
-    ret = fread(mrom, size, 1, fp);
+    //ret = fread(mrom, size, 1, fp);
+    int ret = fread(flash, size, 1, fp);
     //printf("%08x %08x %08x %08x\n", mrom[0], mrom[1], mrom[2], mrom[3]);
     assert(ret == 1);
     fclose(fp);
+    //*****************************
+
     //printf("inst 1: %08x\n", memory[0]);
     return size;
 }

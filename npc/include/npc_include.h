@@ -6,7 +6,7 @@
 //#define NPC_MTRACE_COND 1
 
 
-#define START_ADDR  0x80000000
+#define START_ADDR  0x30000000
 
 #define MROM_ADDR   0x20000000
 #define MROM_SIZE   0x1000
