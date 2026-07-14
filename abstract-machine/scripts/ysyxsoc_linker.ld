@@ -22,14 +22,14 @@ SECTIONS {
         *(.rodata*)
     } > flash AT> flash
 
-    _data_lma = .;
     .data : {
         _data_start = .;
         *(.data*)
         *(.sdata*)
         _data_end = .;
     } > sram AT> flash
-    
+    _data_lma = LOADADDR(.data);
+
     .bss : {
         _bss_start = .;
         *(.bss*)
@@ -39,9 +39,9 @@ SECTIONS {
     } > sram
 
     _stack_top = 0x0f001000;
-    . = _stack_top;
-    _stack_pointer = .;
-    end = .;
-    _end = .;
+    _stack_pointer = _stack_top;
+    end = _bss_end;
+    _end = _bss_end;
     _heap_start = 0x0f001000;
+    ASSERT(_bss_end <= _stack_top, "data/bss overlaps stack")
 }
