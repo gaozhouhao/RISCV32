@@ -7,8 +7,11 @@ extern char _heap_start;
 int main(const char *args);
 
 extern char _pmem_start;
+extern char _psram_start;
+extern char _psram_end;
 #define PMEM_SIZE (128 * 1024 * 1024)
 #define PMEM_END  ((uintptr_t)&_pmem_start + PMEM_SIZE)
+#define PSRAM_END  ((uintptr_t)&_psram_end)
 
 extern uint8_t _data_lma; 
 extern uint8_t _data_start; 
@@ -17,7 +20,7 @@ extern uint8_t _data_end;
 extern uint8_t _bss_start; 
 extern uint8_t _bss_end; 
 
-Area heap = RANGE(&_heap_start, PMEM_END);
+Area heap = RANGE(&_heap_start, PSRAM_END);
 static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 
 void putch(char ch) {
@@ -41,6 +44,7 @@ void halt(int code) {
 }
 
 static void bootloader(){
+    //memset(&_psram_start, 0, &_psram_end - &_psram_start);
     memcpy(&_data_start, &_data_lma, &_data_end - &_data_start);
     memset(&_bss_start, 0, &_bss_end - &_bss_start);
 }
@@ -68,7 +72,6 @@ int _trm_init() {
     asm volatile("csrr %0, marchid" : "=r"(arch));
     printf("mvendorid: %c%c%c%c\n", (uint8_t)(vendor>>24), (uint8_t)(vendor>>16), (uint8_t)(vendor>>8), (uint8_t)(vendor>>0));
     //printf("arch: %d\n", arch);
-    
     
     int ret = main(mainargs);
     halt(ret);

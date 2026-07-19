@@ -39,10 +39,13 @@ SECTIONS {
         _bss_end = .;
     } > psram
 
-    _stack_top = 0x0f001000;
+    _psram_start = ORIGIN(psram);
+    _psram_end = ORIGIN(psram) + LENGTH(psram);
+    
+    _stack_top = 0x0f002000;
     _stack_pointer = _stack_top;
     end = _bss_end;
     _end = _bss_end;
-    _heap_start = 0x0f001000;
+    _heap_start = _end;
 /*ASSERT(_bss_end <= _stack_top, "data/bss overlaps stack")*/
 }

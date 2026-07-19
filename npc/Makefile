@@ -88,6 +88,7 @@ sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	echo $(BIN) $(ARGS) $(IMG)
 	@$(BIN) $(ARGS) $(IMG)
+
 ifeq ($(CONFIG_GTKWAVE), y)
 	gtkwave $(OBJ_DIR)/wave.fst
 endif
