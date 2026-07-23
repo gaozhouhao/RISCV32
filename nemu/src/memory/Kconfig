@@ -5,12 +5,12 @@ config RESET_VECTOR
     default 0x20000000
 
 config MBASE
-  hex "Memory base address"
+  hex "MEM base address"
   default 0x0        if ISA_x86
   default 0x80000000
 
 config MSIZE
-  hex "Memory size"
+  hex "MEM size"
   default 0x8000000
 
 config PC_RESET_OFFSET
@@ -58,5 +58,14 @@ config FLASH_BASE
 config FLASH_SIZE
     hex "FLASH size"
     default 0x10000000
+
+config PSRAM_BASE
+    hex "PSRAM base address"
+    default 0x80000000
+
+config PSRAM_SIZE
+    hex "PSRAM size"
+    default 0x20000000
+
 
 endmenu #MEMORY

@@ -20,16 +20,16 @@ SECTIONS {
     .text : {
         _text_start = .;
         KEEP(*(entry))
-        *(.text*)
+        KEEP(*(.text*))
         _text_end = .;
-    } > sram AT> flash
+    } > psram AT> flash
     _text_lma = LOADADDR(.text);
 
     .rodata : {
         _rodata_start = .;
         *(.rodata*)
         _rodata_end = .;
-    } > sram AT> flash
+    } > psram AT> flash
     _rodata_lma = LOADADDR(.rodata);
 
     .data : {
@@ -57,5 +57,4 @@ SECTIONS {
     end = _bss_end;
     _end = _bss_end;
     _heap_start = _end;
-/*ASSERT(_bss_end <= _stack_top, "data/bss overlaps stack")*/
 }

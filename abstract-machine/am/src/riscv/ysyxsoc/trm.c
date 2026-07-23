@@ -13,9 +13,18 @@ extern char _psram_end;
 #define PMEM_END  ((uintptr_t)&_pmem_start + PMEM_SIZE)
 #define PSRAM_END  ((uintptr_t)&_psram_end)
 
-extern uint8_t _data_lma; 
+extern uint8_t _start;
+
+extern uint8_t _text_end;
+extern uint8_t _text_lma;
+
+extern uint8_t _rodata_start;
+extern uint8_t _rodata_end;
+extern uint8_t _rodata_lma;
+
 extern uint8_t _data_start; 
 extern uint8_t _data_end; 
+extern uint8_t _data_lma; 
 
 extern uint8_t _bss_start; 
 extern uint8_t _bss_end; 
@@ -43,11 +52,17 @@ void halt(int code) {
     while (1);
 }
 
+/*
 static void bootloader(){
     //memset(&_psram_start, 0, &_psram_end - &_psram_start);
+    //memcpy(&_start, &_text_lma, &_text_end - &_start);
+    //memcpy(&_rodata_start, &_rodata_lma, &_rodata_end - &_rodata_start);
     memcpy(&_data_start, &_data_lma, &_data_end - &_data_start);
     memset(&_bss_start, 0, &_bss_end - &_bss_start);
+
+    //asm volatile("jalr x0, %0" : : "r"(_start));
 }
+*/
 
 void uart_init(){
     uint8_t tmp = inb(0x10000003);
@@ -62,8 +77,7 @@ void uart_init(){
 
 int _trm_init() {
 
-
-    bootloader();
+    //bootloader();
 
     uart_init();
 

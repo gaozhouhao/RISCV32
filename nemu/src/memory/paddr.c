@@ -27,6 +27,7 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
 static uint8_t mrom[CONFIG_MROM_SIZE];
 static uint8_t sram[CONFIG_SRAM_SIZE];
+static uint8_t psram[CONFIG_PSRAM_SIZE];
 static uint8_t flash[CONFIG_FLASH_SIZE];
 
 void itrace_dump();
@@ -35,6 +36,8 @@ uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 uint8_t* mrom_guest_to_host(paddr_t paddr) { return mrom + paddr - CONFIG_MROM_BASE; }
 uint8_t* flash_guest_to_host(paddr_t paddr) { return flash + paddr - CONFIG_FLASH_BASE; }
+uint8_t* sram_guest_to_host(paddr_t paddr) { return sram + paddr - CONFIG_SRAM_BASE; }
+uint8_t* psram_guest_to_host(paddr_t paddr) { return psram + paddr - CONFIG_PSRAM_BASE; }
 
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
@@ -60,8 +63,18 @@ static word_t mrom_read(paddr_t addr, int len) {
     return ret;
 }
 
+static word_t psram_read(paddr_t addr, int len) {
+    word_t ret = host_read(psram + addr - CONFIG_PSRAM_BASE, len);
+    return ret;
+}
+
 static word_t sram_read(paddr_t addr, int len) {
     word_t ret = host_read(sram + addr - CONFIG_SRAM_BASE, len);
+    return ret;
+}
+
+static word_t flash_read(paddr_t addr, int len) {
+    word_t ret = host_read(flash + addr - CONFIG_FLASH_BASE, len);
     return ret;
 }
 
@@ -86,6 +99,10 @@ static void sram_write(paddr_t addr, int len, word_t data) {
     host_write(sram + addr - CONFIG_SRAM_BASE, len, data);
 }
 
+static void psram_write(paddr_t addr, int len, word_t data) {
+    host_write(psram + addr - CONFIG_PSRAM_BASE, len, data);
+}
+
 static void out_of_bound(paddr_t addr) {
   panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
       addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
@@ -101,9 +118,11 @@ void init_mem() {
 }
 
 word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
-  if (likely(in_mrom(addr))) return mrom_read(addr, len);
   if (likely(in_sram(addr))) return sram_read(addr, len);
+  if (likely(in_mrom(addr))) return mrom_read(addr, len);
+  if (likely(in_flash(addr))) return flash_read(addr, len);
+  if (likely(in_psram(addr))) return psram_read(addr, len);
+  if (likely(in_pmem(addr))) return pmem_read(addr, len);
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   itrace_dump();
   out_of_bound(addr);
@@ -111,9 +130,10 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
-  if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
   if (likely(in_sram(addr))) { sram_write(addr, len, data); return; }
+  if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
+  if (likely(in_psram(addr))) { psram_write(addr, len, data); return; }
+  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   itrace_dump();
   out_of_bound(addr);
