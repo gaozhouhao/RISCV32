@@ -81,6 +81,8 @@ int _trm_init() {
 
     uart_init();
 
+    printf("fasdg");
+
     uint32_t vendor, arch;
     asm volatile("csrr %0, mvendorid" : "=r"(vendor));
     asm volatile("csrr %0, marchid" : "=r"(arch));

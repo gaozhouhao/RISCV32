@@ -65,7 +65,8 @@ static long load_img() {
 
   fseek(fp, 0, SEEK_SET);
   //int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
-  int ret = fread(mrom_guest_to_host(CONFIG_RESET_VECTOR), size, 1, fp);
+  //int ret = fread(mrom_guest_to_host(CONFIG_RESET_VECTOR), size, 1, fp);
+  int ret = fread(flash_guest_to_host(CONFIG_RESET_VECTOR), size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);

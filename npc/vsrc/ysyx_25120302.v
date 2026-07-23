@@ -137,6 +137,7 @@ wire            inst_done/* verilator public_flat_rd */;
 wire            wb_done_flag;
 wire            exe_done;
 wire            is_ecall;
+wire            lsu_is_ecall;
 wire            is_ebreak;
 wire            is_jalr;
 wire            is_jal;
@@ -152,11 +153,13 @@ wire    [31:0]  redirect_pc_r;
 wire            idu_we;
 wire            exu_we;
 wire            lsu_rf_we;
+wire            lsu_csr_wen;
 wire            sen;
 wire            csr_wen;
 
 wire    [1:0]   wb_sel;
 wire            csr_op_sel;
+wire            lsu_csr_op_sel;
 wire    [1:0]   alu_src1_sel;
 wire    [1:0]   alu_src2_sel;
 wire    [3:0]   ALUop;
@@ -170,11 +173,13 @@ wire    [4:0]   rd;
 wire    [31:0]  imm;
 wire    [31:0]  shamt;
 wire    [11:0]  csr_addr;
+wire    [11:0]  lsu_csr_addr;
 
 wire    [31:0]  src1_data;
 wire    [31:0]  src2_data;
 reg     [31:0]  csr_output_data;
 reg     [31:0]  csr_input_data;
+reg     [31:0]  lsu_csr_input_data;
 
 wire    [31:0]  wb;
 
@@ -249,7 +254,6 @@ EXU exu(
     .ALUop(ALUop),
     .alu_result(alu_result),
     .branch_taken(branch_taken),
-    .csr_op_sel(csr_op_sel),
     .is_jal(is_jal),
     .is_jalr(is_jalr),
     .is_branch(is_branch),
@@ -257,14 +261,11 @@ EXU exu(
     .redirect_pc(redirect_pc),
     .trap_valid(trap_valid),
     .is_ebreak(is_ebreak),
-    .is_csr(is_csr),
     .is_load(is_load),
     .is_store(is_store),
     .pc(pc),
     .src1_data(src1_data),
     .src2_data(src2_data),
-    .csr_input_data(csr_input_data),
-    .csr_output_data(csr_output_data),
     .mtvec_data(mtvec_data),
     .mepc_data(mepc_data),
     .rd(rd),
@@ -285,8 +286,13 @@ LSU lsu(
     .sen(sen),
     .exu_we(exu_we),
     .lsu_rf_we(lsu_rf_we),
+    .lsu_csr_wen(lsu_csr_wen),
+    .csr_wen(csr_wen),
+    .csr_op_sel(csr_op_sel), 
+    .lsu_csr_op_sel(lsu_csr_op_sel),
     .is_load(is_load),
     .is_store(is_store),
+    .is_csr(is_csr),
     .branch_taken(branch_taken),
 
     .pc(pc),
@@ -297,8 +303,9 @@ LSU lsu(
     .src1_data(src1_data),
     .src2_data(src2_data),
     
-    .csr_op_sel(csr_op_sel), 
-    .csr_input_data(csr_input_data),
+    .csr_addr(csr_addr),
+    .lsu_csr_addr(lsu_csr_addr),
+    .lsu_csr_input_data(lsu_csr_input_data),
     .csr_output_data(csr_output_data),
     .mtvec_data(mtvec_data),
     .mepc_data(mepc_data),
@@ -373,11 +380,11 @@ RegisterFile regfile (
 CSR csr (
     .clk(clock),
     .pc(pc),
-    .csr_addr(csr_addr),
-    .csr_wen(csr_wen),
-    .is_ecall(is_ecall),
+    .lsu_csr_addr(lsu_csr_addr),
+    .lsu_csr_wen(lsu_csr_wen),
+    .lsu_is_ecall(lsu_is_ecall),
     .csr_output_data(csr_output_data),
-    .csr_input_data(csr_input_data),
+    .lsu_csr_input_data(lsu_csr_input_data),
     .mtvec_data(mtvec_data),
     .mepc_data(mepc_data),
     .exu_to_csr_valid(exu_to_csr_valid),

@@ -12,9 +12,7 @@ module EXU (
 
     output  reg                 branch_taken,
 
-    input                       csr_op_sel,
     input   reg                 is_ebreak,
-    input   reg                 is_csr,
     input   reg                 is_load,
     input   reg                 is_store,
     input   reg                 is_branch,
@@ -34,8 +32,6 @@ module EXU (
     
     input   wire    [31:0]      mtvec_data,
     input   wire    [31:0]      mepc_data,
-    output  reg     [31:0]      csr_input_data,
-    output  reg     [31:0]      csr_output_data,
     output                      redirect_valid,
     output  reg     [31:0]      redirect_pc,
 
@@ -136,45 +132,6 @@ always @(*) begin
     exu_to_lsu_valid = idu_to_exu_valid;
 end
 
-/*
-reg [7:0] byte1, byte2;
-reg [31:0] word;
-always @(*) begin
-    byte1 = 8'b0;
-    byte2 = 8'b0;
-    next_pc = 32'b0;
-    word = 32'b0;
-    csr_input_data = 32'b0;
-    case (wb_sel)
-        `NPC_ALU: wb = alu_result;
-        `NPC_PC4: wb = pc + 32'h4;
-        `NPC_MEM: begin
-            word = (pmem_read(alu_result) >> (alu_result[1:0]*8));
-            //word = (lsu_rdata >> (alu_result[1:0]*8));
-            case (funct3)
-            3'b000: begin
-                byte1 = word[7:0];
-                wb = {{24{byte1[7]}}, byte1}; //lb
-            end
-            3'b001: begin//lh
-                 {byte2, byte1} = word[15:0];
-                 wb = {{16{byte2[7]}}, byte2, byte1};
-            end
-            3'b010: wb = word; //lw
-            3'b100: wb = word & 32'hff;//lbu
-            3'b101: wb = word & 32'hffff; //lhu
-            default:wb = 32'b0;
-        endcase
-        end
-        `NPC_CSR: begin
-            wb = csr_output_data;
-            if(csr_op_sel == `CSR_WRITE)csr_input_data = src1_data;
-            if(csr_op_sel == `CSR_SET)csr_input_data = csr_output_data | src1_data;
-        end
-        default: wb = 32'b0;
-    endcase
-end
-*/
 
 import "DPI-C" function void ebreak(input bit is_ebreak);
 
