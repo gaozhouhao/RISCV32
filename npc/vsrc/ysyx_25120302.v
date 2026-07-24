@@ -126,17 +126,13 @@ wire            lsu_to_rf_ready;
 wire            rf_to_ifu_valid;
 wire            rf_to_ifu_ready;
 
-wire            exu_to_csr_valid;
-wire            exu_to_csr_ready;
-wire            csr_to_ifu_valid;
-wire            csr_to_ifu_ready;
-
 wire            id_done;
 wire            wb_done;
 wire            inst_done/* verilator public_flat_rd */;
 wire            wb_done_flag;
 wire            exe_done;
 wire            is_ecall;
+wire            is_mret;
 wire            lsu_is_ecall;
 wire            is_ebreak;
 wire            is_jalr;
@@ -173,13 +169,11 @@ wire    [4:0]   rd;
 wire    [31:0]  imm;
 wire    [31:0]  shamt;
 wire    [11:0]  csr_addr;
-wire    [11:0]  lsu_csr_addr;
 
 wire    [31:0]  src1_data;
 wire    [31:0]  src2_data;
-reg     [31:0]  csr_output_data;
-reg     [31:0]  csr_input_data;
-reg     [31:0]  lsu_csr_input_data;
+reg     [31:0]  csr_rdata;
+reg     [31:0]  csr_wdata;
 
 wire    [31:0]  wb;
 
@@ -204,9 +198,7 @@ IFU ifu(
     .redirect_pc_r(redirect_pc_r),
     .redirect_valid_r(redirect_valid_r),
     .rf_to_ifu_valid(rf_to_ifu_valid),
-    .rf_to_ifu_ready(rf_to_ifu_ready),
-    .csr_to_ifu_valid(csr_to_ifu_valid),
-    .csr_to_ifu_ready(csr_to_ifu_ready)
+    .rf_to_ifu_ready(rf_to_ifu_ready)
 );
 
 IDU idu(
@@ -221,6 +213,7 @@ IDU idu(
     .sen(sen),
     .csr_wen(csr_wen),
     .is_ecall(is_ecall),
+    .is_mret(is_mret),
     .is_ebreak(is_ebreak),
     .is_jalr(is_jalr),
     .is_jal(is_jal),
@@ -266,14 +259,23 @@ EXU exu(
     .pc(pc),
     .src1_data(src1_data),
     .src2_data(src2_data),
-    .mtvec_data(mtvec_data),
-    .mepc_data(mepc_data),
+    //.mtvec_data(mtvec_data),
+    //.mepc_data(mepc_data),
     .rd(rd),
     .imm(imm),
     .shamt(shamt),
     .wb(wb),
     .sen(sen),
     .funct3(funct3),
+
+    .csr_wdata(csr_wdata),
+    .csr_addr(csr_addr),
+    .csr_wen(csr_wen),
+    .is_csr(is_csr),
+    .csr_op_sel(csr_op_sel),
+    .is_ecall(is_ecall),
+    .is_mret(is_mret),
+
     .idu_to_exu_ready(idu_to_exu_ready),
     .idu_to_exu_valid(idu_to_exu_valid),
     .exu_to_lsu_ready(exu_to_lsu_ready),
@@ -286,29 +288,19 @@ LSU lsu(
     .sen(sen),
     .exu_we(exu_we),
     .lsu_rf_we(lsu_rf_we),
-    .lsu_csr_wen(lsu_csr_wen),
-    .csr_wen(csr_wen),
-    .csr_op_sel(csr_op_sel), 
-    .lsu_csr_op_sel(lsu_csr_op_sel),
     .is_load(is_load),
     .is_store(is_store),
-    .is_csr(is_csr),
     .branch_taken(branch_taken),
 
     .pc(pc),
     .funct3(funct3),
     .alu_result(alu_result),
+    .csr_wdata(csr_wdata),
     .wb(wb),
     .wb_sel(wb_sel),
     .src1_data(src1_data),
     .src2_data(src2_data),
     
-    .csr_addr(csr_addr),
-    .lsu_csr_addr(lsu_csr_addr),
-    .lsu_csr_input_data(lsu_csr_input_data),
-    .csr_output_data(csr_output_data),
-    .mtvec_data(mtvec_data),
-    .mepc_data(mepc_data),
     .axi(axi_lsu),
 
     .exu_to_lsu_valid(exu_to_lsu_valid),
@@ -376,22 +368,18 @@ RegisterFile regfile (
     .rf_to_ifu_valid(rf_to_ifu_valid),
     .rf_to_ifu_ready(rf_to_ifu_ready)
 );
-
+/*
 CSR csr (
     .clk(clock),
     .pc(pc),
-    .lsu_csr_addr(lsu_csr_addr),
-    .lsu_csr_wen(lsu_csr_wen),
-    .lsu_is_ecall(lsu_is_ecall),
-    .csr_output_data(csr_output_data),
-    .lsu_csr_input_data(lsu_csr_input_data),
+    .csr_addr(csr_addr),
+    .csr_wen(lsu_csr_wen),
+    .is_ecall(lsu_is_ecall),
+    .csr_rdata(csr_rdata),
+    .csr_wdata(csr_wdata),
     .mtvec_data(mtvec_data),
-    .mepc_data(mepc_data),
-    .exu_to_csr_valid(exu_to_csr_valid),
-    .exu_to_csr_ready(exu_to_csr_ready),
-    .csr_to_ifu_valid(csr_to_ifu_valid),
-    .csr_to_ifu_ready(csr_to_ifu_ready)
+    .mepc_data(mepc_data)
 );
-
+*/
 
 endmodule

@@ -21,6 +21,15 @@ module EXU (
 
     input   reg                 trap_valid,
 
+    input                       is_csr,
+    input                       csr_wen,
+    input                       csr_op_sel,
+    input           [11:0]      csr_addr,
+    input                       is_ecall,
+    input                       is_mret,
+    //input           [31:0]      csr_rdata,
+    output          [31:0]      csr_wdata,
+
     input   reg     [31:0]      pc,
     input   wire    [31:0]      src1_data,
     input   wire    [31:0]      src2_data,
@@ -30,8 +39,8 @@ module EXU (
     input   reg     [2:0]       funct3,
     output  reg     [31:0]      wb,
     
-    input   wire    [31:0]      mtvec_data,
-    input   wire    [31:0]      mepc_data,
+    //input   wire    [31:0]      mtvec_data,
+    //input   wire    [31:0]      mepc_data,
     output                      redirect_valid,
     output  reg     [31:0]      redirect_pc,
 
@@ -94,17 +103,22 @@ assign redirect_pc =
         (is_branch && branch_taken)    ? branch_target :
                                   32'b0;
 
-
+wire [31:0] mtvec_data, mepc_data;
 always @(*) begin
     jal_target = 0;
     jalr_target = 0;
     branch_target = 0; 
+    trap_pc = 0;
     if(is_jal)
         jal_target = imm + pc;
     if(is_jalr)
         jalr_target = (imm + src1_data) & ~1;
     if(is_branch)
         branch_target = imm + pc;
+    if(is_ecall)
+        trap_pc = mtvec_data;
+    if(is_mret)
+        trap_pc = mepc_data;
 end
 
 
@@ -149,5 +163,24 @@ always @(posedge clk) begin
         //exu_to_lsu_valid = 1'b0;
     end
 end
+
+
+wire    [31:0] csr_rdata;
+assign csr_wdata = (csr_op_sel == `CSR_WRITE) ? src1_data : (csr_rdata | src1_data);
+
+CSR csr(
+    .clk(clk),
+    .pc(pc),
+    .csr_addr(csr_addr),
+    .csr_wen(csr_wen),
+    .is_ecall(is_ecall),
+    .csr_rdata(csr_rdata),
+    .csr_wdata(csr_wdata),
+    .mtvec_data(mtvec_data),
+    .mepc_data(mepc_data)
+);
+
+
+
 
 endmodule

@@ -14,6 +14,7 @@ module IDU(
     output  reg                         csr_op_sel,
     
     output  reg                         is_ecall,
+    output  reg                         is_mret,
     output  reg                         is_ebreak,
     output  reg                         is_jalr,
     output  reg                         is_jal,
@@ -79,6 +80,7 @@ always @(*) begin
     ifu_to_idu_ready = 1;
     idu_to_exu_valid = ifu_to_idu_valid;
     is_ecall = 1'b0;
+    is_mret = 1'b0;
     is_ebreak = 1'b0;
     ALUop = `NPC_ALU_ADD;
     csr_op_sel = `CSR_WRITE;
@@ -199,6 +201,7 @@ always @(*) begin
             is_ebreak = 1'b1;
         end
         if(inst == 32'b0011_0000_0010_0000_0000_0000_0111_0011) begin
+            is_mret = 1'b1;
             trap_valid = 1;
         end
         if(opcode == 7'b1110011) begin//priortiy
@@ -226,7 +229,4 @@ always @(*) begin
 end
 
 endmodule
-
-
-
 
