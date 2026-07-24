@@ -10,17 +10,17 @@ MEMORY {
 
 SECTIONS {
     .boot.text : {
-        KEEP(*(.boot.entry))
-        KEEP(*(.boot.text))
-        KEEP(*(.boot.text.*))
+        *(.boot.entry)
+        *(.boot.text)
+        *(.boot.text.*)
         _boot_text_end = .;
     } > flash
     _boot_text_lma = LOADADDR(.boot.text);
 
     .text : {
         _text_start = .;
-        KEEP(*(entry))
-        KEEP(*(.text*))
+        *(entry)
+        *(.text*)
         _text_end = .;
     } > psram AT> flash
     _text_lma = LOADADDR(.text);

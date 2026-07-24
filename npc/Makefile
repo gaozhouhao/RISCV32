@@ -52,7 +52,6 @@ VSRCS += $(abspath ../ysyxSoC/build/ysyxSoCFull.v)
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
 
-
 LDFLAGS += -lreadline -lhistory
 
 # rules for NVBoard
