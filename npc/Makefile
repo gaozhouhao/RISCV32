@@ -22,6 +22,7 @@ VERILATOR_CFLAGS += -Wno-PINCONNECTEMPTY \
   					-Wno-ASSIGNDLY \
 					-Wno-PROCASSINIT \
 					--autoflush
+
 ifeq ($(CONFIG_GTKWAVE), y)
 VERILATOR_CFLAGS += --trace-fst
 endif

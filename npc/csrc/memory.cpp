@@ -4,7 +4,8 @@
 #include <npc_include.h>
 const int N = 1 << 24;
 uint32_t mrom[1<<12] = {};
-uint32_t flash[1<<24] = {};
+uint32_t flash[1<<22] = {};
+uint32_t psram[1<<27] = {};
 uint32_t memory[N] = {
 0b10110000000000000010010101110011,
 0b10110000000000000010010101110011,
@@ -36,6 +37,9 @@ uint32_t memory[N] = {
 
 
 unsigned int pmem_read(unsigned int raddr) {
+    if (raddr >= PSRAM_ADDR && raddr < PSRAM_ADDR + PSRAM_SIZE){
+        return psram[(raddr - PSRAM_ADDR) >> 2];
+    }
     //if(raddr >= START_ADDR)
     //    raddr -= START_ADDR;
     uint32_t idx = (raddr & ~0x3u) >> 2;

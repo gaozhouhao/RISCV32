@@ -85,7 +85,7 @@ int _trm_init() {
     asm volatile("csrr %0, mvendorid" : "=r"(vendor));
     asm volatile("csrr %0, marchid" : "=r"(arch));
     printf("mvendorid: %c%c%c%c\n", (uint8_t)(vendor>>24), (uint8_t)(vendor>>16), (uint8_t)(vendor>>8), (uint8_t)(vendor>>0));
-    //printf("arch: %d\n", arch);
+    printf("arch: %d\n", arch);
     
     int ret = main(mainargs);
     halt(ret);

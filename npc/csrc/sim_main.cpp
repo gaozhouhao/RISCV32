@@ -33,9 +33,13 @@ CPUArchState cpu = {.pc=0x30000000};
 
 void exec_once() {
     top->clock = 0; top->eval(); contextp->timeInc(1);
+#ifdef CONFIG_GTKWAVE
     tfp->dump(contextp->time());
+#endif
     top->clock = 1; top->eval(); contextp->timeInc(1);
+#ifdef CONFIG_GTKWAVE
     tfp->dump(contextp->time());
+#endif
 #ifdef CONFIG_ITRACE
     printf("0x%08X\n", top->rootp->top__DOT__inst);
 #endif
