@@ -12,7 +12,7 @@ AM_SRCS := riscv/ysyxsoc/start.S \
 CFLAGS    += -fdata-sections -ffunction-sections
 LDSCRIPTS += $(AM_HOME)/scripts/ysyxsoc_linker.ld
 LDFLAGS   += --defsym=_pmem_start=0x30000000 --defsym=_entry_offset=0x0
-LDFLAGS   += --gc-sections -e _boot_start
+LDFLAGS   += --gc-sections -e _fsbl_start
 NPCFLAGS += 
 
 MAINARGS_MAX_LEN = 64

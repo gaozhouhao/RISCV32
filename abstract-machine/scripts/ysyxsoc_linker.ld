@@ -1,4 +1,4 @@
-ENTRY(_boot_start)
+ENTRY(_fsbl_start)
 /*PHDRS { text PT_LOAD; data PT_LOAD; }*/
 
 MEMORY {
@@ -9,13 +9,22 @@ MEMORY {
 }
 
 SECTIONS {
-    .boot.text : {
-        *(.boot.entry)
-        *(.boot.text)
-        *(.boot.text.*)
-        _boot_text_end = .;
+    .fsbl_text : {
+        *(.fsbl_entry)
+        *(.fsbl_text)
+        *(.fsbl_text.*)
+        _fsbl_text_end = .;
     } > flash
-    _boot_text_lma = LOADADDR(.boot.text);
+    _fsbl_text_lma = LOADADDR(.fsbl_text);
+
+    .ssbl_text : {
+        _ssbl_text_start = .;
+        *(.ssbl_entry)
+        *(.ssbl_text)
+        *(.ssbl_text.*)
+        _ssbl_text_end = .;
+    } > sram AT > flash
+    _ssbl_text_lma = LOADADDR(.ssbl_text);
 
     .text : {
         _text_start = .;
