@@ -103,6 +103,10 @@ static void psram_write(paddr_t addr, int len, word_t data) {
     host_write(psram + addr - CONFIG_PSRAM_BASE, len, data);
 }
 
+static void flash_write(paddr_t addr, int len, word_t data) {
+    host_write(flash + addr - CONFIG_FLASH_BASE, len, data);
+}
+
 static void out_of_bound(paddr_t addr) {
   panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
       addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
@@ -132,6 +136,7 @@ word_t paddr_read(paddr_t addr, int len) {
 void paddr_write(paddr_t addr, int len, word_t data) {
   if (likely(in_sram(addr))) { sram_write(addr, len, data); return; }
   if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
+  if (likely(in_flash(addr))) { flash_write(addr, len, data); return; }
   if (likely(in_psram(addr))) { psram_write(addr, len, data); return; }
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
