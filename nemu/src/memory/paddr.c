@@ -50,11 +50,6 @@ static word_t pmem_read(paddr_t addr, int len) {
         printf("%s-read:\t%08x\t[0x%08x]\n", "memory", ret, addr);
 #endif
 
-#ifdef CONFIG_DTRACE_COND
-    IOMap* map = fetch_mmio_map(addr);
-    if(map != NULL)
-        printf("%s-read:\t%08x\t[0x%08x]\n", map->name, ret, addr);
-#endif
   return ret;
 }
 
@@ -87,11 +82,6 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
 #endif
     if(flag)
         printf("%s-write:\t%08x\t[0x%08x]\n", "memory", data, addr);
-#endif
-#ifdef CONFIG_DTRACE_COND
-    IOMap* map = fetch_mmio_map(addr);
-    if(map != NULL)
-        printf("%s-write:\t%08x\t[0x%08x]\n", map->name, data, addr);
 #endif
 }
 
@@ -127,7 +117,9 @@ word_t paddr_read(paddr_t addr, int len) {
   if (likely(in_flash(addr))) return flash_read(addr, len);
   if (likely(in_psram(addr))) return psram_read(addr, len);
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
+  //printf("addr:%x\n", addr);
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+  
   itrace_dump();
   out_of_bound(addr);
   return 0;
