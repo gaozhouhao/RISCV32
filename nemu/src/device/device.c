@@ -60,7 +60,7 @@ void device_update() {
       }
 #endif
       default: break;
-    }
+  
   }
 #endif
 }
