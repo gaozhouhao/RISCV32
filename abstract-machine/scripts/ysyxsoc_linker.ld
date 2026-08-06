@@ -6,7 +6,10 @@ MEMORY {
   flash : ORIGIN = 0x30000000, LENGTH = 16M
   mrom : ORIGIN = 0x20000000, LENGTH = 4K
   sram : ORIGIN = 0x0f000000, LENGTH = 8K
+  sdram : ORIGIN = 0xa0000000, LENGTH = 128M
+  run_addr : ORIGIN = 0x80000000, LENGTH = 4M
 }
+
 
 SECTIONS {
     .fsbl_text : {
@@ -31,14 +34,14 @@ SECTIONS {
         *(entry)
         *(.text*)
         _text_end = .;
-    } > psram AT> flash
+    } > run_addr AT> flash
     _text_lma = LOADADDR(.text);
 
     .rodata : {
         _rodata_start = .;
         *(.rodata*)
         _rodata_end = .;
-    } > psram AT> flash
+    } > run_addr AT> flash
     _rodata_lma = LOADADDR(.rodata);
 
     .data : {
@@ -46,7 +49,7 @@ SECTIONS {
         *(.data*)
         *(.sdata*)
         _data_end = .;
-    } > psram AT> flash
+    } > run_addr AT> flash
     _data_lma = LOADADDR(.data);
 
 
@@ -80,7 +83,7 @@ SECTIONS {
         __am_apps_data_end = .;
         . = ALIGN(8);
         _data_extra_end = .;
-    } > psram AT > flash
+    } > run_addr AT > flash
     _data_extra_lma = LOADADDR(.data.extra);
 
 
@@ -90,7 +93,7 @@ SECTIONS {
         *(.sbss*)
         *(.scommon)
         _bss_end = .;
-    } > psram
+    } > run_addr
 
     .bss.extra : {
         _bss_extra_start = .;
@@ -102,7 +105,7 @@ SECTIONS {
         __am_apps_bss_end = .;
         . = ALIGN(8);
         _bss_extra_end = .;
-    } > psram
+    } > run_addr
 
 
     _psram_start = ORIGIN(psram);

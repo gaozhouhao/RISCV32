@@ -29,6 +29,7 @@ extern "C" void flash_read(int32_t addr, int32_t *data) {
 extern "C" void mrom_read(int32_t addr, int32_t *data) { 
     *data = mrom[(addr - MROM_ADDR) >> 2];
 }
+
 CPUArchState cpu = {.pc=0x30000000};
 
 void exec_once() {

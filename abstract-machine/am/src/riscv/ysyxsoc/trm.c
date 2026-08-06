@@ -51,6 +51,14 @@ int _trm_init() {
 
     uart_init();
 
+    // *(volatile uint64_t*) 0xa0000000 = 0x12345678;
+    // *(volatile uint64_t*) 0xa0000800 = 0x87654321;
+    // printf("data1:%x\n", *(volatile uint64_t*) 0xa0000000);
+    // //printf("data1:%x\n", data);
+    // printf("data2:%x\n", *(volatile uint64_t*) 0xa0000800);
+    // printf("data3:%x\n", *(volatile uint64_t*) 0xa0001000);
+    
+
     uint32_t vendor, arch;
     asm volatile("csrr %0, mvendorid" : "=r"(vendor));
     asm volatile("csrr %0, marchid" : "=r"(arch));
