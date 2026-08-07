@@ -78,32 +78,32 @@ wire    [31:0]  next_pc/* verilator public_flat_rd */;
 wire    [31:0]  pc/* verilator public_flat_rd */;
 AXI_IF          axi_lsu();
 AXI_IF          axi_ifu();
-AXI_IF          axi_arb();
+AXI_IF          axi_soc();
 //AXI_IF          axi_mem();
 //AXI_IF          axi_uart();
 AXI_IF          axi_clint();
 
-assign  axi_arb.awready = io_master_awready;
-assign  io_master_awvalid = axi_arb.awvalid;
-assign  io_master_awaddr = axi_arb.awaddr;
+assign  axi_soc.awready = io_master_awready;
+assign  io_master_awvalid = axi_soc.awvalid;
+assign  io_master_awaddr = axi_soc.awaddr;
 
-assign  axi_arb.wready = io_master_wready;
-assign  io_master_wvalid = axi_arb.wvalid;
-assign  io_master_wdata = axi_arb.wdata;
-assign  io_master_wstrb = axi_arb.wstrb;
+assign  axi_soc.wready = io_master_wready;
+assign  io_master_wvalid = axi_soc.wvalid;
+assign  io_master_wdata = axi_soc.wdata;
+assign  io_master_wstrb = axi_soc.wstrb;
 
-assign  io_master_bready = axi_arb.bready;
-assign  axi_arb.bvalid = io_master_bvalid;
-assign  axi_arb.bresp = io_master_bresp;
+assign  io_master_bready = axi_soc.bready;
+assign  axi_soc.bvalid = io_master_bvalid;
+assign  axi_soc.bresp = io_master_bresp;
 
-assign  axi_arb.arready = io_master_arready;
-assign  io_master_arvalid = axi_arb.arvalid;
-assign  io_master_araddr = axi_arb.araddr;
+assign  axi_soc.arready = io_master_arready;
+assign  io_master_arvalid = axi_soc.arvalid;
+assign  io_master_araddr = axi_soc.araddr;
 
-assign  io_master_rready = axi_arb.rready;
-assign  axi_arb.rresp = io_master_rresp;
-assign  axi_arb.rvalid = io_master_rvalid;
-assign  axi_arb.rdata = io_master_rdata;
+assign  io_master_rready = axi_soc.rready;
+assign  axi_soc.rresp = io_master_rresp;
+assign  axi_soc.rvalid = io_master_rvalid;
+assign  axi_soc.rdata = io_master_rdata;
 
 
 wire            ifu_reqValid;
@@ -319,13 +319,13 @@ Arbiter arbiter(
     .reset(reset),
     .axi_ifu(axi_ifu),
     .axi_lsu(axi_lsu),
-    .axi_arb(axi_arb.master)
+    .axi_soc(axi_soc.master)
 );
 /*
 Xbar xbar(
     .clk(clock),
     .reset(reset),
-    .axi_arb(axi_arb),
+    .axi_soc(axi_soc),
     .axi_mem(axi_mem),
     .axi_uart(axi_uart),
     .axi_clint(axi_clint)
