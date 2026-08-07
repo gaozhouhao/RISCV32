@@ -7,7 +7,7 @@ MEMORY {
   mrom : ORIGIN = 0x20000000, LENGTH = 4K
   sram : ORIGIN = 0x0f000000, LENGTH = 8K
   sdram : ORIGIN = 0xa0000000, LENGTH = 128M
-  run_addr : ORIGIN = 0x80000000, LENGTH = 4M
+  run_addr : ORIGIN = 0xa0000000, LENGTH = 128M
 }
 
 
@@ -108,8 +108,8 @@ SECTIONS {
     } > run_addr
 
 
-    _psram_start = ORIGIN(psram);
-    _psram_end = ORIGIN(psram) + LENGTH(psram);
+    _run_start = ORIGIN(run_addr);
+    _run_end = ORIGIN(run_addr) + LENGTH(run_addr);
     
     _stack_top = 0x0f002000;
     _boot_stack_pointer = _stack_top;

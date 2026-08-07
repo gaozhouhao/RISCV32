@@ -7,13 +7,15 @@ extern char _heap_start;
 int main(const char *args);
 
 extern char _pmem_start;
-extern char _psram_start;
-extern char _psram_end;
+extern char _run_start;
+extern char _run_end;
+
+
 #define PMEM_SIZE (128 * 1024 * 1024)
 #define PMEM_END  ((uintptr_t)&_pmem_start + PMEM_SIZE)
-#define PSRAM_END  ((uintptr_t)&_psram_end)
+#define RUN_END  ((uintptr_t)&_run_end)
 
-Area heap = RANGE(&_heap_start, PSRAM_END);
+Area heap = RANGE(&_heap_start, RUN_END);
 static const char mainargs[MAINARGS_MAX_LEN] = TOSTRING(MAINARGS_PLACEHOLDER); // defined in CFLAGS
 
 void putch(char ch) {
@@ -50,14 +52,6 @@ void uart_init(){
 int _trm_init() {
 
     uart_init();
-
-    // *(volatile uint64_t*) 0xa0000000 = 0x12345678;
-    // *(volatile uint64_t*) 0xa0000800 = 0x87654321;
-    // printf("data1:%x\n", *(volatile uint64_t*) 0xa0000000);
-    // //printf("data1:%x\n", data);
-    // printf("data2:%x\n", *(volatile uint64_t*) 0xa0000800);
-    // printf("data3:%x\n", *(volatile uint64_t*) 0xa0001000);
-    
 
     uint32_t vendor, arch;
     asm volatile("csrr %0, mvendorid" : "=r"(vendor));
