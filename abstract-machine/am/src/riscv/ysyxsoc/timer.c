@@ -9,9 +9,9 @@ void __am_timer_init() {
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
     uint32_t high1, low, high2;
     do{
-        high1 = inl(0xa0000048 + 4);
-        low = inl(0xa0000048 + 0);
-        high2 = inl(0xa0000048 + 4);
+        high1 = inl(0x02000048 + 4);
+        low = inl(0x02000048 + 0);
+        high2 = inl(0x02000048 + 4);
     }while(high1 != high2);
   uptime->us = (((uint64_t)high1 << 32) | low) * systemFrequency;
 }
