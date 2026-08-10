@@ -1,15 +1,24 @@
 #include <cpu/npc_cpu.h>
+#include <cpu/decode.h>
 #include <cpu/npc_difftest.h>
 #include <npc_utils.h>
 #include <debug.h>
+#include <macro.h>
 #include "../monitor/sdb/sdb.h"
 #include "npc_include.h"
 #include "cpu/npc_difftest.h"
 
-void exec_once();
+#define MAX_INST_TO_PRINT 1000
 
-static void trace_and_difftest(uint32_t pc, uint32_t dnpc, uint32_t inst) {
+uint64_t g_nr_guest_inst = 0;
+static bool g_print_step = false;
+
+void exec_once(Decode *s);
+
+static void trace_and_difftest(Decode *_this) {
     //IFDEF(CONFIG_DIFFTEST, difftest_step(pc, dnpc));
+    //IFDEF(CONFIG_ITRACE, log_write("%s\n", _this->logbuf));
+    if (g_print_step) { IFDEF(CONFIG_ITRACE, printf("%s\n", _this->logbuf)); }
 #ifdef CONFIG_DIFFTEST
     if(pc >= MROM_ADDR && pc < MROM_ADDR + MROM_SIZE){
         difftest_skip_ref();
@@ -47,22 +56,21 @@ static void trace_and_difftest(uint32_t pc, uint32_t dnpc, uint32_t inst) {
 }
 
 static void execute(uint64_t  n) {
-    for (;n > 0; n --) {
-        exec_once();
-        
+    Decode s;
+    for (; n > 0; n --) {
+        exec_once(&s);
+        g_nr_guest_inst ++;
         static int inst_done_r;
         static int owner_rd_r, owner_wr_r;
-    //printf("%d, %d\n", top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done, inst_done_r);
-        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done == 0 && inst_done_r == 1)
-        {
-            //if(owner_wr_r == 2 || owner_rd_r == 2)
-            trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst);
+
+        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done == 0 && inst_done_r == 1) {
+            trace_and_difftest(&s);
         }
         inst_done_r = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done;
-        //owner_rd_r = top->rootp->ysyx_25120302__DOT__xbar__DOT__owner_rd;
-        //owner_wr_r = top->rootp->ysyx_25120302__DOT__xbar__DOT__owner_wr;
-        //TODO
         if (npc_state.state != NPC_RUNNING) break;
+        // if (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
+        //     n --;
+        // }
     }
 }
 
@@ -72,6 +80,7 @@ void assert_fail_msg(){
 }
 
 void cpu_exec(uint64_t n) {
+    g_print_step = (n < MAX_INST_TO_PRINT);
     switch (npc_state.state) {
         case NPC_END: case  NPC_ABORT: case NPC_QUIT:
             printf("Program execution has ended. To restart the program, exit NPC and run again.\n");

@@ -2,11 +2,16 @@
 -include $(NPC_HOME)/include/config/auto.conf
 -include $(NPC_HOME)/include/config/auto.conf.cmd
 
+FILELIST_MK = $(shell find -L ./csrc -name "filelist.mk")
+include $(FILELIST_MK)
+
 TOPNAME = ysyxSoCFull
 NXDC_FILES = constr/top.nxdc
-INC_PATH ?=
+
 INC_PATH += $(NPC_HOME)/include
 INC_PATH += $(abspath ./include)
+
+# INC_PATH += $(NEMU_HOME)/tools/capstone/repo/include
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc -Wall\
@@ -50,8 +55,10 @@ VHDRS = $(shell find $(abspath ./vsrc) -name "*.vh")
 VSRCS += $(shell find $(abspath ../ysyxSoC/perip) -name "*.v")
 VSRCS += $(abspath ../ysyxSoC/build/ysyxSoCFull.v)
 
-CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+CSRCS += $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCS += $(SRC_AUTO_BIND)
+
+CSRCS := $(filter-out $(CSRCS-BLACKLIST-y), $(CSRCS))
 
 LDFLAGS += -lreadline -lhistory
 

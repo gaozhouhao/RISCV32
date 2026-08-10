@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <cpu/decode.h>
 #include <verilated.h>
 #include <verilated_fst_c.h>
 //#include <nvboard.h>
@@ -8,7 +9,7 @@
 #include <debug.h>
 #include "npc_utils.h"
 #include <stdio.h>
-FILE *log_fp = stdout;
+
 const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};    
 const std::unique_ptr<TOP_NAME> top{new TOP_NAME{contextp.get(), "TOP"}};
 
@@ -30,19 +31,43 @@ extern "C" void mrom_read(int32_t addr, int32_t *data) {
     *data = mrom[(addr - MROM_ADDR) >> 2];
 }
 
+uint32_t current_inst = 0;
+extern "C" void get_inst(int inst) {
+    current_inst = (uint32_t)inst;
+};
+
 CPUArchState cpu = {.pc=0x30000000};
 
-void exec_once() {
+void exec_once(Decode *s) {
+    s->pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc;
     top->clock = 0; top->eval(); contextp->timeInc(1);
-#ifdef CONFIG_GTKWAVE
-    tfp->dump(contextp->time());
-#endif
-    top->clock = 1; top->eval(); contextp->timeInc(1);
-#ifdef CONFIG_GTKWAVE
-    tfp->dump(contextp->time());
-#endif
+    IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
+    top->clock = 1; top->eval(); 
+    contextp->timeInc(1);
+    IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
+    int inst_valid = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid;
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
+        s->inst = current_inst;
+    }
+    //s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc;
+    
 #ifdef CONFIG_ITRACE
-    printf("0x%08X\n", top->rootp->top__DOT__inst);
+    if (inst_valid) {
+        char *p = s->logbuf;
+        p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":\t", s->pc);
+        int i;
+
+        uint8_t *inst = (uint8_t *)&s->inst;
+        for (i = 3; i >= 0; i --) {
+            p += snprintf(p, 4, " %02x", inst[i]);
+        }
+        p += snprintf(p, 3, "\t ");
+
+        void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
+        disassemble(p, s->logbuf + sizeof(s->logbuf) - p, s->pc, (uint8_t *)&s->inst, 4);
+    }
+
+//   itrace_push(s->logbuf);
 #endif
 
     for (int i = 0; i < 32; i ++){

@@ -2,20 +2,24 @@
 #include <npc_common.h>
 #include <npc_memory.h>
 #include <npc_include.h>
+
 void init_difftest(char *ref_so_file, long img_size, int port);
 
 void sdb_set_batch_mode();
 
+static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 
+void init_log(const char *log_file);
 void init_sdb();
+void init_disasm();
 
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
     {"batch"    , no_argument      , NULL, 'b'},
-    //{"log"      , required_argument, NULL, 'l'},
+    {"log"      , required_argument, NULL, 'l'},
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"help"     , no_argument      , NULL, 'h'},
@@ -28,7 +32,7 @@ static int parse_args(int argc, char *argv[]) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
-      //case 'l': log_file = optarg; break;
+      case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; 
     printf("diff_so_file ptr = %p\n", (void *)diff_so_file);
                 break;
@@ -99,14 +103,22 @@ static long load_img() {
 }
 
 void init_monitor(int argc, char *argv[]){
+
     parse_args(argc, argv);
+
+    init_log(log_file);
+
     long img_size = load_img();
+
     //long img_size = 4096;
 #if CONFIG_DIFFTEST
     printf("diff_so_file:\033[32m%s\033[0m\n", diff_so_file);
     init_difftest(diff_so_file, img_size, difftest_port);
 #endif    
     init_sdb();
+
+    IFDEF(CONFIG_ITRACE, init_disasm());
+
 }
 
 

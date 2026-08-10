@@ -21,7 +21,7 @@
 #include <npc_utils.h>
 
 #define Log(format, ...) \
-    _NPC_Log(ANSI_FMT("[%s:%d %s] " format, ANSI_FG_BLUE) "\n", \
+    _Log(ANSI_FMT("[%s:%d %s] " format, ANSI_FG_BLUE) "\n", \
         __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 
 #ifdef __cplusplus

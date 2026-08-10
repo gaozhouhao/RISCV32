@@ -55,20 +55,20 @@ uint64_t get_time();
 
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
 
-#define npc_log_write(...) \
+extern "C" bool log_enable();
+#define log_write(...) \
   do { \
     extern FILE* log_fp; \
-    extern bool log_enable(); \
     if (log_enable() && log_fp != NULL) { \
       fprintf(log_fp, __VA_ARGS__); \
       fflush(log_fp); \
     } \
   } while (0) \
 
-#define _NPC_Log(...) \
+#define _Log(...) \
   do { \
     printf(__VA_ARGS__); \
-    npc_log_write(__VA_ARGS__); \
+    log_write(__VA_ARGS__); \
   } while (0)
 
 
