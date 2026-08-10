@@ -112,26 +112,29 @@ void init_mem() {
 }
 
 word_t paddr_read(paddr_t addr, int len) {
+  IFDEF(CONFIG_MTRACE, printf("read:\t0x%08x\n", addr));
   if (likely(in_sram(addr))) return sram_read(addr, len);
   if (likely(in_mrom(addr))) return mrom_read(addr, len);
   if (likely(in_flash(addr))) return flash_read(addr, len);
   if (likely(in_psram(addr))) return psram_read(addr, len);
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
-  //printf("addr:%x\n", addr);
+
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+  IFDEF(CONFIG_ITRACE, itrace_dump());
   
-  itrace_dump();
   out_of_bound(addr);
   return 0;
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
+  IFDEF(CONFIG_MTRACE, printf("write:\t0x%08x\n", addr));
   if (likely(in_sram(addr))) { sram_write(addr, len, data); return; }
   if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
   if (likely(in_flash(addr))) { flash_write(addr, len, data); return; }
   if (likely(in_psram(addr))) { psram_write(addr, len, data); return; }
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
-  itrace_dump();
+  IFDEF(CONFIG_ITRACE, itrace_dump());
+  
   out_of_bound(addr);
 }

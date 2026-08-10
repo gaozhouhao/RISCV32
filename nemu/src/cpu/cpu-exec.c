@@ -36,9 +36,7 @@ static bool g_print_step = false;
 void device_update();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
-#ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
-#endif
+  IFDEF(CONFIG_ITRACE, log_write("%s\n", _this->logbuf));
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 #ifdef CONFIG_WATCHPOINT
@@ -65,18 +63,20 @@ static void exec_once(Decode *s, vaddr_t pc) {
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
-  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
+  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":\t", s->pc);
   int ilen = s->snpc - s->pc;
   int i;
+
   uint8_t *inst = (uint8_t *)&s->isa.inst;
 #ifdef CONFIG_ISA_x86
   for (i = 0; i < ilen; i ++) {
 #else
   for (i = ilen - 1; i >= 0; i --) {
 #endif
-
     p += snprintf(p, 4, " %02x", inst[i]);
   }
+  p += snprintf(p, 2, "\t");
+
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
   int space_len = ilen_max - ilen;
   if (space_len < 0) space_len = 0;
@@ -87,31 +87,32 @@ static void exec_once(Decode *s, vaddr_t pc) {
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
-  
-  char space[128];
-    char *next_p = space;
-    next_p += snprintf(next_p, sizeof(space), FMT_WORD ":", cpu.pc);
-    Decode next_s;
-    next_s.snpc = cpu.pc;
-    next_s.isa.inst = vaddr_ifetch(cpu.pc, 4);
-    uint8_t *next_inst = (uint8_t *)&next_s.isa.inst;
-    for (i = ilen -1; i >= 0; i --) {
-        next_p += snprintf(next_p, 4, " %02x", next_inst[i]);
-    }
-    ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
-    space_len = ilen_max - ilen;
-    if (space_len < 0) space_len = 0;
-    space_len = space_len * 3 + 1;
-    memset(next_p, ' ', space_len);
-    next_p += space_len;
 
-    disassemble(next_p, space + sizeof(space) - next_p,
-        cpu.pc, (uint8_t *)&next_s.isa.inst, ilen);
-    itrace_push(s->logbuf, space);
-    //void itrace_dump();
-    //itrace_dump();
+  itrace_push(s->logbuf);
+
+  // Decode *next_s;
+  // next_s->snpc = cpu.pc;
+  // next_s->isa.inst = vaddr_ifetch(next_s->snpc, 4);
+  // char *next_p = next_s->logbuf;
+  // next_p += snprintf(next_p, sizeof(next_s->logbuf), FMT_WORD ":\t", cpu.pc);
+  
+  // uint8_t *next_inst = (uint8_t *)&next_s->isa.inst;
+  // for (i = ilen -1; i >= 0; i --) {
+  //     next_p += snprintf(next_p, 4, " %02x", next_inst[i]);
+  // }
+  // next_p += snprintf(p, 2, "\t");
+
+  // memset(next_p, ' ', space_len);
+  // next_p += space_len;
+
+  // disassemble(next_p, space + sizeof(space) - next_p,
+  //     cpu.pc, (uint8_t *)&next_s.isa.inst, ilen);
+  // void itrace_dump();
+  // itrace_dump();
 
 #endif
+
+
 }
 
 static void execute(uint64_t n) {
