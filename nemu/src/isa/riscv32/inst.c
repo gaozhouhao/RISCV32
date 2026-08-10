@@ -18,6 +18,7 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 #include <debug.h>
+#include <../../monitor/sdb/sdb.h>
 
 #define R(i) gpr(i)
 #define Mr vaddr_read
@@ -60,6 +61,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 }
 
 static int decode_exec(Decode *s) {
+  static int call_depth = 0;
   s->dnpc = s->snpc;
 
 #define INSTPAT_INST(s) ((s)->isa.inst)
@@ -119,8 +121,29 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 100 ????? 00100 11", xori , I, R(rd) = src1 ^ imm);
   INSTPAT("??????? ????? ????? 110 ????? 00100 11", ori  , I, R(rd) = src1 | imm);
   INSTPAT("??????? ????? ????? 111 ????? 00100 11", andi , I, R(rd) = src1 & imm);
-  INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr , I, R(rd) = s->pc + 4; s->dnpc = (src1 + imm) & ~0x1);
-  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal  , J, R(rd) = s->pc + 4; s->dnpc = s->pc + imm);
+  INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr , I, R(rd) = s->pc + 4; 
+                                                              s->dnpc = (src1 + imm) & ~0x1;
+                                                              int rs1 = BITS(s->isa.inst, 19, 15);
+                                                              if(rd == 1) { // call
+                                                                printf("0x%08x:", s->pc);
+                                                                for (int i = 0; i < call_depth; i ++) printf("  ");
+                                                                printf("call [%s@0x%08x]\n", find_func(s->dnpc), s->dnpc); 
+                                                                call_depth ++;
+                                                              }
+                                                              if(rd == 0 && rs1 == 1 && imm == 0) { // ret
+                                                                call_depth --;
+                                                                printf("0x%08x:", s->pc);
+                                                                for (int i = 0; i < call_depth; i ++) printf("  ");
+                                                                printf("ret [%s]\n", find_func(s->dnpc));
+                                                              });
+  INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal  , J, R(rd) = s->pc + 4; 
+                                                              s->dnpc = s->pc + imm;
+                                                              if(rd == 1) { // call
+                                                                printf("0x%08x:", s->pc);
+                                                                for (int i = 0; i < call_depth; i ++) printf("  ");
+                                                                printf("call [%s@0x%08x]\n", find_func(s->pc), s->dnpc);
+                                                                call_depth ++;
+                                                              });
   INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne  , B, s->dnpc = (src1 != src2)?(s->pc + imm):s->dnpc);
   INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq  , B, s->dnpc = (src1 == src2)?(s->pc + imm):s->dnpc);
   INSTPAT("??????? ????? ????? 100 ????? 11000 11", blt  , B, s->dnpc = ((int32_t)src1 < (int32_t)src2)?(s->pc + imm):s->dnpc);
