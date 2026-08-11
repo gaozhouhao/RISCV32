@@ -7,7 +7,7 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 int printf(const char *fmt, ...) {
-    char out[256];
+    char out[1024];
     va_list ap;
     va_start(ap, fmt);
     int num = vsprintf(out, fmt, ap);
