@@ -9,7 +9,7 @@
 #include <debug.h>
 #include "npc_utils.h"
 #include <stdio.h>
-
+#include "monitor/sdb/sdb.h"
 const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};    
 const std::unique_ptr<TOP_NAME> top{new TOP_NAME{contextp.get(), "TOP"}};
 
@@ -48,8 +48,50 @@ void exec_once(Decode *s) {
     int inst_valid = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid;
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
         s->inst = current_inst;
+        
     }
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done) {
+        s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__next_pc;
+        //printf("next pc: %x\n", s->dnpc);
+    }
+    
     //s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc;
+
+#ifdef CONFIG_FTRACE
+    
+    static int call_depth = 0;
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
+        if((s->inst & 0x7f) == 0x6f) { //jal
+            if (((s->inst >> 7) & 0x1f) == 0x1) { // rd = 1, call
+                printf("0x%08x:", s->pc);
+                for (int i = 0; i < call_depth; i ++) printf("  ");
+                    printf("call [%s@0x%08x]\n", find_func(s->pc), s->dnpc);
+                call_depth ++;
+            }
+        }
+
+        if((s->inst & 0x7f) == 0x67) { //jalr
+            if (((s->inst >> 7) & 0x1f) == 0x1) { // rd = 1, call
+                printf("0x%08x:", s->pc);
+                for (int i = 0; i < call_depth; i ++) printf("  ");
+                    printf("call [%s@0x%08x]\n", find_func(s->pc), s->dnpc);
+                call_depth ++;
+            }
+        }
+    }
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done) {
+        if((s->inst & 0x7f) == 0x67) { //jalr
+            if (((s->inst >> 7) & 0x1f) == 0x0 &&
+                ((s->inst >> 15) & 0x1f) == 0x1 &&
+                ((s->inst >> 20) & 0xfff) == 0x0) { // rd = 0 && rs1 = 1 && imm = 0, ret
+                    call_depth --;
+                    printf("0x%08x:", s->pc);
+                    for (int i = 0; i < call_depth; i ++) printf("  ");
+                    printf("ret [%s]\n", find_func(s->dnpc));
+            }
+        }
+    }
+#endif
     
 #ifdef CONFIG_ITRACE
     if (inst_valid) {
@@ -66,8 +108,7 @@ void exec_once(Decode *s) {
         void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
         disassemble(p, s->logbuf + sizeof(s->logbuf) - p, s->pc, (uint8_t *)&s->inst, 4);
     }
-
-//   itrace_push(s->logbuf);
+    itrace_push(s->logbuf);
 #endif
 
     for (int i = 0; i < 32; i ++){
@@ -120,6 +161,7 @@ int main(int argc, char** argv){
     int cnt = 0;
     tfp->open("./build/obj_dir/wave.fst");
 #endif
+
     printf("main-pc:\033[32m0x%08x\033[0m\n", cpu.pc);
     init_monitor(argc, argv);
     reset();

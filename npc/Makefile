@@ -27,7 +27,10 @@ VERILATOR_CFLAGS += -Wno-PINCONNECTEMPTY \
   					-Wno-ASSIGNDLY \
 					-Wno-PROCASSINIT \
 					--autoflush
+
+ifeq ($(CONFIG_MTRACE),y)
 VERILATOR_CFLAGS += -DCONFIG_MTRACE
+endif
 
 ifeq ($(CONFIG_GTKWAVE), y)
 VERILATOR_CFLAGS += --trace-fst

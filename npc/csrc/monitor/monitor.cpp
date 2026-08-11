@@ -3,18 +3,23 @@
 #include <npc_memory.h>
 #include <npc_include.h>
 
+
+
+void init_log(const char *log_file);
 void init_difftest(char *ref_so_file, long img_size, int port);
 
 void sdb_set_batch_mode();
+
+void init_sdb();
+void init_disasm();
+void init_ftrace(const char *elf_file);
 
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
+static char *ftrace_elf_file = NULL;
 
-void init_log(const char *log_file);
-void init_sdb();
-void init_disasm();
 
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
@@ -23,12 +28,12 @@ static int parse_args(int argc, char *argv[]) {
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"help"     , no_argument      , NULL, 'h'},
-    //{"ftrace"   , required_argument, NULL, 'f'},
+    {"ftrace"   , required_argument, NULL, 'f'},
     {0          , 0                , NULL,  0 },
   };
   int o;
   while ( (o = getopt_long(argc, argv, "-bhl:d:p:f:", table, NULL)) != -1) {
-  printf("parse_args:\033[32m%c\033[0m\n", o);
+  //printf("parse_args:\033[32m%c\033[0m\n", o);
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
@@ -36,7 +41,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'd': diff_so_file = optarg; 
     printf("diff_so_file ptr = %p\n", (void *)diff_so_file);
                 break;
-      //case 'f': ftrace_elf_file = optarg; break;
+      case 'f': ftrace_elf_file = optarg; break;
       case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -118,6 +123,7 @@ void init_monitor(int argc, char *argv[]){
     init_sdb();
 
     IFDEF(CONFIG_ITRACE, init_disasm());
+    IFDEF(CONFIG_FTRACE, init_ftrace(ftrace_elf_file));
 
 }
 

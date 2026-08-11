@@ -22,6 +22,6 @@ WP* new_wp();
 void free_wp(WP *wp);
 
 void itrace_push(char *str1, char *str2);
-
+const char *find_func(vaddr_t addr);
 
 #endif
