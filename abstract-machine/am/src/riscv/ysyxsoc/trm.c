@@ -25,17 +25,12 @@ void putch(char ch) {
         outb(0x10000000, ch);
 }
 
+
 void halt(int code) {
-    if(code == 0)
-        asm volatile("ebreak");
-    
-    putch('W');
-    putch('R');
-    putch('O');
-    putch('N');
-    putch('G');
-    putch('\n');
-    while (1);
+    asm volatile("mv a0, %0" : : "r"(code) : "a0");
+    asm volatile("ebreak");
+
+    while(1);
 }
 
 void uart_init(){
