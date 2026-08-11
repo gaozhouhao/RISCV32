@@ -61,7 +61,7 @@ static int cmd_x(char *args){
         bool success = false;
         word_t addr = expr(second_para, &success);
         for(int i = 0; i < n; i ++){
-            if(addr >= PSRAM_ADDR && addr < PSRAM_ADDR + PSRAM_SIZE){
+            if(addr >= SDRAM_ADDR && addr < SDRAM_ADDR + SDRAM_SIZE){
                 printf("0x%08X:\t", addr);
                 printf("%02X\t", (pmem_read(addr)>>24)&0xff);
                 printf("%02X\t", (pmem_read(addr)>>16)&0xff);
@@ -70,8 +70,9 @@ static int cmd_x(char *args){
                 addr += 4;
             }
             else {
-            //    itrace_dump();
-                panic("out of bound");
+                //IFDEF(CONFIG_ITRACE ,itrace_dump());
+                printf("out of bound\n");
+                //panic("out of bound");
             }
         }
     }
@@ -125,13 +126,14 @@ static int cmd_d(char *args){
     return 0;
 }
 
+static int cmd_help(char *args);
 
 static struct {
   const char *name;
   const char *description;
   int (*handler) (char *);
 } cmd_table [] = {
-  //{ "help", "Display information about all supported commands", cmd_help },
+  { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
 
@@ -145,6 +147,29 @@ static struct {
 };
 
 #define NR_CMD ARRLEN(cmd_table)
+
+static int cmd_help(char *args) {
+  /* extract the first argument */
+  char *arg = strtok(NULL, " ");
+  int i;
+
+  if (arg == NULL) {
+    /* no argument given */
+    for (i = 0; i < NR_CMD; i ++) {
+      printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
+    }
+  }
+  else {
+    for (i = 0; i < NR_CMD; i ++) {
+      if (strcmp(arg, cmd_table[i].name) == 0) {
+        printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
+        return 0;
+      }
+    }
+    printf("Unknown command '%s'\n", arg);
+  }
+  return 0;
+}
 
 static char* rl_gets() {
     static char *line_read = NULL;

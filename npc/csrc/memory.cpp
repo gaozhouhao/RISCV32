@@ -40,8 +40,13 @@ unsigned int pmem_read(unsigned int raddr) {
     if (raddr >= PSRAM_ADDR && raddr < PSRAM_ADDR + PSRAM_SIZE){
         return psram[(raddr - PSRAM_ADDR) >> 2];
     }
-    //if(raddr >= START_ADDR)
-    //    raddr -= START_ADDR;
+    else if (raddr >= SDRAM_ADDR && raddr < SDRAM_ADDR + SDRAM_SIZE){
+        return psram[(raddr - SDRAM_ADDR) >> 2];
+    }
+    else if (raddr >= SRAM_ADDR && raddr < SRAM_ADDR + SRAM_SIZE){
+        return psram[(raddr - SRAM_ADDR) >> 2];
+    }
+
     uint32_t idx = (raddr & ~0x3u) >> 2;
     
     if (idx >= 1 << 24) {
