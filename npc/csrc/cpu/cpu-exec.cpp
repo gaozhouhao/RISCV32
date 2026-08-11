@@ -17,25 +17,25 @@ void exec_once(Decode *s);
 
 static void trace_and_difftest(Decode *_this) {
     //IFDEF(CONFIG_DIFFTEST, difftest_step(pc, dnpc));
-    //IFDEF(CONFIG_ITRACE, log_write("%s\n", _this->logbuf));
+    IFDEF(CONFIG_ITRACE, log_write("%s\n", _this->logbuf));
     if (g_print_step) { IFDEF(CONFIG_ITRACE, printf("%s\n", _this->logbuf)); }
 #ifdef CONFIG_DIFFTEST
-    if(pc >= MROM_ADDR && pc < MROM_ADDR + MROM_SIZE){
+    if(_this->pc >= MROM_ADDR && _this->pc < MROM_ADDR + MROM_SIZE){
         difftest_skip_ref();
     }
-    if(pc >= SRAM_ADDR && pc < SRAM_ADDR + SRAM_SIZE){
+    if(_this->pc >= SRAM_ADDR && _this->pc < SRAM_ADDR + SRAM_SIZE){
         difftest_skip_ref();
     }
-    if(pc >= PSRAM_ADDR && pc < PSRAM_ADDR + PSRAM_SIZE){
+    if(_this->pc >= PSRAM_ADDR && _this->pc < PSRAM_ADDR + PSRAM_SIZE){
         difftest_skip_ref();
     }
-    if(pc >= FLASH_ADDR && pc <= FLASH_ADDR + FLASH_SIZE){
+    if(_this->pc >= FLASH_ADDR && _this->pc <= FLASH_ADDR + FLASH_SIZE){
         difftest_skip_ref();
     }
-    if(pc >= SDRAM_ADDR && pc <= SDRAM_ADDR + SDRAM_SIZE){
+    if(_this->pc >= SDRAM_ADDR && _this->pc <= SDRAM_ADDR + SDRAM_SIZE){
         difftest_skip_ref();
     }
-    difftest_step(pc, dnpc);
+    difftest_step(_this->pc, _this->dnpc);
 #endif
 
 #ifdef CONFIG_WATCHPOINT

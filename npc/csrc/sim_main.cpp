@@ -124,7 +124,12 @@ void exec_once(Decode *s) {
     cpu.pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc;
     static int cnt = 0;
     cnt ++;
-    if(flag) npc_state.state = NPC_END;
+    if(flag) { 
+        if (cpu.gpr[10] == 0)
+            npc_state.state = NPC_END;
+        else
+            npc_state.state = NPC_ABORT;
+    }
 }
 
 static void reset() {
