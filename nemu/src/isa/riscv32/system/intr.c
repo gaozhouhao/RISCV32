@@ -20,6 +20,9 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
    */
+#ifdef CONFIG_ETRACE
+  printf("etrace: mcause = 0x%x, mepc = 0x%x\n", NO, epc);
+#endif
     cpu.csr[0x341] = epc;
     cpu.csr[0x342] = NO;
     return cpu.csr[0x305];

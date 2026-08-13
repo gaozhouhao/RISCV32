@@ -103,7 +103,7 @@ static int cmd_x(char *args){
                 addr += 4;
             }
             else {
-                itrace_dump();
+                IFDEF(CONFIG_ITRACE ,itrace_dump());
                 panic("out of bound");
             }
         }
