@@ -76,15 +76,6 @@ CXXFLAGS += $(INCFLAGS) -DTOP_ROOT="\"V$(TOPNAME)___024root\""
 CXXFLAGS += $(INCFLAGS) -DTOP_DPI="\"V$(TOPNAME)__Dpi\""
 CXXFLAGS += -g
 
-//DIFFTEST ?= 0
-DIFF_REF_PATH = $(NEMU_HOME)/build
-DIFF_REF_SO = $(DIFF_REF_PATH)/riscv32-nemu-interpreter-so
-
-ARGS ?= 
-ifeq ($(CONFIG_DIFFTEST), y)
-override	ARGS += --diff=$(DIFF_REF_SO)
-endif
-
 all:
 	@echo "Write this Makefile by your self."
 
@@ -110,6 +101,6 @@ gdb: $(BIN)
 clean:
 	rm -rf $(BUILD_DIR)
 
-include ../Makefile
 
 include $(NPC_HOME)/scripts/config.mk
+include $(NPC_HOME)/scripts/native.mk

@@ -251,7 +251,7 @@ uint32_t eval(int p, int q) {
         else{
             for(int i = 0; i < 32; i ++){
                 if(strcmp(tokens[p].str+1, regs[i]) == 0) 
-                    return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile__DOT__rf[i]; 
+                    return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__rf[i]; 
                 //TODO
             }
         }

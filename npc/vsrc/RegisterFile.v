@@ -1,4 +1,4 @@
-module RegisterFile(
+module WBU(
     input                       clk,
     input                       reset,
     input       [31:0]            wdata,

@@ -10,7 +10,7 @@ const char *regs[] = {
 void reg_display() {
 
     for(int i = 0; i < 32; i ++){
-        printf("%-3s:  %02x", regs[i], top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile__DOT__rf[i]);
+        printf("%-3s:  %02x", regs[i], top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__rf[i]);
         if (i % 4 == 3) printf("\n");
         else printf("\t");
     }

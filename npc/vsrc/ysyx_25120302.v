@@ -349,7 +349,7 @@ MEM mem(
     .axi(axi_mem)
 );
 */
-RegisterFile regfile (
+WBU wbu (
     .clk(clock),
     .reset(reset),
     .wdata(wb),

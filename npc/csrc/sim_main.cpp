@@ -112,7 +112,7 @@ void exec_once(Decode *s) {
 #endif
 
     for (int i = 0; i < 32; i ++){
-        cpu.gpr[i] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile__DOT__rf[i];
+        cpu.gpr[i] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__rf[i];
         cpu.gpr[0] = 0;
     }
     /*TODO
