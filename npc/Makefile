@@ -82,7 +82,7 @@ all:
 $(BIN): $(VSRCS) $(VHDRS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
-		--top-module $(TOPNAME) $(VSRCS) \
+		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 		--Mdir $(OBJ_DIR) --Wno-UNOPTFLAT --public --exe --trace-fst -o $(abspath $(BIN)) $(CSRCS)
 

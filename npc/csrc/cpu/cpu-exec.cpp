@@ -87,6 +87,7 @@ void cpu_exec(uint64_t n) {
             return;
         default: npc_state.state = NPC_RUNNING;
     }
+    
     execute(n);
 
     switch (npc_state.state) {

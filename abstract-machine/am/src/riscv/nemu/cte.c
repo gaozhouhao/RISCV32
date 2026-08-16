@@ -13,14 +13,18 @@ Context* __am_irq_handle(Context *c) {
   if (user_handler) {
     Event ev = {0};
     switch (c->mcause) {
-        case 11: ev.event = EVENT_YIELD; c->mepc += 4; break;
-        default: ev.event = EVENT_ERROR; break;
+        case 11: 
+          ev.event = EVENT_YIELD; 
+          c->mepc += 4; 
+          break;
+        default: 
+          ev.event = EVENT_ERROR; 
+          break;
     }
+
     c = user_handler(ev, c);
     assert(c != NULL);
   }
-  //printf("c:%d\n", c->mepc);
-
   return c;
 }
 

@@ -2,7 +2,7 @@
 #include <cpu/decode.h>
 #include <verilated.h>
 #include <verilated_fst_c.h>
-//#include <nvboard.h>
+#include <nvboard.h>
 #include "npc_include.h"
 #include "npc_memory.h"
 #include "svdpi.h"
@@ -10,12 +10,15 @@
 #include "npc_utils.h"
 #include <stdio.h>
 #include "monitor/sdb/sdb.h"
+
 const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};    
 const std::unique_ptr<TOP_NAME> top{new TOP_NAME{contextp.get(), "TOP"}};
 
 VerilatedFstC* tfp = new VerilatedFstC;
-//void nvboard_bind_all_pins(TOP_NAME* top);
 
+#if CONFIG_NVBOARD
+    void nvboard_bind_all_pins(TOP_NAME* top);
+#endif
 int flag = 0;
 void ebreak(svBit is_ebreak){ flag = is_ebreak; }
 
@@ -45,20 +48,18 @@ void exec_once(Decode *s) {
     top->clock = 1; top->eval(); 
     contextp->timeInc(1);
     IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
+    IFDEF(CONFIG_NVBOARD, nvboard_update());
     int inst_valid = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid;
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
         s->inst = current_inst;
-        
     }
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done) {
         s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__next_pc;
         //printf("next pc: %x\n", s->dnpc);
     }
-    
     //s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc;
 
 #ifdef CONFIG_FTRACE
-    
     static int call_depth = 0;
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
         if((s->inst & 0x7f) == 0x6f) { //jal
@@ -69,7 +70,6 @@ void exec_once(Decode *s) {
                 call_depth ++;
             }
         }
-
         if((s->inst & 0x7f) == 0x67) { //jalr
             if (((s->inst >> 7) & 0x1f) == 0x1) { // rd = 1, call
                 printf("0x%08x:", s->pc);
@@ -154,10 +154,13 @@ int main(int argc, char** argv){
     FILE *fp = NULL; 
     for(uint32_t i = 0; i < (1<<22); i ++){
         flash[i] = i * 4;
-        //flash[i] = 0x55AA55AA;
     }
-    //nvboard_bind_all_pins(top.get());
-    //nvboard_init();
+    nvboard_bind_all_pins(top.get());
+    // nvboard_init();
+#if CONFIG_NVBOARD
+    nvboard_bind_all_pins(top.get());
+    nvboard_init();
+#endif
     Verilated::commandArgs(argc, argv);
 #if CONFIG_GTKWAVE
     Verilated::mkdir("logs");
@@ -175,8 +178,8 @@ int main(int argc, char** argv){
 
         tfp->close();
         return is_exit_status_bad();
-        //top->eval();
-        //nvboard_update();
+
+        nvboard_update();
         tfp->dump(contextp->time());
     }
 }

@@ -98,12 +98,11 @@ static long load_img() {
     //int ret = fread(memory, size, 1, fp);
     //ret = fread(mrom, size, 1, fp);
     int ret = fread(flash, size, 1, fp);
-    //printf("%08x %08x %08x %08x\n", mrom[0], mrom[1], mrom[2], mrom[3]);
+
     assert(ret == 1);
     fclose(fp);
     //*****************************
 
-    //printf("inst 1: %08x\n", memory[0]);
     return size;
 }
 
@@ -115,7 +114,6 @@ void init_monitor(int argc, char *argv[]){
 
     long img_size = load_img();
 
-    //long img_size = 4096;
 #if CONFIG_DIFFTEST
     printf("diff_so_file:\033[32m%s\033[0m\n", diff_so_file);
     init_difftest(diff_so_file, img_size, difftest_port);
@@ -124,7 +122,6 @@ void init_monitor(int argc, char *argv[]){
 
     IFDEF(CONFIG_ITRACE, init_disasm());
     IFDEF(CONFIG_FTRACE, init_ftrace(ftrace_elf_file));
-
 }
 
 

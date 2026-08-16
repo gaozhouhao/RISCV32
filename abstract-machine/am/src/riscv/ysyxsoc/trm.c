@@ -29,7 +29,6 @@ void putch(char ch) {
 void halt(int code) {
     asm volatile("mv a0, %0" : : "r"(code) : "a0");
     asm volatile("ebreak");
-
     while(1);
 }
 
@@ -46,6 +45,7 @@ void uart_init(){
 
 int _trm_init() {
 
+    // outb(0x10002000, 0x5F);
     uart_init();
 
     uint32_t vendor, arch;
@@ -53,7 +53,7 @@ int _trm_init() {
     asm volatile("csrr %0, marchid" : "=r"(arch));
     printf("mvendorid: %c%c%c%c\n", (uint8_t)(vendor>>24), (uint8_t)(vendor>>16), (uint8_t)(vendor>>8), (uint8_t)(vendor>>0));
     printf("arch: %d\n", arch);
-    
+    // while(1);
     int ret = main(mainargs);
     halt(ret);
 }

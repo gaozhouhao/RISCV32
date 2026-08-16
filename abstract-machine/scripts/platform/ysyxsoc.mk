@@ -28,10 +28,10 @@ image: image-dep
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
-	#@$(OBJCOPY) -S -O binary $(IMAGE).elf $(IMAGE).bin
+# 	@$(OBJCOPY) -S -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: insert-arg
-	#echo "TODO: add command here to run simulation"
+# 	echo "TODO: add command here to run simulation"
 	$(MAKE) -C $(NPC_HOME) ISA=$(ISA) sim ARGS="$(NPCFLAGS)" IMG=$(IMAGE).bin	
 
 
