@@ -33,10 +33,10 @@ void halt(int code) {
 }
 
 void uart_init(){
-    uint8_t tmp = inb(0x10000003);
+    uint8_t tmp = inb(0x10000003); //Control connections
     tmp |= 0x80;
-    outb(0x10000003, tmp);
-    outb(0x10000000, 0x01);
+    outb(0x10000003, tmp); //Divisor Latch Access bit.
+    outb(0x10000000, 0x01); //(system clock speed) / (16 x desired baud rate)
     outb(0x10000001, 0x00);
     tmp = inb(0x10000003);
     tmp &= ~0x80;
