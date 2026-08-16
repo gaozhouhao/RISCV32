@@ -32,21 +32,23 @@ void halt(int code) {
     while(1);
 }
 
-void uart_init(){
-    uint8_t tmp = inb(0x10000003); //Control connections
-    tmp |= 0x80;
-    outb(0x10000003, tmp); //Divisor Latch Access bit.
-    outb(0x10000000, 0x01); //(system clock speed) / (16 x desired baud rate)
-    outb(0x10000001, 0x00);
-    tmp = inb(0x10000003);
-    tmp &= ~0x80;
-    outb(0x10000003, tmp);
-}
+// void uart_init(){
+//     uint8_t tmp = inb(0x10000003); //Control connections
+//     tmp |= 0x80;
+//     outb(0x10000003, tmp); //Divisor Latch Access bit.
+//     outb(0x10000000, 0x01); //(system clock speed) / (16 x desired baud rate)
+//     outb(0x10000001, 0x00);
+//     tmp = inb(0x10000003);
+//     tmp &= ~0x80;
+//     outb(0x10000003, tmp);
+// }
 
 int _trm_init() {
 
+    ioe_init();
     // outb(0x10002000, 0x5F);
-    uart_init();
+    // __am_uart_init();
+    // uart_init();
 
     uint32_t vendor, arch;
     asm volatile("csrr %0, mvendorid" : "=r"(vendor));
