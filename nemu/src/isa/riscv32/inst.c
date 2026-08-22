@@ -145,7 +145,7 @@ static int decode_exec(Decode *s) {
                                                               if(rd == 1) { // call
                                                                 printf("0x%08x:", s->pc);
                                                                 for (int i = 0; i < call_depth; i ++) printf("  ");
-                                                                printf("call [%s@0x%08x]\n", find_func(s->pc), s->dnpc);
+                                                                printf("call [%s@0x%08x]\n", find_func(s->dnpc), s->dnpc);
                                                                 call_depth ++;
                                                               }););
   INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne  , B, s->dnpc = (src1 != src2)?(s->pc + imm):s->dnpc);
