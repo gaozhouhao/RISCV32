@@ -116,8 +116,8 @@ SECTIONS {
     _stack_top = 0x0f002000;
     _boot_stack_pointer = _stack_top;
     _stack_pointer = _stack_top;
-    end = _bss_end;
-    _end = _bss_end;
+    end = _bss_extra_end;
+    _end = _bss_extra_end;
     _heap_start = _end;
 }
 
