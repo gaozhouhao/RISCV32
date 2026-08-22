@@ -112,7 +112,7 @@ void init_mem() {
 }
 
 word_t paddr_read(paddr_t addr, int len) {
-  IFDEF(CONFIG_MTRACE, printf("read:\t0x%08x\n", addr));
+  IFDEF(CONFIG_MTRACE, Log("read:\t0x%08x", addr));
   if (likely(in_sram(addr))) return sram_read(addr, len);
   if (likely(in_mrom(addr))) return mrom_read(addr, len);
   if (likely(in_flash(addr))) return flash_read(addr, len);
@@ -127,7 +127,7 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  IFDEF(CONFIG_MTRACE, printf("write:\t0x%08x\n", addr));
+  IFDEF(CONFIG_MTRACE, Log("write:\t0x%08x", addr));
   if (likely(in_sram(addr))) { sram_write(addr, len, data); return; }
   if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
   if (likely(in_flash(addr))) { flash_write(addr, len, data); return; }
