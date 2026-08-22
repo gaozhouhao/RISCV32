@@ -19,8 +19,6 @@ _ssbl_start:
     call ss_bootloader
 
 
-
-
 .section entry, "ax"
 .globl _start
 .type _start, @function

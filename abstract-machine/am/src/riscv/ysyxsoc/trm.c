@@ -46,6 +46,7 @@ void halt(int code) {
 int _trm_init() {
 
     ioe_init();
+    // __am_input_keybrd();
     // outb(0x10002000, 0x5F);
     // __am_uart_init();
     // uart_init();

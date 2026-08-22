@@ -18,20 +18,11 @@ void __am_uart_init() {
 
 
 void __am_uart_rx(AM_UART_RX_T *rx) {
+
     if ((*LSR & 0x1) == 0x1) {
       rx->data = (char)*RxB;
     }
     else {
       rx->data = (char)0xff;
     }
-  // uptime->us = (((uint64_t)high1 << 32) | low) * systemFrequency;
 }
-
-// void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {
-//   rtc->second = 0;
-//   rtc->minute = 0;
-//   rtc->hour   = 0;
-//   rtc->day    = 0;
-//   rtc->month  = 0;
-//   rtc->year   = 1900;
-// }
