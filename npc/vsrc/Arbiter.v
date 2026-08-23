@@ -35,6 +35,7 @@ owner_t write_owner;
 always@(posedge clk) begin
     if (reset == 1'b1) begin
         read_owner <= IDLE;
+        read_slave <= SLAVE_IDLE;
     end
     if(axi_arb.arvalid && axi_arb.arready) begin
         if (axi_arb.araddr >= `CLINT_BASE && axi_arb.araddr <  `CLINT_END)
@@ -49,6 +50,7 @@ always@(posedge clk) begin
     end
     else if(axi_arb.rvalid && axi_arb.rready) begin
         read_owner <= IDLE;
+        read_slave <= SLAVE_IDLE;
     end
 end
 
@@ -189,6 +191,12 @@ always@(*) begin
             axi_arb.rvalid = axi_soc.rvalid;
             axi_soc.rready = axi_arb.rready;
         end
+        SLAVE_IDLE: begin
+            axi_arb.rdata = 32'b0;
+            axi_arb.rresp = 2'b0;
+            axi_arb.rvalid = 1'b0;
+            axi_soc.rready = axi_arb.rready;
+        end
         default: ;
     endcase
 
@@ -208,6 +216,9 @@ always@(*) begin
         axi_soc.arvalid = axi_arb.arvalid;
         axi_arb.arready = axi_soc.arready;
 
+    end
+    
+
         axi_soc.awvalid = axi_arb.awvalid;
         axi_soc.awaddr = axi_arb.awaddr;
 
@@ -216,8 +227,6 @@ always@(*) begin
         axi_soc.wdata = axi_arb.wdata;
 
         axi_soc.bready = axi_arb.bready;
-    end
-
 end
 
 

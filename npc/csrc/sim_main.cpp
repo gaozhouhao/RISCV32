@@ -16,6 +16,9 @@ const std::unique_ptr<TOP_NAME> top{new TOP_NAME{contextp.get(), "TOP"}};
 
 VerilatedFstC* tfp = new VerilatedFstC;
 
+uint64_t cycle_cnt = 0;
+uint64_t inst_cnt  = 0;
+
 #if CONFIG_NVBOARD
     void nvboard_bind_all_pins(TOP_NAME* top);
 #endif
@@ -44,6 +47,7 @@ CPUArchState cpu = {.pc=0x30000000};
 void exec_once(Decode *s) {
     s->pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc;
     top->clock = 0; top->eval(); contextp->timeInc(1);
+    cycle_cnt ++;
     IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
     top->clock = 1; top->eval(); 
     contextp->timeInc(1);
@@ -55,6 +59,7 @@ void exec_once(Decode *s) {
     }
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done) {
         s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__next_pc;
+        inst_cnt ++;
         //printf("next pc: %x\n", s->dnpc);
     }
     //s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc;
@@ -133,9 +138,10 @@ void exec_once(Decode *s) {
 }
 
 static void reset() {
-    top->reset = 1; top->clock = 0; top->eval(); contextp->timeInc(1); 
+    top->reset = 1; 
+    top->clock = 0; top->eval(); contextp->timeInc(1); 
     tfp->dump(contextp->time());
-    for(int i = 0; i < 9; i ++){
+    for(int i = 0; i < 30; i ++){
         top->clock = 1; top->eval();    contextp->timeInc(1); tfp->dump(contextp->time());
         top->clock = 0; top->eval();    contextp->timeInc(1); tfp->dump(contextp->time());
     }
@@ -155,7 +161,7 @@ int main(int argc, char** argv){
     for(uint32_t i = 0; i < (1<<22); i ++){
         flash[i] = i * 4;
     }
-    nvboard_bind_all_pins(top.get());
+
     // nvboard_init();
 #if CONFIG_NVBOARD
     nvboard_bind_all_pins(top.get());
@@ -175,7 +181,7 @@ int main(int argc, char** argv){
     reset();
     while (1) {
         sdb_mainloop();
-
+        printf("IPC:%f\n", (float)(inst_cnt / cycle_cnt));
         tfp->close();
         return is_exit_status_bad();
 
