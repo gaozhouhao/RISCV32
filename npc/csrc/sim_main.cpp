@@ -181,7 +181,7 @@ int main(int argc, char** argv){
     reset();
     while (1) {
         sdb_mainloop();
-        printf("IPC:%f\n", (float)(inst_cnt / cycle_cnt));
+        printf("IPC:%f\n", (float)((float)inst_cnt / (float)cycle_cnt));
         tfp->close();
         return is_exit_status_bad();
 
