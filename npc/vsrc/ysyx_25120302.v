@@ -91,6 +91,7 @@ assign  axi_soc.wready = io_master_wready;
 assign  io_master_wvalid = axi_soc.wvalid;
 assign  io_master_wdata = axi_soc.wdata;
 assign  io_master_wstrb = axi_soc.wstrb;
+assign  io_master_wlast = 1'b1;
 
 assign  io_master_bready = axi_soc.bready;
 assign  axi_soc.bvalid = io_master_bvalid;
