@@ -90,10 +90,22 @@ sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	echo $(BIN) $(ARGS) $(IMG)
 	@$(BIN) $(ARGS) $(IMG)
-
 ifeq ($(CONFIG_GTKWAVE), y)
 	gtkwave $(OBJ_DIR)/wave.fst
 endif
+
+RTL_FILES = $(NPC_HOME)/vsrc/mydesign.v
+RTL_FILES += $(NPC_HOME)/vsrc/$(file)
+
+sta:
+	@echo RTL_FILES=$(RTL_FILES)
+	$(MAKE) -C $(HOME)/yosys-sta/ sta \
+    	DESIGN=mydesign SDC_FILE=$(NPC_HOME)/scripts/my.sdc \
+    	CLK_FREQ_MHZ=100 CLK_PORT_NAME=clk O=$(NPC_HOME)/result \
+    	RTL_FILES="$(RTL_FILES)"
+
+
+
 
 gdb: $(BIN)
 	gdb -s $(BIN) --args $(BIN) $(ARGS) $(IMG)
