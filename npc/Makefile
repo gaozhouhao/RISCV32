@@ -55,6 +55,7 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 # project source
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
 VSRCS := $(filter-out %Xbar.sv, $(VSRCS))
+VSRCS := $(filter-out $(shell find $(abspath ./vsrc/wrapper) -name "*.v"), $(VSRCS))
 VHDRS = $(shell find $(abspath ./vsrc) -name "*.vh")
 VSRCS += $(shell find $(abspath ../ysyxSoC/perip) -name "*.v")
 VSRCS += $(abspath ../ysyxSoC/build/ysyxSoCFull.v)
@@ -94,14 +95,15 @@ ifeq ($(CONFIG_GTKWAVE), y)
 	gtkwave $(OBJ_DIR)/wave.fst
 endif
 
-RTL_FILES = $(NPC_HOME)/vsrc/mydesign.v
-RTL_FILES += $(NPC_HOME)/vsrc/$(file)
+RTL_FILES ?=
+RTL_FILES += $(NPC_HOME)/vsrc/wrapper/$(file)_TOP.v
+RTL_FILES += $(NPC_HOME)/vsrc/$(file).sv
 
 sta:
 	@echo RTL_FILES=$(RTL_FILES)
 	$(MAKE) -C $(HOME)/yosys-sta/ sta \
     	DESIGN=mydesign SDC_FILE=$(NPC_HOME)/scripts/my.sdc \
-    	CLK_FREQ_MHZ=100 CLK_PORT_NAME=clk O=$(NPC_HOME)/result \
+    	CLK_FREQ_MHZ=2000 CLK_PORT_NAME=clk O=$(NPC_HOME)/result \
     	RTL_FILES="$(RTL_FILES)"
 
 

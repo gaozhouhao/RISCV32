@@ -3,7 +3,7 @@ module EXU (
     input                       clk,
     input   wire    [1:0]       wb_sel,
     input   wire    [1:0]       alu_src1_sel,
-    input   reg     [ 1:0]       alu_src2_sel,
+    input   reg     [ 1:0]      alu_src2_sel,
     input   reg     [ 3:0]      ALUop,
     output          [31:0]      alu_result,
     input   reg                 idu_we,
