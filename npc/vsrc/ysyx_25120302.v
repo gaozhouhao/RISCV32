@@ -362,8 +362,6 @@ WBU wbu (
     .raddr2(src2),
     .rdata1(src1_data),
     .rdata2(src2_data),
-    .exu_to_rf_valid(exu_to_rf_valid),
-    .exu_to_rf_ready(exu_to_rf_ready),
     .lsu_to_rf_valid(lsu_to_rf_valid),
     .lsu_to_rf_ready(lsu_to_rf_ready),
     .rf_to_ifu_valid(rf_to_ifu_valid),
