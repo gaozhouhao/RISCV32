@@ -164,8 +164,6 @@ wire    [31:0]  wb;
 
 wire    [2:0]   funct3;
 
-wire    [31:0]  mtvec_data;
-wire    [31:0]  _data;
 
 // IDU Output
 wire            idu_valid;
@@ -283,6 +281,7 @@ IDU idu(
 
 IDU_EXU_Reg idu_exu_reg(
     .clk(clock),
+    .reset(reset),
 
     .in_valid(idu_valid),
     .in_rf_we(idu_rf_we),
@@ -464,12 +463,12 @@ WBU wbu (
     .clk(clock),
     .reset(reset),
     .wdata(wb),
-    .waddr(rd),
+    .waddr(idu_rd),
     .lsu_rf_we(lsu_rf_we),
     .wb_done(wb_done),
     .wb_done_flag(wb_done_flag),
-    .raddr1(src1),
-    .raddr2(src2),
+    .raddr1(idu_src1),
+    .raddr2(idu_src2),
     .rdata1(rf_src1_data),
     .rdata2(rf_src2_data),
     .lsu_to_rf_valid(lsu_to_rf_valid),
@@ -477,18 +476,6 @@ WBU wbu (
     .rf_to_ifu_valid(rf_to_ifu_valid),
     .rf_to_ifu_ready(rf_to_ifu_ready)
 );
-/*
-CSR csr (
-    .clk(clock),
-    .pc(pc),
-    .csr_addr(csr_addr),
-    .csr_wen(lsu_csr_wen),
-    .is_ecall(lsu_is_ecall),
-    .csr_rdata(csr_rdata),
-    .csr_wdata(csr_wdata),
-    .mtvec_data(mtvec_data),
-    .mepc_data(mepc_data)
-);
-*/
+
 
 endmodule

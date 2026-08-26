@@ -1,7 +1,7 @@
 module IDU_EXU_Reg (
 
-    input                       clk,                              
-
+    input                       clk,
+    input                       reset,
     input                       in_valid,
 
     input   reg                 in_rf_we,
@@ -67,33 +67,65 @@ module IDU_EXU_Reg (
 );
 
     always @(posedge clk) begin
-        out_valid           <= in_valid         ;
-        out_rf_we           <= in_rf_we         ;
-        out_csr_wen         <= in_csr_wen       ;
-        out_wb_sel          <= in_wb_sel        ;
-        out_csr_op_sel      <= in_csr_op_sel    ;
-        out_is_ecall        <= in_is_ecall      ;
-        out_is_mret         <= in_is_mret       ;
-        out_is_ebreak       <= in_is_ebreak     ;
-        out_is_jalr         <= in_is_jalr       ;
-        out_is_jal          <= in_is_jal        ;
-        out_is_branch       <= in_is_branch     ;
-        out_is_csr          <= in_is_csr        ;
-        out_is_load         <= in_is_load       ;
-        out_is_store        <= in_is_store      ;
-        out_trap_valid      <= in_trap_valid    ;
-        out_branch_op       <= in_branch_op     ;
-        out_alu_op          <= in_alu_op        ;
-        out_alu_src2_sel    <= in_alu_src2_sel  ;
-        out_alu_src1_sel    <= in_alu_src1_sel  ;
-        out_src1            <= in_src1          ;
-        out_src2            <= in_src2          ;
-        out_rd              <= in_rd            ;
-        out_imm             <= in_imm           ;
-        out_shamt           <= in_shamt         ;
-        out_csr_addr        <= in_csr_addr      ;
-        out_src1_data       <= in_src1_data     ;
-        out_src2_data       <= in_src2_data     ;
+        if (reset) begin
+            out_valid           <= 1'b0     ;
+            out_rf_we           <= 1'b0     ;
+            out_csr_wen         <= 1'b0     ;
+            out_wb_sel          <= 1'b0     ;
+            out_csr_op_sel      <= 1'b0     ;
+            out_is_ecall        <= 1'b0     ;
+            out_is_mret         <= 1'b0     ;
+            out_is_ebreak       <= 1'b0     ;
+            out_is_jalr         <= 1'b0     ;
+            out_is_jal          <= 1'b0     ;
+            out_is_branch       <= 1'b0     ;
+            out_is_csr          <= 1'b0     ;
+            out_is_load         <= 1'b0     ;
+            out_is_store        <= 1'b0     ;
+            out_trap_valid      <= 1'b0     ;
+            out_branch_op       <= 3'b0     ;
+            out_alu_op          <= 4'b0     ;
+            out_alu_src2_sel    <= 2'b0     ;
+            out_alu_src1_sel    <= 2'b0     ;
+            out_src1            <= 5'b0     ;
+            out_src2            <= 5'b0     ;
+            out_rd              <= 5'b0     ;
+            out_imm             <= 32'b0    ;
+            out_shamt           <= 32'b0    ;
+            out_csr_addr        <= 12'b0    ;
+            out_src1_data       <= 32'b0    ;
+            out_src2_data       <= 32'b0    ;
+        end
+
+        else begin
+            out_valid           <= in_valid         ;
+            out_rf_we           <= in_rf_we         ;
+            out_csr_wen         <= in_csr_wen       ;
+            out_wb_sel          <= in_wb_sel        ;
+            out_csr_op_sel      <= in_csr_op_sel    ;
+            out_is_ecall        <= in_is_ecall      ;
+            out_is_mret         <= in_is_mret       ;
+            out_is_ebreak       <= in_is_ebreak     ;
+            out_is_jalr         <= in_is_jalr       ;
+            out_is_jal          <= in_is_jal        ;
+            out_is_branch       <= in_is_branch     ;
+            out_is_csr          <= in_is_csr        ;
+            out_is_load         <= in_is_load       ;
+            out_is_store        <= in_is_store      ;
+            out_trap_valid      <= in_trap_valid    ;
+            out_branch_op       <= in_branch_op     ;
+            out_alu_op          <= in_alu_op        ;
+            out_alu_src2_sel    <= in_alu_src2_sel  ;
+            out_alu_src1_sel    <= in_alu_src1_sel  ;
+            out_src1            <= in_src1          ;
+            out_src2            <= in_src2          ;
+            out_rd              <= in_rd            ;
+            out_imm             <= in_imm           ;
+            out_shamt           <= in_shamt         ;
+            out_csr_addr        <= in_csr_addr      ;
+            out_src1_data       <= in_src1_data     ;
+            out_src2_data       <= in_src2_data     ;
+        end
     end
 
 
