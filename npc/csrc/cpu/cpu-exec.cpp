@@ -63,10 +63,10 @@ static void execute(uint64_t  n) {
         static int inst_done_r;
         static int owner_rd_r, owner_wr_r;
 
-        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done == 0 && inst_done_r == 1) {
+        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done == 0 && inst_done_r == 1) {
             trace_and_difftest(&s);
         }
-        inst_done_r = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__inst_done;
+        inst_done_r = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done;
         if (npc_state.state != NPC_RUNNING) break;
         // if (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
         //     n --;

@@ -42,6 +42,12 @@ extern "C" void get_inst(int inst) {
     current_inst = (uint32_t)inst;
 };
 
+static uint64_t perf_cnt[16] = {};
+extern "C" void perf_event(int event_id) {
+    perf_cnt[event_id]++;
+}
+
+
 CPUArchState cpu = {.pc=0x30000000};
 
 void exec_once(Decode *s) {
@@ -182,9 +188,14 @@ int main(int argc, char** argv){
     while (1) {
         sdb_mainloop();
         printf("IPC:%f\n", (float)((float)inst_cnt / (float)cycle_cnt));
+        printf("IFU fetch : %lu\n", perf_cnt[0]);
+        printf("LSU load  : %lu\n", perf_cnt[1]);
+        printf("LSU store : %lu\n", perf_cnt[2]);
+        printf("EXU done  : %lu\n", perf_cnt[3]);
+
+
         tfp->close();
         return is_exit_status_bad();
-
         nvboard_update();
         tfp->dump(contextp->time());
     }
