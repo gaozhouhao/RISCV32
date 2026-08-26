@@ -225,8 +225,8 @@ wire    [11:0]  idu_to_exu_csr_addr;
 wire    [31:0]  idu_to_exu_src1_data;
 wire    [31:0]  idu_to_exu_src2_data;
 
-
-
+wire exu_is_load;
+wire exu_is_store;
 IFU ifu(
     .axi(axi_ifu),
     .clk(clock),
@@ -306,7 +306,7 @@ IDU_EXU_Reg idu_exu_reg(
     .in_alu_src2_sel(idu_alu_src2_sel),
     .in_alu_src1_sel(idu_alu_src1_sel),
     .in_src1(idu_src1),
-    .in_src2(idu_src1),
+    .in_src2(idu_src2),
     .in_rd(idu_rd),
     .in_imm(idu_imm),
     .in_shamt(idu_shamt),
@@ -377,6 +377,9 @@ EXU exu(
     .out_wb_data(wb),
     .in_branch_op(idu_to_exu_branch_op),
 
+    .out_is_load(exu_is_load),
+    .out_is_store(exu_is_store),
+
     .out_csr_wdata(csr_wdata),
     .in_csr_addr(idu_to_exu_csr_addr),
     .in_csr_wen(idu_to_exu_csr_wen),
@@ -396,8 +399,8 @@ LSU lsu(
     .reset(reset),
     .exu_we(exu_we),
     .lsu_rf_we(lsu_rf_we),
-    .is_load(is_load),
-    .is_store(is_store),
+    .is_load(exu_is_load),
+    .is_store(exu_is_store),
 
 
     .pc(pc),
