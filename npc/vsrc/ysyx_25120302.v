@@ -71,16 +71,12 @@ module ysyx_25120302(
     output          io_slave_rlast,
     output  [ 3:0]  io_slave_rid
 );
+
 wire    [31:0]  inst/* verilator public_flat_rd */;
-wire    [31:0]  idu_to_exu_inst/* verilator public_flat_rd */;
-wire    [31:0]  next_pc/* verilator public_flat_rd */;
 wire    [31:0]  pc/* verilator public_flat_rd */;
 AXI_IF          axi_lsu();
 AXI_IF          axi_ifu();
 AXI_IF          axi_soc();
-//AXI_IF          axi_mem();
-//AXI_IF          axi_uart();
-AXI_IF          axi_clint();
 
 assign axi_soc.awready   = io_master_awready;
 assign io_master_awvalid = axi_soc.awvalid;
@@ -105,14 +101,6 @@ assign axi_soc.rresp    = io_master_rresp;
 assign axi_soc.rvalid   = io_master_rvalid;
 assign axi_soc.rdata    = io_master_rdata;
 
-
-wire            ifu_reqValid;
-wire            ifu_reqReady;
-wire            ifu_respValid;
-wire            ifu_respReady;
-wire    [31:0]  ifu_raddr;
-wire    [31:0]  ifu_rdata;
-
 wire            ifu_to_idu_valid;
 wire            idu_to_ifu_ready;
 
@@ -132,18 +120,14 @@ wire            redirect_valid;
 wire            redirect_valid_r;
 wire    [31:0]  redirect_pc;
 wire    [31:0]  redirect_pc_r;
-wire            rf_we;
+
 wire            exu_we;
 wire            lsu_rf_we;
-wire            lsu_csr_wen;
+
 wire            csr_wen;
 
 wire    [1:0]   wb_sel;
-wire            csr_op_sel;
-wire            lsu_csr_op_sel;
-wire    [1:0]   alu_src1_sel;
-wire    [1:0]   alu_src2_sel;
-wire    [3:0]   alu_op;
+
 wire    [31:0]  alu_result;
 
 wire            branch_taken;
@@ -151,13 +135,11 @@ wire            branch_taken;
 wire    [4:0]   src1;
 wire    [4:0]   src2;
 wire    [4:0]   rd;
-wire    [31:0]  imm;
-wire    [31:0]  shamt;
-wire    [11:0]  csr_addr;
+
 
 wire    [31:0]  rf_src1_data;
 wire    [31:0]  rf_src2_data;
-reg     [31:0]  csr_rdata;
+
 reg     [31:0]  csr_wdata;
 
 wire    [31:0]  wb;
@@ -177,7 +159,6 @@ wire            idu_is_ebreak;
 wire            idu_is_jalr;
 wire            idu_is_jal;
 wire            idu_is_branch;
-wire            idu_is_csr;
 wire            idu_is_load;
 wire            idu_is_store;
 wire            idu_trap_valid;
@@ -206,7 +187,6 @@ wire            idu_to_exu_is_ebreak;
 wire            idu_to_exu_is_jalr;
 wire            idu_to_exu_is_jal;
 wire            idu_to_exu_is_branch;
-wire            idu_to_exu_is_csr;
 wire            idu_to_exu_is_load;
 wire            idu_to_exu_is_store;
 wire            idu_to_exu_trap_valid;
@@ -242,7 +222,6 @@ IFU ifu(
 );
 
 IDU idu(
-    .pc(pc),
     .in_inst(inst),
     .in_src1_data(rf_src1_data),
     .in_src2_data(rf_src2_data),
@@ -262,7 +241,6 @@ IDU idu(
     .out_is_store(idu_is_store),
     .out_is_branch(idu_is_branch),
     .out_trap_valid(idu_trap_valid),
-    .out_is_csr(idu_is_csr),
     .out_wb_sel(idu_wb_sel),
     .out_csr_op_sel(idu_csr_op_sel),
     .out_alu_src1_sel(idu_alu_src1_sel),
@@ -295,7 +273,6 @@ IDU_EXU_Reg idu_exu_reg(
     .in_is_jalr(idu_is_jalr),
     .in_is_jal(idu_is_jal),
     .in_is_branch(idu_is_branch),
-    .in_is_csr(idu_is_csr),
     .in_is_load(idu_is_load),
     .in_is_store(idu_is_store),
     .in_trap_valid(idu_trap_valid),
@@ -309,7 +286,6 @@ IDU_EXU_Reg idu_exu_reg(
     .in_rd(idu_rd),
     .in_imm(idu_imm),
     .in_shamt(idu_shamt),
-    .in_csr_addr(idu_csr_addr),
     .in_src1_data(idu_src1_data),
     .in_src2_data(idu_src2_data),
 
@@ -325,7 +301,6 @@ IDU_EXU_Reg idu_exu_reg(
     .out_is_jalr(idu_to_exu_is_jalr),
     .out_is_jal(idu_to_exu_is_jal),
     .out_is_branch(idu_to_exu_is_branch),
-    .out_is_csr(idu_to_exu_is_csr),
     .out_is_load(idu_to_exu_is_load),
     .out_is_store(idu_to_exu_is_store),
     .out_trap_valid(idu_to_exu_trap_valid),
@@ -382,7 +357,6 @@ EXU exu(
     .out_csr_wdata(csr_wdata),
     .in_csr_addr(idu_to_exu_csr_addr),
     .in_csr_wen(idu_to_exu_csr_wen),
-    .in_is_csr(idu_to_exu_is_csr),
     .in_csr_op_sel(idu_to_exu_csr_op_sel),
     .in_is_ecall(idu_to_exu_is_ecall),
     .in_is_mret(idu_to_exu_is_mret),

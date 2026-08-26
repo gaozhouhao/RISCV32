@@ -1,6 +1,6 @@
 `include "params.vh"
 module IDU(
-    input           [31:0]              pc,
+
     input   reg     [31:0]              in_inst,
     input                               in_valid,
     input                               in_ready,
@@ -22,7 +22,6 @@ module IDU(
     output  reg                         out_is_jalr,
     output  reg                         out_is_jal,
     output  reg                         out_is_branch,
-    output  reg                         out_is_csr,
     output  reg                         out_is_load,
     output  reg                         out_is_store,
     output  reg                         out_trap_valid,
@@ -43,7 +42,7 @@ module IDU(
     output          [31:0]              out_src2_data
 );
 
-wire    [31:0]  immR, immI, immS, immB, immU, immJ;
+wire    [31:0]  immI, immS, immB, immU, immJ;
 
 wire    [6:0]   opcode;
 wire    [6:0]   funct7;
@@ -97,7 +96,6 @@ always @(*) begin
     out_alu_src2_sel = 0;
     out_is_jalr = 0;
     out_is_jal = 0;
-    out_is_csr = 0;
     out_is_load = 0;
     out_is_store = 0;
     out_is_branch = 0;
@@ -190,7 +188,7 @@ always @(*) begin
             else out_is_load = 1'b0;
             out_alu_src1_sel = `NPC_RS1_DATA;
             out_alu_src2_sel = `NPC_IMM;
-         out_alu_op = `NPC_ALU_ADD;
+            out_alu_op = `NPC_ALU_ADD;
         end
         if (opcode == 7'b0100011) begin // sb/sh/sw
             out_alu_src1_sel = `NPC_RS1_DATA;
@@ -212,14 +210,12 @@ always @(*) begin
         end
         if(opcode == 7'b1110011) begin//priortiy
             if(funct3 == 3'b001)begin //CSRRW
-                out_is_csr = 1;
                 if(out_rd != 0) out_rf_we = 1;
                 out_wb_sel = `NPC_CSR;
                 out_csr_wen = 1;
                 out_csr_op_sel = `CSR_WRITE;
             end
             if(funct3 == 3'b010)begin //CSRRS
-                out_is_csr = 1;
                 out_csr_wen = 1;
                 if(out_rd != 0) out_rf_we = 1;
                 out_wb_sel = `NPC_CSR;

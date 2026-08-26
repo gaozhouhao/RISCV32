@@ -15,7 +15,6 @@ module IDU_EXU_Reg (
     input   reg                 in_is_jalr,
     input   reg                 in_is_jal,
     input   reg                 in_is_branch,
-    input   reg                 in_is_csr,
     input   reg                 in_is_load,
     input   reg                 in_is_store,
     input   reg                 in_trap_valid,
@@ -29,7 +28,6 @@ module IDU_EXU_Reg (
     input           [ 4:0]      in_rd,
     input           [31:0]      in_imm,
     input           [31:0]      in_shamt,
-    input           [11:0]      in_csr_addr,
     input           [31:0]      in_src1_data,
     input           [31:0]      in_src2_data,
 
@@ -46,7 +44,6 @@ module IDU_EXU_Reg (
     output  reg                 out_is_jalr,
     output  reg                 out_is_jal,
     output  reg                 out_is_branch,
-    output  reg                 out_is_csr,
     output  reg                 out_is_load,
     output  reg                 out_is_store,
     output  reg                 out_trap_valid,
@@ -71,7 +68,7 @@ module IDU_EXU_Reg (
             out_valid           <= 1'b0     ;
             out_rf_we           <= 1'b0     ;
             out_csr_wen         <= 1'b0     ;
-            out_wb_sel          <= 1'b0     ;
+            out_wb_sel          <= 2'b0     ;
             out_csr_op_sel      <= 1'b0     ;
             out_is_ecall        <= 1'b0     ;
             out_is_mret         <= 1'b0     ;
@@ -79,7 +76,6 @@ module IDU_EXU_Reg (
             out_is_jalr         <= 1'b0     ;
             out_is_jal          <= 1'b0     ;
             out_is_branch       <= 1'b0     ;
-            out_is_csr          <= 1'b0     ;
             out_is_load         <= 1'b0     ;
             out_is_store        <= 1'b0     ;
             out_trap_valid      <= 1'b0     ;
@@ -109,7 +105,6 @@ module IDU_EXU_Reg (
             out_is_jalr         <= in_is_jalr       ;
             out_is_jal          <= in_is_jal        ;
             out_is_branch       <= in_is_branch     ;
-            out_is_csr          <= in_is_csr        ;
             out_is_load         <= in_is_load       ;
             out_is_store        <= in_is_store      ;
             out_trap_valid      <= in_trap_valid    ;
@@ -122,7 +117,6 @@ module IDU_EXU_Reg (
             out_rd              <= in_rd            ;
             out_imm             <= in_imm           ;
             out_shamt           <= in_shamt         ;
-            out_csr_addr        <= in_csr_addr      ;
             out_src1_data       <= in_src1_data     ;
             out_src2_data       <= in_src2_data     ;
         end

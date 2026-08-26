@@ -17,7 +17,6 @@ module EXU (
     input   reg                 in_is_jal,
     input                       in_is_ecall,
     input                       in_is_mret,
-    input                       in_is_csr,
 
     input   reg                 in_trap_valid,
 
@@ -156,15 +155,7 @@ import "DPI-C" function void ebreak(input bit is_ebreak);
 reg    [31:0]  store_data;
 always @(posedge clk) begin
     if(in_valid == 1'b1) begin
-
-        //else lsu_wen <= 1'b0;
         ebreak(in_is_ebreak);
-        //exu_to_wbu_valid = 1'b1;
-        //exu_to_lsu_valid = 1'b1;
-    end
-    else begin
-        //exu_to_wbu_valid = 1'b0;
-        //exu_to_lsu_valid = 1'b0;
     end
 end
 
@@ -183,8 +174,6 @@ CSR csr(
     .mtvec_data(mtvec_data),
     .mepc_data(mepc_data)
 );
-
-
 
 
 endmodule
