@@ -27,6 +27,7 @@ module IDU(
     output  reg                         out_trap_valid,
 
     output          [2:0]               out_branch_op,
+    output          [2:0]               out_load_size,
 
     output  reg     [1:0]               out_alu_src2_sel,
     output  reg     [1:0]               out_alu_src1_sel,
@@ -67,6 +68,7 @@ assign out_shamt = {{27{1'b0}}, in_inst[24:20]};
 assign out_csr_addr = in_inst[31:20];
 
 assign out_branch_op = funct3;
+assign out_load_size = funct3;
 
 always @(*) begin
     case (opcode)
@@ -90,7 +92,7 @@ always @(*) begin
     out_is_ecall = 1'b0;
     out_is_mret = 1'b0;
     out_is_ebreak = 1'b0;
- out_alu_op = `NPC_ALU_ADD;
+    out_alu_op = `NPC_ALU_ADD;
     out_csr_op_sel = `CSR_WRITE;
     out_alu_src1_sel = `NPC_RS1_DATA;
     out_alu_src2_sel = 0;

@@ -2,32 +2,28 @@
 module LSU(
     input                               clk,
     input                               reset,
-    input                               exu_we,
-    output      reg                     lsu_rf_we,
-    input       reg                     is_load,
-    input       reg                     is_store,
+    AXI_IF.master                       axi,
+    input                               in_rf_we,
+    input       reg                     in_is_load,
+    input       reg                     in_is_store,
     input       reg     [31:0]          pc,
 
-    input               [ 1:0]          wb_sel, 
-    input       reg     [ 2:0]          funct3,
-    
-    input               [31:0]          alu_result,
-    input       wire    [31:0]          src2_data,
-    input       wire    [31:0]          csr_wdata,
+    input       reg     [31:0]          in_redirect_pc,
+    input       reg                     in_redirect_valid,
+    input                               in_valid,
+    input                               in_ready,
 
+    input       reg     [ 2:0]          in_load_size,
+    input               [31:0]          in_mem_addr,
+    input       wire    [31:0]          in_store_data,
+    input       wire    [31:0]          in_wb_data,
 
-    output      reg     [31:0]          wb,
-    AXI_IF.master                       axi,
-    
-    output                              exu_to_lsu_valid,
-    output                              exu_to_lsu_ready,
-    input                               lsu_to_rf_ready,
-    output                              lsu_to_rf_valid,
-
-    input       reg     [31:0]          redirect_pc,
-    input       reg                     redirect_valid,
-    output      reg     [31:0]          redirect_pc_r,
-    output      reg                     redirect_valid_r
+    output      reg     [31:0]          out_wb_data,
+    output      reg                     out_rf_we,
+    output                              out_valid,
+    output                              out_ready,
+    output      reg     [31:0]          out_redirect_pc,
+    output      reg                     out_redirect_valid
 );
 
     import perf_pkg::*;
@@ -42,37 +38,32 @@ module LSU(
         .random_num(random_num)
     );
 
-    assign exu_to_lsu_ready = 1'b1;
-    reg [ 1:0] lsu_wb_sel;
-    reg [31:0] lsu_alu_result;
-    reg [31:0] lsu_csr_wdata;
+    assign out_ready = 1'b1;
+    reg [31:0] lsu_in_mem_addr;
+
 
     reg exu_to_lsu_valid_r;
     reg lsu_is_load, lsu_is_store;
     always @(posedge clk) begin
-        exu_to_lsu_valid_r <= exu_to_lsu_valid;
-        redirect_valid_r <= redirect_valid;
+        exu_to_lsu_valid_r <= in_valid;
+        out_redirect_valid <= in_redirect_valid;
         if(reset == 1) begin
             lsu_is_load <= 0;
             lsu_is_store <= 0;
-            lsu_alu_result <= 0;
-            lsu_csr_wdata <= 0;
+            lsu_in_mem_addr <= 0;
             axi.araddr <= 0;
             axi.awaddr <= 0;
-            lsu_wb_sel <= 0;
-            lsu_rf_we <= 0;
-            redirect_pc_r <= 0;
+            out_rf_we <= 0;
+            out_redirect_pc <= 0;
         end
-        else if (exu_to_lsu_valid)begin
-            lsu_is_load <= is_load;
-            lsu_is_store  <= is_store;
-            lsu_alu_result <= alu_result; 
-            lsu_csr_wdata <= csr_wdata;
-            axi.araddr <= alu_result;
-            axi.awaddr <= alu_result;
-            lsu_wb_sel <= wb_sel;
-            lsu_rf_we <= exu_we | is_load;
-            redirect_pc_r <= redirect_pc;
+        else if (in_valid)begin
+            lsu_is_load <= in_is_load;
+            lsu_is_store  <= in_is_store;
+            lsu_in_mem_addr <= in_mem_addr; 
+            axi.araddr <= in_mem_addr;
+            axi.awaddr <= in_mem_addr;
+            out_rf_we <= in_rf_we | in_is_load;
+            out_redirect_pc <= in_redirect_pc;
         end
     end
     reg     is_busy;
@@ -85,9 +76,9 @@ module LSU(
     reg     state_aw, next_state_aw;
 
     reg     is_load_store, store_done, load_done;
-    assign lsu_to_rf_valid = load_done || 
+    assign out_valid = load_done || 
                             store_done || 
-                            redirect_valid_r ||
+                            out_redirect_valid ||
                             ((~lsu_is_load && ~ lsu_is_store) && exu_to_lsu_valid_r);
     always_comb begin
         case (state_l)
@@ -122,7 +113,7 @@ module LSU(
         case (state_aw)
             IDLE: begin
                 axi.awvalid = 0;
-                if(exu_to_lsu_valid && is_store) begin
+                if(in_valid && in_is_store) begin
                     next_state_aw = WAIT;
                 end
                 else
@@ -143,7 +134,7 @@ module LSU(
         case (state_w)
             IDLE: begin
                 axi.wvalid = 0;
-                if(exu_to_lsu_valid && is_store) begin
+                if(in_valid && in_is_store) begin
                     next_state_w = WAIT;
                 end
                 else
@@ -198,50 +189,44 @@ module LSU(
         word = 32'b0;
         //csr_input_data = 32'b0;
         if(lsu_is_load) begin
-            word = (axi.rdata >> (lsu_alu_result[1:0]*8));
-            case (funct3)
+            word = (axi.rdata >> (lsu_in_mem_addr[1:0]*8));
+            case (in_load_size)
             3'b000: begin
                 byte1 = word[7:0];
-                wb = {{24{byte1[7]}}, byte1}; //lb
+                out_wb_data = {{24{byte1[7]}}, byte1}; //lb
             end
             3'b001: begin//lh
                 {byte2, byte1} = word[15:0];
-                wb = {{16{byte2[7]}}, byte2, byte1};
+                out_wb_data = {{16{byte2[7]}}, byte2, byte1};
             end
-            3'b010: wb = word; //lw
-            3'b100: wb = word & 32'hff;//lbu
-            3'b101: wb = word & 32'hffff; //lhu
-            default:wb = 32'b0;
+            3'b010: out_wb_data = word; //lw
+            3'b100: out_wb_data = word & 32'hff;//lbu
+            3'b101: out_wb_data = word & 32'hffff; //lhu
+            default:out_wb_data = 32'b0;
         endcase
         end
-        else case (lsu_wb_sel)
-            `NPC_ALU: wb = lsu_alu_result;
-            `NPC_PC4: wb = pc + 32'h4;
-            `NPC_CSR: begin
-            wb = lsu_csr_wdata;
-            end
-            default: wb = 32'b0;
-        endcase
+        else 
+            out_wb_data = in_wb_data;
     end
 
     always @(posedge clk) begin
-        if(exu_to_lsu_valid)
-        case (funct3)
+        if(in_valid)
+        case (in_load_size)
             3'b000: begin //sb
-                axi.wdata <= {4{src2_data[7:0]}};
-                axi.wstrb <= 4'b0001 << alu_result[1:0];
+                axi.wdata <= {4{in_store_data[7:0]}};
+                axi.wstrb <= 4'b0001 << in_mem_addr[1:0];
             end
             3'b001: begin //sh
-                axi.wdata <= {16'b0, src2_data[15:0]} << (alu_result[1:0] * 8);
-                axi.wstrb <= 4'b0011 << alu_result[1:0];
+                axi.wdata <= {16'b0, in_store_data[15:0]} << (in_mem_addr[1:0] * 8);
+                axi.wstrb <= 4'b0011 << in_mem_addr[1:0];
             end
             3'b010: begin
-                axi.wdata <= src2_data;
+                axi.wdata <= in_store_data;
                 axi.wstrb <= 4'b1111;//sw
             end
             default: begin
                 axi.wstrb <= 4'b0;
-                axi.wdata <= src2_data;
+                axi.wdata <= in_store_data;
             end
         endcase
     end

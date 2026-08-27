@@ -1,7 +1,8 @@
 module IFU(
     input                               clk,
-    AXI_IF.master                       axi,
     input                               reset,
+    AXI_IF.master                       axi,
+    
     input                               in_wb_done,
     input   reg     [31:0]              in_redirect_pc_r,
     input   reg                         in_redirect_valid_r,

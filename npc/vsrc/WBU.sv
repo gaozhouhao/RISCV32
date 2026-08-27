@@ -5,14 +5,13 @@ module WBU(
     input       [4:0]             waddr,
     input                       lsu_rf_we,
     output  reg                   wb_done,
-    output  reg                   wb_done_flag,
     input       [4:0]             raddr1,
     input       [4:0]             raddr2,
     output      [31:0]            rdata1,
     output      [31:0]            rdata2,
 
     input                       lsu_to_rf_valid,
-    output                      lsu_to_rf_ready,
+    output                      out_ready,
     input                       rf_to_ifu_ready,
     output                      rf_to_ifu_valid
 );
@@ -31,9 +30,6 @@ module WBU(
     end
 
 
-    always @(*) begin
-        wb_done_flag = wb_done;
-    end
 
     always @(posedge clk) begin
         if(lsu_to_rf_valid)begin
@@ -41,13 +37,10 @@ module WBU(
                 if(waddr != 5'b0) begin
                     rf[waddr] <= wdata;
                 end
-            //else
-                //wb_done_flag <= 0;
         end
-        //else wb_done_flag <= 0;
     end
     
-    assign lsu_to_rf_ready = 1'b1;
+    assign out_ready = 1'b1;
 
     assign rdata1 = (raddr1 == 5'b0)?{32{1'b0}}:rf[raddr1];
     assign rdata2 = (raddr2 == 5'b0)?{32{1'b0}}:rf[raddr2];

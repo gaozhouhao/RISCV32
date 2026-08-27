@@ -17,7 +17,6 @@ module EXU (
     input   reg                 in_is_jal,
     input                       in_is_ecall,
     input                       in_is_mret,
-
     input   reg                 in_trap_valid,
 
     input                       in_csr_wen,
@@ -30,27 +29,25 @@ module EXU (
     input   reg     [31:0]      in_imm,
     input           [31:0]      in_shamt,
     input   reg     [2:0]       in_branch_op,
+    input   reg     [ 2:0]      in_load_size,
     input                       in_valid,
     input                       in_ready,
 
     output  reg                 out_is_load,
     output   reg                out_is_store,
-
+    output          [ 2:0]      out_load_size,
     output  reg     [31:0]      out_wb_data,
+    output  reg     [31:0]      out_store_data,
+    output  reg     [31:0]      out_mem_addr,
     output                      out_redirect_valid,
     output  reg     [31:0]      out_redirect_pc,
-
-    output          [31:0]      out_csr_wdata,
-    output                      out_exu_we,
-
-    output  reg                 out_branch_taken,
-    output          [31:0]      out_alu_result,
-
+    output                      out_rf_we,
     output                      out_ready,
     output                      out_valid
 );
 
-
+wire    [31:0]  alu_result;
+reg             branch_taken;
 ALU alu(
     .alu_src1(alu_src1),
     .alu_src2(alu_src2),
@@ -59,18 +56,18 @@ ALU alu(
     .alu_op(in_alu_op),
     .src1_data(in_src1_data),
     .src2_data(in_src2_data),
-    .alu_result(out_alu_result),
+    .alu_result(alu_result),
     .alu_flags(alu_flags)
 );
 
 reg     [31:0]  alu_src1;
 reg     [31:0]  alu_src2;
 reg     [3:0]   alu_flags;
-//reg     [7:0]   wmask;
 
-assign out_exu_we = in_rf_we;
+assign out_rf_we = in_rf_we;
 assign out_is_load = in_is_load;
 assign out_is_store = in_is_store;
+assign out_store_data = in_is_store ? in_src2_data : 32'b0;
 
 import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
 import "DPI-C" function void pmem_write(
@@ -78,20 +75,29 @@ import "DPI-C" function void pmem_write(
 
 always @(*) begin
     case (in_branch_op)
-        3'b000: out_branch_taken = alu_flags[`ALU_FLAG_ZERO];//beq
-        3'b001: out_branch_taken = ~alu_flags[`ALU_FLAG_ZERO];//bne
-        3'b100: out_branch_taken = alu_flags[`ALU_FLAG_NEGATIVE] ^ alu_flags[`ALU_FLAG_OVERFLOW];//blt
-        3'b101: out_branch_taken = ~(alu_flags[`ALU_FLAG_NEGATIVE] ^ alu_flags[`ALU_FLAG_OVERFLOW]);//bge
-        3'b110: out_branch_taken = ~alu_flags[`ALU_FLAG_NOBORROW];//bltu
-        3'b111: out_branch_taken = alu_flags[`ALU_FLAG_NOBORROW];//bgeu
-        default:out_branch_taken = 0;
+        3'b000: branch_taken = alu_flags[`ALU_FLAG_ZERO];//beq
+        3'b001: branch_taken = ~alu_flags[`ALU_FLAG_ZERO];//bne
+        3'b100: branch_taken = alu_flags[`ALU_FLAG_NEGATIVE] ^ alu_flags[`ALU_FLAG_OVERFLOW];//blt
+        3'b101: branch_taken = ~(alu_flags[`ALU_FLAG_NEGATIVE] ^ alu_flags[`ALU_FLAG_OVERFLOW]);//bge
+        3'b110: branch_taken = ~alu_flags[`ALU_FLAG_NOBORROW];//bltu
+        3'b111: branch_taken = alu_flags[`ALU_FLAG_NOBORROW];//bgeu
+        default:branch_taken = 0;
+    endcase
+end
+
+always @(*) begin
+    case (in_wb_sel)
+        `NPC_ALU: out_wb_data = alu_result;
+        `NPC_PC4: out_wb_data = pc + 32'h4;
+        `NPC_CSR: out_wb_data = csr_rdata;
+        `NPC_MEM: out_wb_data = 32'b0;
     endcase
 end
 
 assign out_redirect_valid =
            in_is_jal
         |  in_is_jalr
-        | (in_is_branch && out_branch_taken)
+        | (in_is_branch && branch_taken)
         | in_trap_valid;
 
 reg     [31:0]      jalr_target;
@@ -102,7 +108,7 @@ assign out_redirect_pc =
         in_trap_valid              ? trap_pc       :
         in_is_jal                  ? jal_target    :
         in_is_jalr                 ? jalr_target   :
-        (in_is_branch && out_branch_taken)    ? branch_target :
+        (in_is_branch && branch_taken)    ? branch_target :
                                   32'b0;
 
 wire [31:0] mtvec_data, mepc_data;
@@ -152,7 +158,6 @@ end
 
 import "DPI-C" function void ebreak(input bit is_ebreak);
 
-reg    [31:0]  store_data;
 always @(posedge clk) begin
     if(in_valid == 1'b1) begin
         ebreak(in_is_ebreak);
@@ -161,7 +166,7 @@ end
 
 
 wire    [31:0] csr_rdata;
-assign out_csr_wdata = (in_csr_op_sel == `CSR_WRITE) ? in_src1_data : (csr_rdata | in_src1_data);
+wire    [31:0]  csr_wdata = (in_csr_op_sel == `CSR_WRITE) ? in_src1_data : (csr_rdata | in_src1_data);
 
 CSR csr(
     .clk(clk),
@@ -170,7 +175,7 @@ CSR csr(
     .csr_wen(in_csr_wen),
     .is_ecall(in_is_ecall),
     .csr_rdata(csr_rdata),
-    .csr_wdata(out_csr_wdata),
+    .csr_wdata(csr_wdata),
     .mtvec_data(mtvec_data),
     .mepc_data(mepc_data)
 );
