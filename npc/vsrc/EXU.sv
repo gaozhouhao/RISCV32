@@ -66,7 +66,7 @@ ALU alu(
 reg     [31:0]  alu_src1;
 reg     [31:0]  alu_src2;
 reg     [3:0]   alu_flags;
-reg     [7:0]   wmask;
+//reg     [7:0]   wmask;
 
 assign out_exu_we = in_rf_we;
 assign out_is_load = in_is_load;

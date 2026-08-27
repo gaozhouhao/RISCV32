@@ -77,6 +77,7 @@ wire    [31:0]  pc/* verilator public_flat_rd */;
 AXI_IF          axi_lsu();
 AXI_IF          axi_ifu();
 AXI_IF          axi_soc();
+AXI_IF          axi_clint();
 
 assign axi_soc.awready   = io_master_awready;
 assign io_master_awvalid = axi_soc.awvalid;
@@ -124,8 +125,6 @@ wire    [31:0]  redirect_pc_r;
 wire            exu_we;
 wire            lsu_rf_we;
 
-wire            csr_wen;
-
 wire    [1:0]   wb_sel;
 
 wire    [31:0]  alu_result;
@@ -143,7 +142,6 @@ wire    [31:0]  rf_src2_data;
 reg     [31:0]  csr_wdata;
 
 wire    [31:0]  wb;
-
 wire    [2:0]   funct3;
 
 
@@ -286,6 +284,7 @@ IDU_EXU_Reg idu_exu_reg(
     .in_rd(idu_rd),
     .in_imm(idu_imm),
     .in_shamt(idu_shamt),
+    .in_csr_addr(idu_csr_addr),
     .in_src1_data(idu_src1_data),
     .in_src2_data(idu_src2_data),
 

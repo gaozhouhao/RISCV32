@@ -28,6 +28,7 @@ module IDU_EXU_Reg (
     input           [ 4:0]      in_rd,
     input           [31:0]      in_imm,
     input           [31:0]      in_shamt,
+    input           [11:0]      in_csr_addr,
     input           [31:0]      in_src1_data,
     input           [31:0]      in_src2_data,
 
@@ -117,6 +118,7 @@ module IDU_EXU_Reg (
             out_rd              <= in_rd            ;
             out_imm             <= in_imm           ;
             out_shamt           <= in_shamt         ;
+            out_csr_addr        <= in_csr_addr      ;
             out_src1_data       <= in_src1_data     ;
             out_src2_data       <= in_src2_data     ;
         end
