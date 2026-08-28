@@ -118,7 +118,6 @@ wire            wbu_to_ifu_valid;
 wire            ifu_to_wbu_ready;
 
 // IDU Output
-wire            idu_valid;
 wire            idu_rf_we;
 wire            idu_csr_wen;
 wire    [ 1:0]  idu_wb_sel;
@@ -201,7 +200,7 @@ IDU idu(
     .in_valid(ifu_to_idu_valid),
     .in_ready(exu_to_idu_ready),
 
-    .out_valid(idu_valid),
+    .out_valid(idu_to_exu_valid),
     .out_ready(idu_to_ifu_ready),
     .out_rf_we(idu_rf_we),
     .out_csr_wen(idu_csr_wen),
