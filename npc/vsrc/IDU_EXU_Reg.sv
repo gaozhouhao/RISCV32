@@ -21,6 +21,7 @@ module IDU_EXU_Reg (
 
     input           [ 2:0]      in_branch_op,
     input           [ 2:0]      in_load_size,
+    input           [ 2:0]      in_store_size,
     input   reg     [ 3:0]      in_alu_op,
     input   reg     [ 1:0]      in_alu_src2_sel,
     input   reg     [ 1:0]      in_alu_src1_sel,
@@ -52,6 +53,7 @@ module IDU_EXU_Reg (
 
     output          [ 2:0]      out_branch_op,
     output          [ 2:0]      out_load_size,
+    output          [ 2:0]      out_store_size,
     output  reg     [ 3:0]      out_alu_op,
 
     output  reg     [ 1:0]      out_alu_src2_sel,
@@ -84,6 +86,7 @@ module IDU_EXU_Reg (
             out_trap_valid      <= 1'b0     ;
             out_branch_op       <= 3'b0     ;
             out_load_size       <= 3'b0     ;
+            out_store_size      <= 3'b0     ;
             out_alu_op          <= 4'b0     ;
             out_alu_src2_sel    <= 2'b0     ;
             out_alu_src1_sel    <= 2'b0     ;
@@ -114,6 +117,7 @@ module IDU_EXU_Reg (
             out_trap_valid      <= in_trap_valid    ;
             out_branch_op       <= in_branch_op     ;
             out_load_size       <= in_load_size     ;
+            out_store_size      <= in_store_size    ;
             out_alu_op          <= in_alu_op        ;
             out_alu_src2_sel    <= in_alu_src2_sel  ;
             out_alu_src1_sel    <= in_alu_src1_sel  ;

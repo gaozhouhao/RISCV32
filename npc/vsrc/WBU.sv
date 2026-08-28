@@ -1,22 +1,22 @@
 module WBU(
-    input                       clk,
-    input                       reset,
-    input       [31:0]            wdata,
-    input       [4:0]             waddr,
-    input                       lsu_rf_we,
-    output  reg                   wb_done,
-    input       [4:0]             raddr1,
-    input       [4:0]             raddr2,
-    output      [31:0]            rdata1,
-    output      [31:0]            rdata2,
+    input               clk,
+    input               reset,
+    input               in_valid,
+    input               in_ready,
+    input       [31:0]  in_wdata,
+    input       [ 4:0]  in_waddr,
+    input               lsu_rf_we,
+    input       [ 4:0]  in_raddr1,
+    input       [ 4:0]  in_raddr2,
 
-    input                       lsu_to_rf_valid,
-    output                      out_ready,
-    input                       rf_to_ifu_ready,
-    output                      rf_to_ifu_valid
+    output      [31:0]  out_rdata1,
+    output      [31:0]  out_rdata2,
+    output  reg         out_wb_done,
+    output              out_ready,
+    output              out_valid
 );
 
-    assign rf_to_ifu_valid = lsu_to_rf_valid;
+    assign out_valid = in_valid;
     
     reg [31:0] rf [31:0]/* verilator public_flat_rd */;
 
@@ -26,24 +26,22 @@ module WBU(
     end
     
     always @(*) begin
-        wb_done = lsu_to_rf_valid && ~reset;
+        out_wb_done = in_valid && ~reset;
     end
 
-
-
     always @(posedge clk) begin
-        if(lsu_to_rf_valid)begin
+        if(in_valid)begin
             if (lsu_rf_we) 
-                if(waddr != 5'b0) begin
-                    rf[waddr] <= wdata;
+                if(in_waddr != 5'b0) begin
+                    rf[in_waddr] <= in_wdata;
                 end
         end
     end
     
     assign out_ready = 1'b1;
 
-    assign rdata1 = (raddr1 == 5'b0)?{32{1'b0}}:rf[raddr1];
-    assign rdata2 = (raddr2 == 5'b0)?{32{1'b0}}:rf[raddr2];
+    assign out_rdata1 = (in_raddr1 == 5'b0)?{32{1'b0}}:rf[in_raddr1];
+    assign out_rdata2 = (in_raddr2 == 5'b0)?{32{1'b0}}:rf[in_raddr2];
     
 
 endmodule

@@ -28,6 +28,7 @@ module IDU(
 
     output          [2:0]               out_branch_op,
     output          [2:0]               out_load_size,
+    output          [2:0]               out_store_size,
 
     output  reg     [1:0]               out_alu_src2_sel,
     output  reg     [1:0]               out_alu_src1_sel,
@@ -69,6 +70,12 @@ assign out_csr_addr = in_inst[31:20];
 
 assign out_branch_op = funct3;
 assign out_load_size = funct3;
+assign out_store_size = funct3;
+
+
+
+
+
 
 always @(*) begin
     case (opcode)

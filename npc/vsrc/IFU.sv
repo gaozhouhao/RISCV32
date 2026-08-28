@@ -4,8 +4,8 @@ module IFU(
     AXI_IF.master                       axi,
     
     input                               in_wb_done,
-    input   reg     [31:0]              in_redirect_pc_r,
-    input   reg                         in_redirect_valid_r,
+    input   reg     [31:0]              in_redirect_pc,
+    input   reg                         in_redirect_valid,
     input                               in_ready,
     input                               in_valid,
 
@@ -28,6 +28,7 @@ module IFU(
     reg inst_valid;
     wire inst_done/* verilator public_flat_rd */;
     assign inst_done = in_wb_done;
+    assign out_ready = (state == IDLE);
 
     reg is_busy;
     always @(posedge clk) begin
@@ -81,7 +82,7 @@ module IFU(
     end
 
     wire    [31:0]  next_pc/* verilator public_flat_rd */;
-    assign next_pc = in_redirect_valid_r ? in_redirect_pc_r : pc + 4;
+    assign next_pc = in_redirect_valid ? in_redirect_pc : pc + 4;
 
     always @(posedge clk) begin
         if(inst_done)

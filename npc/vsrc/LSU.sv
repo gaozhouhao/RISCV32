@@ -4,6 +4,7 @@ module LSU(
     input                               reset,
     AXI_IF.master                       axi,
     input                               in_rf_we,
+    input               [ 4:0]          in_rd,
     input       reg                     in_is_load,
     input       reg                     in_is_store,
     input       reg     [31:0]          pc,
@@ -14,10 +15,12 @@ module LSU(
     input                               in_ready,
 
     input       reg     [ 2:0]          in_load_size,
+    input       reg     [ 2:0]          in_store_size,
     input               [31:0]          in_mem_addr,
     input       wire    [31:0]          in_store_data,
     input       wire    [31:0]          in_wb_data,
 
+    output              [ 4:0]          out_rd,
     output      reg     [31:0]          out_wb_data,
     output      reg                     out_rf_we,
     output                              out_valid,
@@ -32,59 +35,43 @@ module LSU(
     import "DPI-C" function void pmem_write(
         input int unsigned waddr, input int unsigned wdata, input byte wmask);
 
-    reg     [7:0]   random_num;
-    LFSR lfsr(
-        .clk(clk),
-        .random_num(random_num)
-    );
-
-    assign out_ready = 1'b1;
-    reg [31:0] lsu_in_mem_addr;
-
-
+    assign out_ready = (state_l == IDLE) && (state_w == IDLE) && (state_aw == IDLE);
+    reg [31:0] mem_addr;
     reg exu_to_lsu_valid_r;
-    reg lsu_is_load, lsu_is_store;
+    reg is_load, is_store;
     always @(posedge clk) begin
-        exu_to_lsu_valid_r <= in_valid;
-        out_redirect_valid <= in_redirect_valid;
-        if(reset == 1) begin
-            lsu_is_load <= 0;
-            lsu_is_store <= 0;
-            lsu_in_mem_addr <= 0;
-            axi.araddr <= 0;
-            axi.awaddr <= 0;
-            out_rf_we <= 0;
-            out_redirect_pc <= 0;
-        end
-        else if (in_valid)begin
-            lsu_is_load <= in_is_load;
-            lsu_is_store  <= in_is_store;
-            lsu_in_mem_addr <= in_mem_addr; 
+        if (in_valid && out_ready)begin
+            is_load <= in_is_load;
+            is_store  <= in_is_store;
+            out_rd <= in_rd;
+            mem_addr <= in_mem_addr; 
             axi.araddr <= in_mem_addr;
             axi.awaddr <= in_mem_addr;
             out_rf_we <= in_rf_we | in_is_load;
             out_redirect_pc <= in_redirect_pc;
+            out_redirect_valid <= in_redirect_valid;
         end
     end
-    reg     is_busy;
-    reg [7:0]   resp_busy;
+
     parameter IDLE = 1'b0, WAIT = 1'b1;
-    reg             lsu_is_valid;
     reg     state, next_state;
     reg     state_l, next_state_l;
     reg     state_w, next_state_w;
     reg     state_aw, next_state_aw;
 
     reg     is_load_store, store_done, load_done;
-    assign out_valid = load_done || 
-                            store_done || 
-                            out_redirect_valid ||
-                            ((~lsu_is_load && ~ lsu_is_store) && exu_to_lsu_valid_r);
+
+    assign out_valid = 
+        load_done || 
+        store_done || 
+        out_redirect_valid ||
+        ((~is_load && ~is_store) && exu_to_lsu_valid_r);
+
     always_comb begin
         case (state_l)
             IDLE: begin
                 axi.arvalid = 0;
-                if(exu_to_lsu_valid_r && lsu_is_load) begin
+                if(exu_to_lsu_valid_r && is_load) begin
                     next_state_l = WAIT;
                 end
                 else
@@ -98,8 +85,8 @@ module LSU(
     end
 
     always @(*) begin
-        axi.rready = (~is_busy && ~reset);
-        if(axi.rvalid && axi.rready && ~is_busy) begin
+        axi.rready = (~reset);
+        if(axi.rvalid && axi.rready) begin
             perf_event(PERF_LSU_LOAD);
             load_done = 1;
         end
@@ -165,8 +152,8 @@ module LSU(
     end
 
     always @(*) begin
-        axi.bready = (~is_busy && ~reset);
-        if(axi.bvalid && axi.bready && ~is_busy) begin
+        axi.bready = (~reset);
+        if(axi.bvalid && axi.bready) begin
             perf_event(PERF_LSU_STORE);
             store_done = 1;
         end
@@ -187,9 +174,8 @@ module LSU(
         byte1 = 8'b0;
         byte2 = 8'b0;
         word = 32'b0;
-        //csr_input_data = 32'b0;
-        if(lsu_is_load) begin
-            word = (axi.rdata >> (lsu_in_mem_addr[1:0]*8));
+        if(is_load) begin
+            word = (axi.rdata >> (mem_addr[1:0]*8));
             case (in_load_size)
             3'b000: begin
                 byte1 = word[7:0];
@@ -211,7 +197,7 @@ module LSU(
 
     always @(posedge clk) begin
         if(in_valid)
-        case (in_load_size)
+        case (in_store_size)
             3'b000: begin //sb
                 axi.wdata <= {4{in_store_data[7:0]}};
                 axi.wstrb <= 4'b0001 << in_mem_addr[1:0];
