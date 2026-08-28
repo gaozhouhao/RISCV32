@@ -30,11 +30,10 @@ module IFU(
     assign inst_done = in_wb_done;
     assign out_ready = (state == IDLE);
 
-    reg is_busy;
     always @(posedge clk) begin
         if (reset == 1) inst_valid <= 1'b0;
-            axi.rready <= (~is_busy && ~reset);
-        if(axi.rvalid && ~is_busy) begin
+            axi.rready <= ( ~reset);
+        if(axi.rvalid & axi.rready) begin
             out_inst <= axi.rdata;
             out_valid <= 1;
             get_inst(axi.rdata);

@@ -1,47 +1,48 @@
 `include "params.vh"
 module IDU(
+    input                   clk,
+    input                   reset,
+    input   reg     [31:0]  in_inst,
+    input                   in_valid,
+    input                   in_ready,
 
-    input   reg     [31:0]              in_inst,
-    input                               in_valid,
-    input                               in_ready,
+    input           [31:0]  in_src1_data,
+    input           [31:0]  in_src2_data,
 
-    input           [31:0]              in_src1_data,
-    input           [31:0]              in_src2_data,
-
-    output                              out_ready,
-    output                              out_valid,
+    output                  out_ready,
+    output                  out_valid,
     
-    output  reg                         out_rf_we,
-    output  reg                         out_csr_wen,
-    output  reg     [1:0]               out_wb_sel,
-    output  reg                         out_csr_op_sel,
+    output  reg             out_rf_we,
+    output  reg             out_csr_wen,
+    output  reg     [ 1:0]  out_wb_sel,
+    output  reg             out_csr_op_sel,
     
-    output  reg                         out_is_ecall,
-    output  reg                         out_is_mret,
-    output  reg                         out_is_ebreak,
-    output  reg                         out_is_jalr,
-    output  reg                         out_is_jal,
-    output  reg                         out_is_branch,
-    output  reg                         out_is_load,
-    output  reg                         out_is_store,
-    output  reg                         out_trap_valid,
+    output  reg             out_is_ecall,
+    output  reg             out_is_mret,
+    output  reg             out_is_ebreak,
+    output  reg             out_is_jalr,
+    output  reg             out_is_jal,
+    output  reg             out_is_branch,
+    output  reg             out_is_load,
+    output  reg             out_is_store,
+    output  reg             out_trap_valid,
 
-    output          [2:0]               out_branch_op,
-    output          [2:0]               out_load_size,
-    output          [2:0]               out_store_size,
+    output          [ 2:0]  out_branch_op,
+    output          [ 2:0]  out_load_size,
+    output          [ 2:0]  out_store_size,
 
-    output  reg     [1:0]               out_alu_src2_sel,
-    output  reg     [1:0]               out_alu_src1_sel,
-    output  reg     [3:0]               out_alu_op,
-    output          [4:0]               out_src1,
-    output          [4:0]               out_src2,
-    output          [4:0]               out_rd,
-    output          [31:0]              out_imm,
-    output          [31:0]              out_shamt,
-    output          [11:0]              out_csr_addr,
+    output  reg     [ 1:0]  out_alu_src2_sel,
+    output  reg     [ 1:0]  out_alu_src1_sel,
+    output  reg     [ 3:0]  out_alu_op,
+    output          [ 4:0]  out_src1,
+    output          [ 4:0]  out_src2,
+    output          [ 4:0]  out_rd,
+    output          [31:0]  out_imm,
+    output          [31:0]  out_shamt,
+    output          [11:0]  out_csr_addr,
 
-    output          [31:0]              out_src1_data,
-    output          [31:0]              out_src2_data
+    output          [31:0]  out_src1_data,
+    output          [31:0]  out_src2_data
 );
 
 wire    [31:0]  immI, immS, immB, immU, immJ;
@@ -71,10 +72,20 @@ assign out_csr_addr = in_inst[31:20];
 assign out_branch_op = funct3;
 assign out_load_size = funct3;
 assign out_store_size = funct3;
+assign out_ready = in_ready;
 
+always @(posedge clk) begin
+    if (reset == 1'b1) begin
+        out_valid <= 1'b0;
+    end
+    else if (in_valid & out_ready) begin
+        out_valid <= 1'b1;
+    end
+    else if (out_valid & in_ready) begin
+        out_valid <= 1'b0;
+    end
 
-
-
+end
 
 
 always @(*) begin
@@ -94,8 +105,6 @@ end
 
 
 always @(*) begin
-    out_ready = 1;
-    out_valid = in_valid;
     out_is_ecall = 1'b0;
     out_is_mret = 1'b0;
     out_is_ebreak = 1'b0;

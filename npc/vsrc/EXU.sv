@@ -154,7 +154,7 @@ ALU alu(
     .alu_flags(alu_flags)
 );
 
-assign  out_ready = in_ready;
+assign out_ready = in_ready;
 assign out_store_data = in_is_store ? in_src2_data : 32'b0;
 assign out_mem_addr = alu_result;
 

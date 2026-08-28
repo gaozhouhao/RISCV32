@@ -166,6 +166,8 @@ wire    [31:0]  exu_redirect_pc;
 wire            lsu_rf_we;
 wire    [31:0]  lsu_wb_data;
 wire    [ 4:0]  lsu_rd;
+wire    [ 4:0]  lsu_src1;
+wire    [ 4:0]  lsu_src2;
 wire            lsu_redirect_valid;
 wire    [31:0]  lsu_redirect_pc;
 
@@ -191,6 +193,8 @@ IFU ifu(
 );
 
 IDU idu(
+    .clk(clock),
+    .reset(reset),
     .in_inst(inst),
     .in_src1_data(wbu_src1_data),
     .in_src2_data(wbu_src2_data),
@@ -242,7 +246,6 @@ EXU exu(
     .in_is_jal(idu_is_jal),
     .in_is_jalr(idu_is_jalr),
     .in_is_branch(idu_is_branch),
-    
     .in_trap_valid(idu_trap_valid),
     .in_is_ebreak(idu_is_ebreak),
     .in_is_load(idu_is_load),
@@ -294,6 +297,8 @@ LSU lsu(
 
     .in_rf_we(exu_rf_we),
     .in_rd(exu_rd),
+    .in_src1(exu_src1),
+    .in_src2(exu_src2),
     .in_is_load(exu_is_load),
     .in_is_store(exu_is_store),
     .in_ready(wbu_to_lsu_ready),
@@ -313,6 +318,8 @@ LSU lsu(
     
     .out_wb_data(lsu_wb_data),
     .out_rd(lsu_rd),
+    .out_src1(lsu_src1),
+    .out_src2(lsu_src2),
     .out_rf_we(lsu_rf_we),
     .out_redirect_valid(lsu_redirect_valid),
     .out_redirect_pc(lsu_redirect_pc)
@@ -358,16 +365,17 @@ WBU wbu (
     .reset(reset),
     .in_wdata(lsu_wb_data),
     .in_waddr(lsu_rd),
-    .lsu_rf_we(lsu_rf_we),
-    .out_wb_done(wbu_wb_done),
-    .in_raddr1(idu_src1),
-    .in_raddr2(idu_src2),
+    .in_rf_we(lsu_rf_we),
+    .in_valid(lsu_to_wbu_valid),
+    .in_ready(ifu_to_wbu_ready),
+    .in_raddr1(lsu_src1),
+    .in_raddr2(lsu_src2),
+
     .out_rdata1(wbu_src1_data),
     .out_rdata2(wbu_src2_data),
-    .in_valid(lsu_to_wbu_valid),
+    .out_wb_done(wbu_wb_done),
     .out_ready(wbu_to_lsu_ready),
-    .out_valid(wbu_to_ifu_valid),
-    .in_ready(ifu_to_wbu_ready)
+    .out_valid(wbu_to_ifu_valid)
 );
 
 

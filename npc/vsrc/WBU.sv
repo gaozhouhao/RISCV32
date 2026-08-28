@@ -5,7 +5,7 @@ module WBU(
     input               in_ready,
     input       [31:0]  in_wdata,
     input       [ 4:0]  in_waddr,
-    input               lsu_rf_we,
+    input               in_rf_we,
     input       [ 4:0]  in_raddr1,
     input       [ 4:0]  in_raddr2,
 
@@ -30,16 +30,15 @@ module WBU(
     end
 
     always @(posedge clk) begin
-        if(in_valid)begin
-            if (lsu_rf_we) 
+        if(in_valid && in_ready)begin
+            if (in_rf_we) 
                 if(in_waddr != 5'b0) begin
                     rf[in_waddr] <= in_wdata;
                 end
         end
     end
     
-    assign out_ready = 1'b1;
-
+    assign out_ready = in_ready;
     assign out_rdata1 = (in_raddr1 == 5'b0)?{32{1'b0}}:rf[in_raddr1];
     assign out_rdata2 = (in_raddr2 == 5'b0)?{32{1'b0}}:rf[in_raddr2];
     
