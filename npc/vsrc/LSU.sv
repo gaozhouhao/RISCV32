@@ -40,6 +40,7 @@ module LSU(
         input int unsigned waddr, input int unsigned wdata, input byte wmask);
 
     assign out_ready = (state_l == IDLE) && (state_w == IDLE) && (state_aw == IDLE);
+    reg         lsu_valid;
     reg [31:0]  mem_addr;
     reg [31:0]  store_data;
     reg exu_to_lsu_valid_r;
@@ -47,6 +48,7 @@ module LSU(
     reg [ 2:0]  load_size, store_size;
     always @(posedge clk) begin
         if (in_valid && out_ready)begin
+            lsu_valid <= 1'b1;
             is_load <= in_is_load;
             is_store <= in_is_store;
             load_size <= in_load_size;
@@ -55,11 +57,13 @@ module LSU(
             store_data <= in_store_data;
             out_rd <= in_rd;
             out_src1 <= in_src1;
-            out_src2 <= in_src1;
+            out_src2 <= in_src2;
             out_rf_we <= in_rf_we;
             out_redirect_pc <= in_redirect_pc;
             out_redirect_valid <= in_redirect_valid;
         end
+        if (out_valid && in_ready)
+            lsu_valid <= 1'b0;
     end
 
     parameter IDLE = 1'b0, WAIT = 1'b1;
@@ -80,6 +84,9 @@ module LSU(
         else if (~in_is_load && ~in_is_store) begin
             out_valid <= in_valid;
         end
+        else if (out_valid && in_ready) begin
+            out_valid <= 1'b0;
+        end
     end
 
     ///////////////////////////////////////
@@ -92,7 +99,7 @@ module LSU(
         else begin
             case (state_l)
                 IDLE: begin
-                    if (in_valid && in_is_load) begin
+                    if (lsu_valid && is_load) begin
                         axi.arvalid <= 1'b1;
                         axi.araddr <= mem_addr;
                         state_l <= WAIT;
@@ -111,13 +118,13 @@ module LSU(
     // R Channel
     ///////////////////////////////////////
     wire [31:0] word;
-    assign word = axi.rdata;
+    assign word = axi.rdata >> (mem_addr[1:0] * 8);
     assign axi.rready = (state_l == IDLE);
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             out_wb_data <= 32'b0;
         end
-        else begin
+        else if (is_load == 1'b1)begin
             if (axi.rvalid && axi.rready) begin
                 `ifdef CONFIG_MTRACE
                     $display("Read:\t0x%08x", axi.araddr);
@@ -133,6 +140,9 @@ module LSU(
                 endcase
             end
         end
+        else begin
+            out_wb_data <= in_wb_data;
+        end
     end
 
     ///////////////////////////////////////
@@ -145,7 +155,7 @@ module LSU(
         else begin
             case (state_aw)
                 IDLE: begin
-                    if (in_valid && in_is_store) begin
+                    if (lsu_valid && is_store) begin
                         axi.awvalid <= 1'b1;
                         axi.awaddr <= mem_addr;
                         state_aw <= WAIT;
@@ -175,24 +185,24 @@ module LSU(
         else begin
             case (state_w)
                 IDLE: begin
-                    if(in_valid && is_store) begin
+                    if(lsu_valid && is_store) begin
                         axi.wvalid <= 1'b1;
                         case (store_size)
                             3'b000: begin //sb
-                                axi.wdata <= {4{in_store_data[7:0]}};
-                                axi.wstrb <= 4'b0001 << in_mem_addr[1:0];
+                                axi.wdata <= {4{store_data[7:0]}};
+                                axi.wstrb <= 4'b0001 << mem_addr[1:0];
                             end
                             3'b001: begin //sh
-                                axi.wdata <= {16'b0, in_store_data[15:0]} << (in_mem_addr[1:0] * 8);
-                                axi.wstrb <= 4'b0011 << in_mem_addr[1:0];
+                                axi.wdata <= {16'b0, store_data[15:0]} << (mem_addr[1:0] * 8);
+                                axi.wstrb <= 4'b0011 << mem_addr[1:0];
                             end
                             3'b010: begin
-                                axi.wdata <= in_store_data;
+                                axi.wdata <= store_data;
                                 axi.wstrb <= 4'b1111;//sw
                             end
                             default: begin
                                 axi.wstrb <= 4'b0;
-                                axi.wdata <= in_store_data;
+                                axi.wdata <= store_data;
                             end
                         endcase
                         state_w <= WAIT;
@@ -204,7 +214,7 @@ module LSU(
                         $display("Write:\t0x%08x", axi.awaddr);
                     `endif
                         axi.wvalid <= 1'b0;
-                        state_aw <= IDLE;
+                        state_w <= IDLE;
                     end
                 end
             endcase
@@ -216,7 +226,6 @@ module LSU(
     ///////////////////////////////////////
     assign axi.bready = (state_aw == IDLE) && (state_w == IDLE);
     always @(posedge clk) begin
-        axi.bready = ~reset;
         if(axi.bvalid && axi.bready) begin
             perf_event(PERF_LSU_STORE);
         end
