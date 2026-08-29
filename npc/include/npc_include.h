@@ -22,6 +22,25 @@
 #define MEM_LEFT    0x80000000
 #define MEM_RIGHT   0x88000000
 
+enum {
+    PERF_IFU_FETCH = 0,
+    PERF_LSU_LOAD,
+    PERF_LSU_STORE,
+    PERF_EXU_DONE,
+    PERF_CYCLE,
+    PERF_INSTRET,
+    PERF_BRANCH,
+    PERF_BRANCH_TAKEN,
+    PERF_JUMP,
+    PERF_IFU_STALL,
+    PERF_IDU_STALL,
+    PERF_EXU_STALL,
+    PERF_LSU_STALL,
+    PERF_IFU_MEM_WAIT,
+    PERF_LSU_LOAD_WAIT,
+    PERF_LSU_STORE_WAIT,
+    PERF_MAX
+};
 
 extern const char *regs[];
 #define STR1(x)     #x

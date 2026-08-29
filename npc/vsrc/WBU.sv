@@ -15,22 +15,35 @@ module WBU(
     output              out_ready,
     output              out_valid
 );
+    import perf_pkg::*;
+    always @(posedge clk) begin
+        if (out_valid && in_ready) begin
 
-    assign out_valid = in_valid;
-    
+        end
+    end
+
+
     reg [31:0] rf [31:0]/* verilator public_flat_rd */;
-
     integer i;
     initial begin
         for (i = 0; i < 32; i = i + 1) rf[i] = 32'b0;
     end
-    
-    always @(*) begin
-        out_wb_done = in_valid && ~reset;
+    assign out_wb_done = in_valid && out_ready;
+    always @(posedge clk) begin
+        if (reset == 1'b1) begin
+            out_valid <= 1'b0;
+        end
+        else if (in_valid && out_ready) begin
+            perf_event(PERF_INSTRET);
+            out_valid <= 1'b1;
+        end
+        else if (out_valid && in_ready) begin
+            out_valid <= 1'b0;
+        end
     end
 
     always @(posedge clk) begin
-        if(in_valid && in_ready)begin
+        if(in_valid && out_ready)begin
             if (in_rf_we) 
                 if(in_waddr != 5'b0) begin
                     rf[in_waddr] <= in_wdata;

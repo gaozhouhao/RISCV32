@@ -51,8 +51,15 @@ module EXU (
     output                      out_ready,
     output                      out_valid
 );
-
+import perf_pkg::*;
 import "DPI-C" function void ebreak(input bit is_ebreak);
+
+always @(posedge clk) begin
+    if (out_valid && !in_ready) perf_event(PERF_EXU_STALL);
+    if (out_valid && in_ready) begin
+        if (in_is_branch && branch_taken) perf_event(PERF_BRANCH_TAKEN);
+    end
+end
 
 reg     [31:0]      jalr_target;
 reg     [31:0]      jal_target;
@@ -65,6 +72,7 @@ always @(posedge clk) begin
         end
         else begin
             if (in_valid & out_ready) begin
+                perf_event(PERF_EXU_DONE);
                 out_valid <= 1'b1;
                 ebreak(in_is_ebreak);
                 out_is_load         <= in_is_load       ;

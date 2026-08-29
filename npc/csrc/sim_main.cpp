@@ -47,7 +47,7 @@ extern "C" void perf_event(int event_id) {
     perf_cnt[event_id]++;
 }
 
-
+void print_perf_cnt();
 CPUArchState cpu = {.pc=0x30000000};
 
 void exec_once(Decode *s) {
@@ -59,8 +59,8 @@ void exec_once(Decode *s) {
     contextp->timeInc(1);
     IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
     IFDEF(CONFIG_NVBOARD, nvboard_update());
-    int inst_valid = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid;
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
+    int inst_valid = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__out_valid;
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__out_valid) {
         s->inst = current_inst;
     }
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done) {
@@ -187,16 +187,47 @@ int main(int argc, char** argv){
     reset();
     while (1) {
         sdb_mainloop();
-        printf("IPC:%f\n", (float)((float)inst_cnt / (float)cycle_cnt));
-        printf("IFU fetch : %lu\n", perf_cnt[0]);
-        printf("LSU load  : %lu\n", perf_cnt[1]);
-        printf("LSU store : %lu\n", perf_cnt[2]);
-        printf("EXU done  : %lu\n", perf_cnt[3]);
-
-
+        print_perf_cnt();
         tfp->close();
         return is_exit_status_bad();
         nvboard_update();
         tfp->dump(contextp->time());
     }
+}
+
+
+void print_perf_cnt() {
+    float ipc = 0.0f;
+
+    if (perf_cnt[PERF_CYCLE] != 0) {
+        ipc = (float)perf_cnt[PERF_INSTRET] /
+              (float)perf_cnt[PERF_CYCLE];
+    }
+
+    printf("========== Performance ==========\n");
+
+    printf("IPC             : %f\n", ipc);
+
+    printf("Cycle           : %lu\n", perf_cnt[PERF_CYCLE]);
+    printf("Instret         : %lu\n", perf_cnt[PERF_INSTRET]);
+
+    printf("IFU fetch       : %lu\n", perf_cnt[PERF_IFU_FETCH]);
+    printf("LSU load        : %lu\n", perf_cnt[PERF_LSU_LOAD]);
+    printf("LSU store       : %lu\n", perf_cnt[PERF_LSU_STORE]);
+    printf("EXU done        : %lu\n", perf_cnt[PERF_EXU_DONE]);
+
+    printf("Branch          : %lu\n", perf_cnt[PERF_BRANCH]);
+    printf("Branch taken    : %lu\n", perf_cnt[PERF_BRANCH_TAKEN]);
+    printf("Jump            : %lu\n", perf_cnt[PERF_JUMP]);
+
+    printf("IFU stall       : %lu\n", perf_cnt[PERF_IFU_STALL]);
+    printf("IDU stall       : %lu\n", perf_cnt[PERF_IDU_STALL]);
+    printf("EXU stall       : %lu\n", perf_cnt[PERF_EXU_STALL]);
+    printf("LSU stall       : %lu\n", perf_cnt[PERF_LSU_STALL]);
+
+    printf("IFU mem wait    : %lu\n", perf_cnt[PERF_IFU_MEM_WAIT]);
+    printf("LSU load wait   : %lu\n", perf_cnt[PERF_LSU_LOAD_WAIT]);
+    printf("LSU store wait  : %lu\n", perf_cnt[PERF_LSU_STORE_WAIT]);
+
+    printf("=================================\n");
 }
