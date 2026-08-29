@@ -145,6 +145,8 @@ wire    [31:0]  idu_shamt;
 wire    [11:0]  idu_csr_addr;
 wire    [31:0]  idu_src1_data;
 wire    [31:0]  idu_src2_data;
+wire    [ 4:0]  idu_decode_src1;
+wire    [ 4:0]  idu_decode_src2;
 
 //  EXU Output
 wire            exu_is_load;
@@ -228,7 +230,9 @@ IDU idu(
     .out_shamt(idu_shamt),
     .out_csr_addr(idu_csr_addr),
     .out_src1_data(idu_src1_data),
-    .out_src2_data(idu_src2_data)
+    .out_src2_data(idu_src2_data),
+    .idu_decode_src1(idu_decode_src1),
+    .idu_decode_src2(idu_decode_src2)
 );
 
 
@@ -367,8 +371,8 @@ WBU wbu (
     .in_rf_we(lsu_rf_we),
     .in_valid(lsu_to_wbu_valid),
     .in_ready(ifu_to_wbu_ready),
-    .in_raddr1(lsu_src1),
-    .in_raddr2(lsu_src2),
+    .in_raddr1(idu_decode_src1),
+    .in_raddr2(idu_decode_src2),
 
     .out_rdata1(wbu_src1_data),
     .out_rdata2(wbu_src2_data),

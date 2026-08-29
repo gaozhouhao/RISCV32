@@ -42,7 +42,9 @@ module IDU(
     output          [11:0]  out_csr_addr,
 
     output          [31:0]  out_src1_data,
-    output          [31:0]  out_src2_data
+    output          [31:0]  out_src2_data,
+    output          [ 4:0]  idu_decode_src1,
+    output          [ 4:0]  idu_decode_src2
 );
 
 wire    [31:0]  immI, immS, immB, immU, immJ;
@@ -57,6 +59,8 @@ assign funct7 = in_inst[31:25];
 
 assign src1 = in_inst[19:15];
 assign src2 = in_inst[24:20];
+assign idu_decode_src1 = src1;
+assign idu_decode_src2 = src2;
 assign src1_data = in_src1_data;
 assign src2_data = in_src2_data;
 assign rd   = in_inst[11:7];
@@ -293,7 +297,7 @@ always @(*) begin
                 csr_wen = 1;
                 if(rd != 0) rf_we = 1;
                 wb_sel = `NPC_CSR;
-                if(src1 != 0) csr_wen = 0;
+                if(src1 == 0) csr_wen = 0;
                 csr_op_sel = `CSR_SET;
             end
         end
