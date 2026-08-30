@@ -38,13 +38,8 @@ uint32_t memory[N] = {
 
 unsigned int pmem_read(unsigned int raddr) {
     if (raddr >= PSRAM_ADDR && raddr < PSRAM_ADDR + PSRAM_SIZE){
-        return psram[(raddr - PSRAM_ADDR) >> 2];
-    }
-    else if (raddr >= SDRAM_ADDR && raddr < SDRAM_ADDR + SDRAM_SIZE){
-        return psram[(raddr - SDRAM_ADDR) >> 2];
-    }
-    else if (raddr >= SRAM_ADDR && raddr < SRAM_ADDR + SRAM_SIZE){
-        return psram[(raddr - SRAM_ADDR) >> 2];
+        //printf("addr:%08x\tinst:%08x\n", raddr, memory[(raddr - PSRAM_ADDR) >> 2]);
+        return memory[(raddr - PSRAM_ADDR) >> 2];
     }
 
     uint32_t idx = (raddr & ~0x3u) >> 2;
@@ -56,21 +51,24 @@ unsigned int pmem_read(unsigned int raddr) {
     return memory[idx]; 
 }
 void pmem_write(unsigned int waddr, unsigned int wdata, char wmask) {
-    if(wmask & 0x01){
-        memory[waddr >> 2] &= ~0x000000ff;
-        memory[waddr >> 2] |= (wdata & 0xff) << 0;
-    }
-    if(wmask & 0x02){
-        memory[waddr >> 2] &= ~0x0000ff00;
-        memory[waddr >> 2] |= wdata & 0x0000ff00;
-    }
-    if(wmask & 0x04){
-        memory[waddr >> 2] &= ~0x00ff0000;
-        memory[waddr >> 2] |= wdata & 0x00ff0000;
-    }
-    if(wmask & 0x08){
-        memory[waddr >> 2] &= ~0xff000000;
-        memory[waddr >> 2] |= wdata & 0xff000000;
+    if (waddr >= PSRAM_ADDR && waddr < PSRAM_ADDR + PSRAM_SIZE){
+        waddr -= PSRAM_ADDR;
+        if(wmask & 0x01){
+            memory[waddr >> 2] &= ~0x000000ff;
+            memory[waddr >> 2] |= (wdata & 0xff) << 0;
+        }
+        if(wmask & 0x02){
+            memory[waddr >> 2] &= ~0x0000ff00;
+            memory[waddr >> 2] |= wdata & 0x0000ff00;
+        }
+        if(wmask & 0x04){
+            memory[waddr >> 2] &= ~0x00ff0000;
+            memory[waddr >> 2] |= wdata & 0x00ff0000;
+        }
+        if(wmask & 0x08){
+            memory[waddr >> 2] &= ~0xff000000;
+            memory[waddr >> 2] |= wdata & 0xff000000;
+        }
     }
 // #ifdef CONFIG_MTRACE
 //     printf("%s-write:\t%08x\t[0x%08x]\n", "memory", wdata, waddr+START_ADDR);

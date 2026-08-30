@@ -64,6 +64,31 @@ extern const std::unique_ptr<TOP_NAME> top;
 uint32_t pmem_read(uint32_t pc);
 void nvboard_bind_all_pins(TOP_NAME* top);
 
+#ifdef ARCH_NPC
+
+#define DUT_INST_DONE   (top->rootp->ysyx_25120302__DOT__ifu__DOT__inst_done)
+#define DUT_ALLOW_FETCH (top->rootp->ysyx_25120302__DOT__ifu__DOT__allow_fetch)
+#define DUT_INST_VALID  (top->rootp->ysyx_25120302__DOT__ifu__DOT__out_valid)
+#define DUT_PC          (top->rootp->ysyx_25120302__DOT__ifu__DOT__pc)
+#define DUT_NEXT_PC     (top->rootp->ysyx_25120302__DOT__ifu__DOT__next_pc)
+#define DUT_RF          (top->rootp->ysyx_25120302__DOT__wbu__DOT__rf)
+
+// #define IFU_VALID(top) \
+//     top->rootp->top__DOT__cpu__DOT__ifu__DOT__out_valid
+
+// #define LSU_VALID(top) \
+//     top->rootp->top__DOT__cpu__DOT__lsu__DOT__out_valid
+
+#elif defined(ARCH_YSYXSOC)
+
+#define DUT_INST_DONE   (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done)
+#define DUT_ALLOW_FETCH (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__allow_fetch)
+#define DUT_INST_VALID  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__out_valid)
+#define DUT_PC          (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__pc)
+#define DUT_NEXT_PC     (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__next_pc)
+#define DUT_RF          (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__rf)
+
+#endif
 
 
 #endif

@@ -5,13 +5,26 @@
 FILELIST_MK = $(shell find -L ./csrc -name "filelist.mk")
 include $(FILELIST_MK)
 
+ARCH ?= ysyxsoc
+
+ifeq ($(ARCH),npc)
+TOPNAME = ysyx_25120302
+RESET_PC := 80000000
+CXXFLAGS += -DARCH_NPC
+VERILATOR_CFLAGS += -DARCH_NPC
+else ifeq ($(ARCH),ysyxsoc)
 TOPNAME = ysyxSoCFull
+RESET_PC := 30000000
+CXXFLAGS += -DARCH_YSYXSOC
+VERILATOR_CFLAGS += -DARCH_YSYXSOC
 NXDC_FILES = constr/top.nxdc
+else
+$(error Unsupported ARCH=$(ARCH))
+endif
+
 
 INC_PATH += $(NPC_HOME)/include
 INC_PATH += $(abspath ./include)
-
-# INC_PATH += $(NEMU_HOME)/tools/capstone/repo/include
 
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc -Wall\
@@ -27,6 +40,7 @@ VERILATOR_CFLAGS += -Wno-PINCONNECTEMPTY \
   					-Wno-ASSIGNDLY \
 					-Wno-PROCASSINIT \
 					--autoflush
+VERILATOR_CFLAGS += -DRESET_PC=32\'h$(RESET_PC)
 
 ifeq ($(CONFIG_MTRACE),y)
 VERILATOR_CFLAGS += -DCONFIG_MTRACE
@@ -35,9 +49,9 @@ endif
 ifeq ($(CONFIG_GTKWAVE), y)
 VERILATOR_CFLAGS += --trace-fst
 endif
+
 VERILATOR_CFLAGS += -I$(abspath ./vsrc)
-VERILATOR_CFLAGS += -I$(abspath ../ysyxSoC/perip/uart16550/rtl)
-VERILATOR_CFLAGS += -I$(abspath ../ysyxSoC/perip/spi/rtl)
+
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -47,35 +61,50 @@ default: $(BIN)
 
 $(shell mkdir -p $(BUILD_DIR))
 
-# constraint file
-SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
-$(SRC_AUTO_BIND): $(NXDC_FILES)
-	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+
 
 # project source
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
 VSRCS := $(filter-out %Xbar.sv, $(VSRCS))
 VSRCS := $(filter-out $(shell find $(abspath ./vsrc/wrapper) -name "*.v"), $(VSRCS))
 VHDRS = $(shell find $(abspath ./vsrc) -name "*.vh")
-VSRCS += $(shell find $(abspath ../ysyxSoC/perip) -name "*.v")
-VSRCS += $(abspath ../ysyxSoC/build/ysyxSoCFull.v)
 
 CSRCS += $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-CSRCS += $(SRC_AUTO_BIND)
-
 CSRCS := $(filter-out $(CSRCS-BLACKLIST-y), $(CSRCS))
 
 LDFLAGS += -lreadline -lhistory
 
-# rules for NVBoard
-include $(NVBOARD_HOME)/scripts/nvboard.mk
+
 
 # rules for velilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 CXXFLAGS += $(INCFLAGS) -DTOP_ROOT="\"V$(TOPNAME)___024root\""
 CXXFLAGS += $(INCFLAGS) -DTOP_DPI="\"V$(TOPNAME)__Dpi\""
+CXXFLAGS += -DRESET_PC=0x$(RESET_PC)
 CXXFLAGS += -g
+
+
+ifeq ($(ARCH),ysyxsoc)
+# rules for NVBoard
+include $(NVBOARD_HOME)/scripts/nvboard.mk
+
+VERILATOR_CFLAGS += -I$(abspath ../ysyxSoC/perip/uart16550/rtl)
+VERILATOR_CFLAGS += -I$(abspath ../ysyxSoC/perip/spi/rtl)
+
+# constraint file
+SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
+$(SRC_AUTO_BIND): $(NXDC_FILES)
+	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+
+# project source
+VSRCS += $(shell find $(abspath ../ysyxSoC/perip) -name "*.v")
+VSRCS += $(abspath ../ysyxSoC/build/ysyxSoCFull.v)
+
+CSRCS += $(SRC_AUTO_BIND)
+endif
+
+
 
 all:
 	@echo "Write this Makefile by your self."

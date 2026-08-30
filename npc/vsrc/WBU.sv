@@ -28,12 +28,16 @@ module WBU(
     initial begin
         for (i = 0; i < 32; i = i + 1) rf[i] = 32'b0;
     end
-    assign out_wb_done = in_valid && out_ready;
+    assign out_wb_done = out_valid && in_ready;
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             out_valid <= 1'b0;
         end
         else if (in_valid && out_ready) begin
+            if (in_rf_we) 
+                if(in_waddr != 5'b0) begin
+                    rf[in_waddr] <= in_wdata;
+                end
             perf_event(PERF_INSTRET);
             out_valid <= 1'b1;
         end
@@ -42,15 +46,6 @@ module WBU(
         end
     end
 
-    always @(posedge clk) begin
-        if(in_valid && out_ready)begin
-            if (in_rf_we) 
-                if(in_waddr != 5'b0) begin
-                    rf[in_waddr] <= in_wdata;
-                end
-        end
-    end
-    
     assign out_ready = in_ready;
     assign out_rdata1 = (in_raddr1 == 5'b0)?{32{1'b0}}:rf[in_raddr1];
     assign out_rdata2 = (in_raddr2 == 5'b0)?{32{1'b0}}:rf[in_raddr2];

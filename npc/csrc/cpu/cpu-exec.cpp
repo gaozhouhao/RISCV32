@@ -16,7 +16,7 @@ static bool g_print_step = false;
 void exec_once(Decode *s);
 
 static void trace_and_difftest(Decode *_this) {
-    //IFDEF(CONFIG_DIFFTEST, difftest_step(pc, dnpc));
+    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, _this->dnpc));
     IFDEF(CONFIG_ITRACE, log_write("%s\n", _this->logbuf));
     if (g_print_step) { IFDEF(CONFIG_ITRACE, printf("%s\n", _this->logbuf)); }
 #ifdef CONFIG_DIFFTEST
@@ -62,11 +62,10 @@ static void execute(uint64_t  n) {
         g_nr_guest_inst ++;
         static int inst_done_r;
         static int owner_rd_r, owner_wr_r;
-
-        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done == 0 && inst_done_r == 1) {
+        if(DUT_INST_DONE == 0 && inst_done_r == 1) {
             trace_and_difftest(&s);
         }
-        inst_done_r = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done;
+        inst_done_r = DUT_INST_DONE;
         if (npc_state.state != NPC_RUNNING) break;
         // if (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
         //     n --;
@@ -97,8 +96,8 @@ void cpu_exec(uint64_t n) {
             printf("npc: %s at pc = " FMT_WORD"\n",
                 (npc_state.state == NPC_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
                 (npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
-                     ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
-                    top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc - 4);
+                    ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
+                    DUT_PC - 4);
        // fall through
        case NPC_QUIT: 
             //statistic();

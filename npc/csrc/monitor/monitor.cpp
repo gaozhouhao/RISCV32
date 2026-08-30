@@ -39,7 +39,7 @@ static int parse_args(int argc, char *argv[]) {
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; 
-    printf("diff_so_file ptr = %p\n", (void *)diff_so_file);
+      printf("diff_so_file ptr = %p\n", (void *)diff_so_file);
                 break;
       case 'f': ftrace_elf_file = optarg; break;
       case 1: img_file = optarg; return 0;
@@ -97,7 +97,11 @@ static long load_img() {
     fseek(fp, 0, SEEK_SET);
     //int ret = fread(memory, size, 1, fp);
     //ret = fread(mrom, size, 1, fp);
+#ifdef ARCH_YSYXSOC
     int ret = fread(flash, size, 1, fp);
+#elif defined(ARCH_NPC)
+    int ret = fread(memory, size, 1, fp);
+#endif
 
     assert(ret == 1);
     fclose(fp);

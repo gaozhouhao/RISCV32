@@ -2,7 +2,6 @@
 #include <cpu/decode.h>
 #include <verilated.h>
 #include <verilated_fst_c.h>
-#include <nvboard.h>
 #include "npc_include.h"
 #include "npc_memory.h"
 #include "svdpi.h"
@@ -11,13 +10,13 @@
 #include <stdio.h>
 #include "monitor/sdb/sdb.h"
 
+#ifdef ARCH_YSYXSOC
+#include <nvboard.h>
+#endif
 const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};    
 const std::unique_ptr<TOP_NAME> top{new TOP_NAME{contextp.get(), "TOP"}};
 
 VerilatedFstC* tfp = new VerilatedFstC;
-
-uint64_t cycle_cnt = 0;
-uint64_t inst_cnt  = 0;
 
 #if CONFIG_NVBOARD
     void nvboard_bind_all_pins(TOP_NAME* top);
@@ -48,25 +47,23 @@ extern "C" void perf_event(int event_id) {
 }
 
 void print_perf_cnt();
-CPUArchState cpu = {.pc=0x30000000};
+CPUArchState cpu = {.pc=RESET_PC};
 
 void exec_once(Decode *s) {
-    s->pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc;
+    s->pc = DUT_PC;
     top->clock = 0; top->eval(); contextp->timeInc(1);
-    cycle_cnt ++;
     IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
     top->clock = 1; top->eval(); 
     contextp->timeInc(1);
+    
     IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
     IFDEF(CONFIG_NVBOARD, nvboard_update());
-    int inst_valid = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__out_valid;
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__out_valid) {
+    if(DUT_ALLOW_FETCH) {
         s->inst = current_inst;
     }
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done) {
-        s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__next_pc;
-        inst_cnt ++;
-        //printf("next pc: %x\n", s->dnpc);
+    if(DUT_INST_DONE) {
+        s->dnpc = DUT_NEXT_PC;
+        s->pc = s->dnpc;
     }
     //s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc;
 
@@ -123,7 +120,7 @@ void exec_once(Decode *s) {
 #endif
 
     for (int i = 0; i < 32; i ++){
-        cpu.gpr[i] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__rf[i];
+        cpu.gpr[i] = DUT_RF[i];
         cpu.gpr[0] = 0;
     }
     /*TODO
@@ -132,7 +129,7 @@ void exec_once(Decode *s) {
     cpu.csr[0x341] = top->rootp->top__DOT__csr__DOT__mepc;
     cpu.csr[0x342] = top->rootp->top__DOT__csr__DOT__mcause;
     */
-    cpu.pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc;
+    cpu.pc = DUT_PC;
     static int cnt = 0;
     cnt ++;
     if(flag) { 
@@ -190,7 +187,7 @@ int main(int argc, char** argv){
         print_perf_cnt();
         tfp->close();
         return is_exit_status_bad();
-        nvboard_update();
+        IFDEF(CONFIG_NVBOARD, nvboard_update());
         tfp->dump(contextp->time());
     }
 }
@@ -200,8 +197,7 @@ void print_perf_cnt() {
     float ipc = 0.0f;
 
     if (perf_cnt[PERF_CYCLE] != 0) {
-        ipc = (float)perf_cnt[PERF_INSTRET] /
-              (float)perf_cnt[PERF_CYCLE];
+        ipc = (float)perf_cnt[PERF_INSTRET] / (float)perf_cnt[PERF_CYCLE];
     }
 
     printf("========== Performance ==========\n");

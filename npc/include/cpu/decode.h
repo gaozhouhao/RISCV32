@@ -23,7 +23,6 @@ typedef struct Decode {
   uint32_t snpc; // static next pc
   uint32_t dnpc; // dynamic next pc
   uint32_t inst;
-  //ISADecodeInfo isa;
   IFDEF(CONFIG_ITRACE, char logbuf[128]);
 } Decode;
 
