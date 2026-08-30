@@ -1,16 +1,48 @@
 *.*
 *
+
+# Allow directories so Git can descend into them
 !*/
+
+# Build system
 !Makefile
 !*.mk
-!*.[cSh]
+!Kconfig
+!.config
+
+# RTL
 !*.v
 !*.sv
 !*.vh
+
+# C/C++
+!*.[cSh]
 !*.cc
 !*.cpp
+!*.hpp
+
+# Scripts / configuration
+!*.py
+!*.sh
+!*.tcl
+!*.conf
+!*.cfg
+!*.json
+!*.inc
+
+# STA / synthesis
+!*.sdc
+
+# Linker scripts
+!*.ld
+
+# NVBoard constraint
+!*.nxdc
+
+# Repository files
 !.gitignore
 !README.md
-!*.nxdc
+
+# Generated outputs
 build/
 result/

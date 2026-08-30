@@ -69,7 +69,7 @@ void exec_once(Decode *s) {
 
 #ifdef CONFIG_FTRACE
     static int call_depth = 0;
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
+    if(DUT_INST_VALID) {
         if((s->inst & 0x7f) == 0x6f) { //jal
             if (((s->inst >> 7) & 0x1f) == 0x1) { // rd = 1, call
                 printf("0x%08x:", s->pc);
@@ -87,7 +87,7 @@ void exec_once(Decode *s) {
             }
         }
     }
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done) {
+    if(DUT_INST_VALID) {
         if((s->inst & 0x7f) == 0x67) { //jalr
             if (((s->inst >> 7) & 0x1f) == 0x0 &&
                 ((s->inst >> 15) & 0x1f) == 0x1 &&
@@ -102,7 +102,7 @@ void exec_once(Decode *s) {
 #endif
     
 #ifdef CONFIG_ITRACE
-    if (inst_valid) {
+    if (DUT_INST_VALID) {
         char *p = s->logbuf;
         p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":\t", s->pc);
         int i;

@@ -1,0 +1,84 @@
+mainmenu "NPC Configuration Menu"
+
+choice
+    prompt "Base ISA"
+    default ISA_riscv
+config ISA_x86
+    bool "x86"
+config ISA_riscv
+    bool "riscv"
+endchoice
+
+config ISA
+    string
+    default "riscv32" if ISA_riscv && !RV64
+
+choice 
+    prompt "NPC execution engine"
+    default ENGINE_INTERPRETER
+
+config ENGINE_INTERPRETER
+    bool "Interpreter"
+
+endchoice
+
+
+
+menu "Testing and Debugging"
+config TRACE
+    bool "Enable tracer"
+    default y
+
+config TRACE_START
+    depends on TRACE
+    int "When tracing is enabled (unit: number of instructions)"
+    default 0
+
+config TRACE_END
+    depends on TRACE
+    int "When tracing is disabled (unit: number of instructions)" 
+    default 100
+
+config ITRACE
+    depends on TRACE
+    bool "Enable instruction tracer"
+    default n
+    
+config MTRACE
+    depends on TRACE
+    bool "Enable memory tracer"
+    default n
+
+config FTRACE
+    depends on TRACE
+    bool "Enable function tracer"
+    default n
+
+config WATCHPOINT
+    bool "Enable watchpoint"
+    default n
+
+
+config DIFFTEST
+    bool "Enable differential testing"
+    default n
+
+config GTKWAVE
+    bool "Enable GTKwave"
+    default n 
+
+
+endmenu
+
+config NVBOARD
+    bool "Enable NVBoard"
+    default n 
+
+
+
+
+
+
+
+
+
