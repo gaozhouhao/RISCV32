@@ -3,9 +3,9 @@
 module Xbar(
     input               clk,
     input               reset,
-    AXI_IF.salver       axi_arb,
+    AXI_IF.slaver       axi_arb,
     AXI_IF.master       axi_mem,
-    AXI_IF.master       axi_soc,    
+    AXI_IF.master       axi_uart,    
     AXI_IF.master       axi_clint    
 );
 
@@ -17,11 +17,11 @@ logic   [1:0]   owner_rd, owner_wr;
 
 always @(*) begin
     sel_rd = IDLE;
-    if(axi_arb.araddr >= UART_BASE && axi_arb.araddr <= UART_END)
+    if(axi_arb.araddr >= `UART_BASE && axi_arb.araddr <= `UART_END)
         sel_rd = UART;
-    else if(axi_arb.araddr >= SRAM_BASE && axi_arb.araddr <= SRAM_END)
+    else if(axi_arb.araddr >= `SRAM_BASE && axi_arb.araddr <= `SRAM_END)
         sel_rd = SRAM;
-    else if(axi_arb.araddr >= CLINT_BASE && axi_arb.araddr <= CLINT_END)begin
+    else if(axi_arb.araddr >= `CLINT_BASE && axi_arb.araddr <= `CLINT_END)begin
         sel_rd = CLINT;
     end
     else
@@ -38,7 +38,7 @@ always @(posedge clk) begin
 end
 /*
 always @(posedge clk) begin
-    if((axi_arb.araddr >= CLINT_BASE && axi_arb.araddr <= CLINT_END))begin
+    if((axi_arb.araddr >= `CLINT_BASE && axi_arb.araddr <= CLINT_END))begin
         $display("addr:%x", axi_arb.araddr);
     end
 end
@@ -48,15 +48,15 @@ assign  axi_arb.arready = sel_rd == UART ? axi_uart.arready :
                           sel_rd == CLINT ? axi_mem.arready :
                           0;
 assign axi_uart.arvalid = (sel_rd == UART) ? axi_arb.arvalid : 0;
-assign axi_uart.araddr = (sel_rd == UART) ? (axi_arb.araddr - UART_BASE) : 0;
+assign axi_uart.araddr = (sel_rd == UART) ? (axi_arb.araddr - `UART_BASE) : 0;
 assign axi_uart.rready = (owner_rd == UART) ? axi_arb.rready : 0;
 
 assign axi_mem.arvalid = (sel_rd == SRAM) ? axi_arb.arvalid : 0;
-assign axi_mem.araddr = (sel_rd == SRAM) ? (axi_arb.araddr - SRAM_BASE) : 0;
+assign axi_mem.araddr = (sel_rd == SRAM) ? (axi_arb.araddr - `SRAM_BASE) : 0;
 assign axi_mem.rready = (owner_rd == SRAM) ? axi_arb.rready : 0;
 
 assign axi_clint.arvalid = (sel_rd == CLINT) ? axi_arb.arvalid : 0;
-assign axi_clint.araddr = (sel_rd == CLINT) ? (axi_arb.araddr - CLINT_BASE) : 0;
+assign axi_clint.araddr = (sel_rd == CLINT) ? (axi_arb.araddr - `CLINT_BASE) : 0;
 assign axi_clint.rready = (owner_rd == CLINT) ? axi_arb.rready : 0;
 
 assign axi_arb.rdata = (owner_rd == UART) ? axi_uart.rdata :
@@ -79,12 +79,12 @@ logic got_aw, got_w;
 logic sent_aw, sent_w;
 always @(*) begin
     sel_wr = IDLE;
-    if(axi_arb.awaddr >= UART_BASE && axi_arb.awaddr <= UART_END)begin
+    if(axi_arb.awaddr >= `UART_BASE && axi_arb.awaddr <= `UART_END)begin
         sel_wr = UART;
     end
-    else if(axi_arb.awaddr >= SRAM_BASE && axi_arb.awaddr <= SRAM_END)
+    else if(axi_arb.awaddr >= `SRAM_BASE && axi_arb.awaddr <= `SRAM_END)
         sel_wr = SRAM;
-    else if(axi_arb.awaddr >= CLINT_BASE && axi_arb.awaddr <= CLINT_END)
+    else if(axi_arb.awaddr >= `CLINT_BASE && axi_arb.awaddr <= `CLINT_END)
         sel_wr = CLINT;
     else begin
         sel_wr = IDLE;
@@ -105,7 +105,7 @@ always @(posedge clk) begin
 end
 
 logic   [31:0]  wdata_r;
-logic   [ 7:0]  wstrb_r;
+logic   [ 3:0]  wstrb_r;
 always @(posedge clk) begin
     if(fire_w && !got_aw && !fire_aw && !got_w) begin
         wdata_r <= axi_arb.wdata;
@@ -235,15 +235,15 @@ always @(*) begin
 end
 
 assign axi_uart.awvalid = (sel_wr == UART) ? axi_arb.awvalid : 0;
-assign axi_uart.awaddr = (sel_wr == UART) ? (axi_arb.awaddr - UART_BASE) : 0;
+assign axi_uart.awaddr = (sel_wr == UART) ? (axi_arb.awaddr - `UART_BASE) : 0;
 assign axi_uart.bready = (owner_wr == UART) ? axi_arb.bready : 0;
 
 assign axi_mem.awvalid = (sel_wr == SRAM) ? axi_arb.awvalid : 0;
-assign axi_mem.awaddr = (sel_wr == SRAM) ? (axi_arb.awaddr - SRAM_BASE) : 0;
+assign axi_mem.awaddr = (sel_wr == SRAM) ? (axi_arb.awaddr - `SRAM_BASE) : 0;
 assign axi_mem.bready = (owner_wr == SRAM) ? axi_arb.bready : 0;
 
 assign axi_clint.awvalid = (sel_wr == CLINT) ? axi_arb.awvalid : 0;
-assign axi_clint.awaddr = (sel_wr == CLINT) ? (axi_arb.awaddr - CLINT_BASE) : 0;
+assign axi_clint.awaddr = (sel_wr == CLINT) ? (axi_arb.awaddr - `CLINT_BASE) : 0;
 assign axi_clint.bready = (owner_wr == CLINT) ? axi_arb.bready : 0;
 
 assign axi_arb.bvalid = (owner_wr == UART) ? axi_uart.bvalid :

@@ -1,13 +1,7 @@
 module MEM(
     input                               clk,
     input                               reset,    
-    AXI_IF.salver                       axi
-);
-
-reg     [7:0]   random_num;
-LFSR lfsr(
-    .clk(clk),
-    .random_num(random_num)
+    AXI_IF.slaver                       axi
 );
 
 import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
@@ -56,7 +50,7 @@ always_ff @(posedge clk) begin
         end
         if (w_fire) begin
             mem_wdata <= axi.wdata;
-            mem_wmask <= axi.wstrb;
+            mem_wmask <= {4'b0, axi.wstrb};
             w_got  <= 1;
         end
         if (aw_got && w_got) begin

@@ -76,8 +76,11 @@ wire    [31:0]  inst/* verilator public_flat_rd */;
 wire    [31:0]  pc/* verilator public_flat_rd */;
 AXI_IF          axi_lsu();
 AXI_IF          axi_ifu();
+AXI_IF          axi_arb();
 AXI_IF          axi_soc();
 AXI_IF          axi_clint();
+AXI_IF          axi_mem();
+AXI_IF          axi_uart();
 
 assign axi_soc.awready   = io_master_awready;
 assign io_master_awvalid = axi_soc.awvalid;
@@ -328,41 +331,7 @@ LSU lsu(
     .out_redirect_pc(lsu_redirect_pc)
 );
 
-Arbiter arbiter(
-    .clk(clock),
-    .reset(reset),
-    .axi_ifu(axi_ifu),
-    .axi_lsu(axi_lsu),
-    .axi_soc(axi_soc.master)
-);
-/*
-Xbar xbar(
-    .clk(clock),
-    .reset(reset),
-    .axi_soc(axi_soc),
-    .axi_mem(axi_mem),
-    .axi_uart(axi_uart),
-    .axi_clint(axi_clint)
-);
-*/
-CLINT clint(
-    .clk(clock),
-    .reset(reset),
-    .axi(axi_clint)    
-);
-/*
-UART uart(
-    .clk(clock),
-    .reset(reset),
-    .axi(axi_uart)    
-);
 
-MEM mem(
-    .clk(clock),
-    .reset(reset),
-    .axi(axi_mem)
-);
-*/
 WBU wbu (
     .clk(clock),
     .reset(reset),
@@ -380,6 +349,67 @@ WBU wbu (
     .out_ready(wbu_to_lsu_ready),
     .out_valid(wbu_to_ifu_valid)
 );
+
+Arbiter arbiter(
+    .clk(clock),
+    .reset(reset),
+    .axi_ifu(axi_ifu),
+    .axi_lsu(axi_lsu),
+    .axi_arb(axi_arb)
+    // .axi_soc(axi_soc.master),
+    // .axi_clint(axi_clint)
+);
+
+`ifdef ARCH_NPC
+
+Xbar xbar(
+    .clk(clock),
+    .reset(reset),
+    .axi_arb(axi_arb),
+    .axi_mem(axi_mem),
+    .axi_uart(axi_uart),
+    .axi_clint(axi_clint)
+);
+
+
+CLINT clint(
+    .clk(clock),
+    .reset(reset),
+    .axi(axi_clint)
+);
+
+
+`elsif ARCH_YSYXSOC
+
+SoCXbar socxbar(
+    .clk(clock),
+    .reset(reset),
+    .axi_arb(axi_arb),
+    .axi_soc(axi_soc),
+    .axi_clint(axi_clint)
+);
+
+
+CLINT clint(
+    .clk(clock),
+    .reset(reset),
+    .axi(axi_clint)    
+);
+
+UART uart(
+    .clk(clock),
+    .reset(reset),
+    .axi(axi_uart)    
+);
+
+MEM mem(
+    .clk(clock),
+    .reset(reset),
+    .axi(axi_mem)
+);
+
+`endif
+
 
 
 endmodule

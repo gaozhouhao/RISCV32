@@ -20,30 +20,30 @@ module IFU(
     import "DPI-C" function void get_inst(input int inst);
     import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);
 
-`ifdef ARCH_NPC
+// `ifdef ARCH_NPC
 
-    reg start_up;
-    assign out_ready = !reset;
+//     reg start_up;
+//     assign out_ready = !reset;
 
-    always @(posedge clk) begin
-        if (reset == 1'b1) begin
-            out_valid <= 1'b0;
-            start_up <= 1'b0;
-        end
-        else begin
-            start_up <= 1'b1;
-            if (allow_fetch) begin
-                out_valid <= 1'b1;
-                get_inst(pmem_read(fetch_pc));
-                out_inst <= pmem_read(fetch_pc);
-            end
-            else if (out_valid && in_ready) begin
-                out_valid <= 1'b0;
-            end
-        end
-    end
+//     always @(posedge clk) begin
+//         if (reset == 1'b1) begin
+//             out_valid <= 1'b0;
+//             start_up <= 1'b0;
+//         end
+//         else begin
+//             start_up <= 1'b1;
+//             if (allow_fetch) begin
+//                 out_valid <= 1'b1;
+//                 get_inst(pmem_read(fetch_pc));
+//                 out_inst <= pmem_read(fetch_pc);
+//             end
+//             else if (out_valid && in_ready) begin
+//                 out_valid <= 1'b0;
+//             end
+//         end
+//     end
 
-`elsif ARCH_YSYXSOC
+// `elsif ARCH_YSYXSOC
 
     localparam IDLE    = 2'b00;
     localparam SEND_AR = 2'b01;
@@ -114,7 +114,10 @@ module IFU(
             end
         end
     end
-`endif
+    
+// `endif
+
+
     wire allow_fetch/* verilator public_flat_rd */;
     wire inst_done/* verilator public_flat_rd */;
     assign inst_done = in_wb_done;

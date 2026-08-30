@@ -44,87 +44,89 @@ module LSU(
     wire in_fire  = in_valid && out_ready;
     wire out_fire = out_valid && in_ready;
     
-`ifdef ARCH_NPC
-    assign out_ready = in_ready;
-    import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);
-    import "DPI-C" function void pmem_write(
-        input int unsigned waddr, input int unsigned wdata, input byte wmask);
+// `ifdef ARCH_NPC
+//     assign out_ready = in_ready;
+//     import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);
+//     import "DPI-C" function void pmem_write(
+//         input int unsigned waddr, input int unsigned wdata, input byte wmask);
 
-    reg [31:0] word;
-    reg [31:0]  wb_data;
-    reg is_load;
-    always @(posedge clk) begin
-        if (reset == 1'b1) begin
-            out_valid <= 1'b0;
-        end
-        else begin
-            if (in_fire) begin
-                out_valid <= 1'b1;
-                if (in_is_load) begin
-                    word <= pmem_read(in_mem_addr) >> (in_mem_addr[1:0] * 8);
-                end
-                if (in_is_store) begin
-                    pmem_write(in_mem_addr, wdata, {4'b0, wstrb});
-                end
-                load_size <= in_load_size;
-                is_load <= in_is_load;
-                wb_data <= in_wb_data;
-                out_rd <= in_rd;
-                out_src1 <= in_src1;
-                out_src2 <= in_src2;
-                out_rf_we <= in_rf_we;
-                out_redirect_pc <= in_redirect_pc;
-                out_redirect_valid <= in_redirect_valid;
-            end
-            if (out_fire) begin
-                out_valid <= 1'b0;
-            end
-        end
-    end
+//     reg [31:0] word;
+//     reg [31:0]  wb_data;
+//     reg is_load;
+//     always @(posedge clk) begin
+//         if (reset == 1'b1) begin
+//             out_valid <= 1'b0;
+//         end
+//         else begin
+//             if (in_fire) begin
+//                 out_valid <= 1'b1;
+//                 if (in_is_load) begin
+//                     word <= pmem_read(in_mem_addr) >> (in_mem_addr[1:0] * 8);
+//                 end
+//                 if (in_is_store) begin
+//                     pmem_write(in_mem_addr, wdata, {4'b0, wstrb});
+//                 end
+//                 load_size <= in_load_size;
+//                 is_load <= in_is_load;
+//                 wb_data <= in_wb_data;
+//                 out_rd <= in_rd;
+//                 out_src1 <= in_src1;
+//                 out_src2 <= in_src2;
+//                 out_rf_we <= in_rf_we;
+//                 out_redirect_pc <= in_redirect_pc;
+//                 out_redirect_valid <= in_redirect_valid;
+//             end
+//             if (out_fire) begin
+//                 out_valid <= 1'b0;
+//             end
+//         end
+//     end
 
     
-    reg [ 2:0]  load_size;
-    always @(*) begin
-        if (is_load) begin
-            case (load_size)
-                3'b000: out_wb_data = {{24{word[7]}}, word[7:0]}; //lb
-                3'b001: out_wb_data = {{16{word[15]}}, word[15:0]};//lh
-                3'b010: out_wb_data = word; //lw
-                3'b100: out_wb_data = word & 32'hff;//lbu
-                3'b101: out_wb_data = word & 32'hffff; //lhu
-                default:out_wb_data = 32'b0;
-            endcase
-        end
-        else begin
-            out_wb_data = wb_data;
-        end
-    end
+//     reg [ 2:0]  load_size;
+//     always @(*) begin
+//         if (is_load) begin
+//             case (load_size)
+//                 3'b000: out_wb_data = {{24{word[7]}}, word[7:0]}; //lb
+//                 3'b001: out_wb_data = {{16{word[15]}}, word[15:0]};//lh
+//                 3'b010: out_wb_data = word; //lw
+//                 3'b100: out_wb_data = word & 32'hff;//lbu
+//                 3'b101: out_wb_data = word & 32'hffff; //lhu
+//                 default:out_wb_data = 32'b0;
+//             endcase
+//         end
+//         else begin
+//             out_wb_data = wb_data;
+//         end
+//     end
 
-    reg [31:0] wdata;
-    reg [3:0]  wstrb;
-    always @(*) begin
-        case (in_store_size)
-            3'b000: begin //sb
-                wdata = {4{in_store_data[7:0]}};
-                wstrb = 4'b0001 << in_mem_addr[1:0];
-            end
-            3'b001: begin //sh
-                wdata = {16'b0, in_store_data[15:0]} << (in_mem_addr[1:0] * 8);
-                wstrb = 4'b0011 << in_mem_addr[1:0];
-            end
-            3'b010: begin
-                wdata = in_store_data;
-                wstrb = 4'b1111;//sw
-            end
-            default: begin
-                wstrb = 4'b0;
-                wdata = in_store_data;
-            end
-        endcase
-    end
+//     reg [31:0] wdata;
+//     reg [3:0]  wstrb;
+//     always @(*) begin
+//         case (in_store_size)
+//             3'b000: begin //sb
+//                 wdata = {4{in_store_data[7:0]}};
+//                 wstrb = 4'b0001 << in_mem_addr[1:0];
+//             end
+//             3'b001: begin //sh
+//                 wdata = {16'b0, in_store_data[15:0]} << (in_mem_addr[1:0] * 8);
+//                 wstrb = 4'b0011 << in_mem_addr[1:0];
+//             end
+//             3'b010: begin
+//                 wdata = in_store_data;
+//                 wstrb = 4'b1111;//sw
+//             end
+//             default: begin
+//                 wstrb = 4'b0;
+//                 wdata = in_store_data;
+//             end
+//         endcase
+//     end
     
 
-`elsif ARCH_YSYXSOC
+// `elsif ARCH_YSYXSOC
+
+
     typedef enum logic [2:0] {
         LSU_IDLE,
         LSU_READ_ADDR,
@@ -325,6 +327,6 @@ module LSU(
         end
     end
 
-`endif
+// `endif
 
 endmodule

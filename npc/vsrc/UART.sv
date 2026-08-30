@@ -1,7 +1,7 @@
 module UART(
     input                               clk,
     input                               reset,    
-    AXI_IF.salver                       axi
+    AXI_IF.slaver                       axi
 );
 
 logic   is_busy_ar, is_busy_aw, is_busy_w;
@@ -36,7 +36,7 @@ always_ff @(posedge clk) begin
         end
         if (w_fire) begin
             mem_wdata <= axi.wdata;
-            mem_wmask <= axi.wstrb;
+            mem_wmask <= {4'b0, axi.wstrb};
             w_got  <= 1;
         end
         if (aw_got && w_got) begin
