@@ -7,7 +7,7 @@ extern char _heap_start;
 int main(const char *args);
 
 extern char _pmem_start;
-#define PMEM_SIZE (128 * 1024 * 1024)
+#define PMEM_SIZE (16 * 1024 * 1024)
 #define PMEM_END  ((uintptr_t)&_pmem_start + PMEM_SIZE)
 
 Area heap = RANGE(&_heap_start, PMEM_END);
@@ -25,13 +25,13 @@ void halt(int code) {
 }
 
 void _trm_init() {
-    /*
+    
     uint32_t vendor, arch;
     asm volatile("csrr %0, mvendorid" : "=r"(vendor));
     asm volatile("csrr %0, marchid" : "=r"(arch));
-    printf("mvendorid: %x\n", vendor);
-    printf("arch: %x\n", arch);
-    */
+    printf("mvendorid: %c%c%c%c\n", (uint8_t)(vendor>>24), (uint8_t)(vendor>>16), (uint8_t)(vendor>>8), (uint8_t)(vendor>>0));
+    printf("arch: %d\n", arch);
+    
     int ret = main(mainargs);
     halt(ret);
 }

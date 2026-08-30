@@ -45,7 +45,7 @@ always_ff @(posedge clk) begin
     end 
     else begin
         if (aw_fire) begin
-            mem_waddr <= axi.awaddr;
+            mem_waddr <= axi.awaddr + 32'h80000000;
             aw_got <= 1;
         end
         if (w_fire) begin

@@ -356,8 +356,6 @@ Arbiter arbiter(
     .axi_ifu(axi_ifu),
     .axi_lsu(axi_lsu),
     .axi_arb(axi_arb)
-    // .axi_soc(axi_soc.master),
-    // .axi_clint(axi_clint)
 );
 
 `ifdef ARCH_NPC
@@ -371,29 +369,10 @@ Xbar xbar(
     .axi_clint(axi_clint)
 );
 
-
 CLINT clint(
     .clk(clock),
     .reset(reset),
     .axi(axi_clint)
-);
-
-
-`elsif ARCH_YSYXSOC
-
-SoCXbar socxbar(
-    .clk(clock),
-    .reset(reset),
-    .axi_arb(axi_arb),
-    .axi_soc(axi_soc),
-    .axi_clint(axi_clint)
-);
-
-
-CLINT clint(
-    .clk(clock),
-    .reset(reset),
-    .axi(axi_clint)    
 );
 
 UART uart(
@@ -408,8 +387,22 @@ MEM mem(
     .axi(axi_mem)
 );
 
+`elsif ARCH_YSYXSOC
+
+SoCXbar socxbar(
+    .clk(clock),
+    .reset(reset),
+    .axi_arb(axi_arb),
+    .axi_soc(axi_soc),
+    .axi_clint(axi_clint)
+);
+
+CLINT clint(
+    .clk(clock),
+    .reset(reset),
+    .axi(axi_clint)    
+);
+
 `endif
-
-
 
 endmodule

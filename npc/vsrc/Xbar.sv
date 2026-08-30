@@ -45,7 +45,7 @@ end
 */
 assign  axi_arb.arready = sel_rd == UART ? axi_uart.arready :
                           sel_rd == SRAM ? axi_mem.arready :
-                          sel_rd == CLINT ? axi_mem.arready :
+                          sel_rd == CLINT ? axi_clint.arready :
                           0;
 assign axi_uart.arvalid = (sel_rd == UART) ? axi_arb.arvalid : 0;
 assign axi_uart.araddr = (sel_rd == UART) ? (axi_arb.araddr - `UART_BASE) : 0;
@@ -65,7 +65,7 @@ assign axi_arb.rdata = (owner_rd == UART) ? axi_uart.rdata :
                        0;
 assign axi_arb.rresp = (owner_rd == UART) ? axi_uart.rresp :
                        (owner_rd == SRAM) ? axi_mem.rresp :
-                       (owner_rd == SRAM) ? axi_clint.rresp :
+                       (owner_rd == CLINT) ? axi_clint.rresp :
                        0;
 assign axi_arb.rvalid = (owner_rd == UART) ? axi_uart.rvalid :
                         (owner_rd == SRAM) ? axi_mem.rvalid :
@@ -128,7 +128,7 @@ always @(*) begin
     end
     else if(got_aw) begin
         axi_arb.wready = (owner_wr == UART) ? axi_uart.wready :
-                         (owner_wr == SRAM) ? axi_uart.wready :
+                         (owner_wr == SRAM) ? axi_mem.wready :
                          (owner_wr == CLINT) ? axi_clint.wready :
                          0;    
     end
@@ -248,11 +248,11 @@ assign axi_clint.bready = (owner_wr == CLINT) ? axi_arb.bready : 0;
 
 assign axi_arb.bvalid = (owner_wr == UART) ? axi_uart.bvalid :
                         (owner_wr == SRAM) ? axi_mem.bvalid :
-                        (owner_wr == CLINT) ? axi_mem.bvalid :
+                        (owner_wr == CLINT) ? axi_clint.bvalid :
                         0;
 assign axi_arb.bresp = (owner_wr == UART) ? axi_uart.bresp :
                        (owner_wr == SRAM) ? axi_mem.bresp :
-                       (owner_wr == CLINT) ? axi_mem.bresp :
+                       (owner_wr == CLINT) ? axi_clint.bresp :
                        0;
 always @(posedge clk) begin
     if(axi_arb.bvalid && axi_arb.bready) begin

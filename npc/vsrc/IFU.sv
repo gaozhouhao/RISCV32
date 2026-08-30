@@ -18,9 +18,10 @@ module IFU(
 
     import perf_pkg::*;
     import "DPI-C" function void get_inst(input int inst);
-    import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);
 
 // `ifdef ARCH_NPC
+//     
+//     import "DPI-C" function int unsigned pmem_read(input int unsigned  raddr);
 
 //     reg start_up;
 //     assign out_ready = !reset;
@@ -135,6 +136,7 @@ module IFU(
         end
         else if (inst_done) begin
             pc <= next_pc;
+
         end
     end
 

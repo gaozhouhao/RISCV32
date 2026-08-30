@@ -25,8 +25,10 @@ always @(posedge clk or posedge reset) begin
             //$display("%x", axi.araddr);
             if(axi.araddr == 32'h48)
                 axi.rdata <= mtime_lo;
-            if(axi.araddr == 32'h4c)
+            else if(axi.araddr == 32'h4c)
                 axi.rdata <= mtime_hi;
+            else
+                $fatal("Unexpected CLINT read");
             axi.rresp <= 0;
             axi.rvalid <= 1;
         end

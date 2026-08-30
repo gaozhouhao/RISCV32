@@ -62,14 +62,24 @@
 
 
 
-`define  UART_BASE   32'ha000_0300
-`define  UART_END    32'ha000_0FFF
+`define  UART_BASE   32'h1000_0000
+`define  UART_END    32'h1000_0FFF
 
 `define  SRAM_BASE   32'h8000_0000
 `define  SRAM_END    32'h80ff_ffff
 
+`ifdef ARCH_NPC
+
+`define  CLINT_BASE  32'ha000_0000
+`define  CLINT_END   32'ha000_02ff
+
+`elsif ARCH_YSYXSOC
+
 `define  CLINT_BASE  32'h0200_0000
 `define  CLINT_END   32'h0200_02ff
+
+`endif
+
 
 
 `define PERF_IFU_FETCH 0

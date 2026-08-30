@@ -61,11 +61,9 @@ default: $(BIN)
 
 $(shell mkdir -p $(BUILD_DIR))
 
-
-
 # project source
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.sv")
-VSRCS := $(filter-out %Xbar.sv, $(VSRCS))
+# VSRCS := $(filter-out %Xbar.sv, $(VSRCS))
 VSRCS := $(filter-out $(shell find $(abspath ./vsrc/wrapper) -name "*.v"), $(VSRCS))
 VHDRS = $(shell find $(abspath ./vsrc) -name "*.vh")
 
@@ -73,8 +71,6 @@ CSRCS += $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "
 CSRCS := $(filter-out $(CSRCS-BLACKLIST-y), $(CSRCS))
 
 LDFLAGS += -lreadline -lhistory
-
-
 
 # rules for velilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
@@ -86,6 +82,7 @@ CXXFLAGS += -g
 
 
 ifeq ($(ARCH),ysyxsoc)
+
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
@@ -102,6 +99,7 @@ VSRCS += $(shell find $(abspath ../ysyxSoC/perip) -name "*.v")
 VSRCS += $(abspath ../ysyxSoC/build/ysyxSoCFull.v)
 
 CSRCS += $(SRC_AUTO_BIND)
+
 endif
 
 
