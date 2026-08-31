@@ -41,7 +41,7 @@ extern "C" void get_inst(int inst) {
     current_inst = (uint32_t)inst;
 };
 
-static uint64_t perf_cnt[16] = {};
+static uint64_t perf_cnt[PERF_MAX] = {};
 extern "C" void perf_event(int event_id) {
     perf_cnt[event_id]++;
 }
