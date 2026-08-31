@@ -33,8 +33,9 @@ module LSU(
     output      reg                     out_redirect_valid
 );
 
+`ifdef VERILATOR
     import perf_pkg::*;
-
+`endif
     wire    aw_fire, w_fire, ar_fire, b_fire, r_fire;
     assign  aw_fire = axi.awvalid && axi.awready;
     assign  w_fire = axi.wvalid && axi.wready;
@@ -137,11 +138,14 @@ module LSU(
     } lsu_state_t;
     lsu_state_t lsu_state;
 
+`ifdef VERILATOR
     always @(posedge clk) begin
         if (out_valid && !in_ready) perf_event(PERF_LSU_STALL);
         if (lsu_state == LSU_WAIT_R) perf_event(PERF_LSU_LOAD_WAIT);
         if (lsu_state == LSU_WAIT_B) perf_event(PERF_LSU_STORE_WAIT);
     end
+`endif 
+
 
     assign out_ready = (lsu_state == LSU_IDLE) && !out_valid;
 
@@ -246,7 +250,9 @@ module LSU(
             `ifdef CONFIG_MTRACE
                 $display("Read:\t0x%08x", axi.araddr);
             `endif
-            perf_event(PERF_LSU_LOAD);
+            `ifdef VERILATOR
+                perf_event(PERF_LSU_LOAD);
+            `endif
             case (load_size)
                 3'b000: out_wb_data <= {{24{word[7]}}, word[7:0]}; //lb
                 3'b001: out_wb_data <= {{16{word[15]}}, word[15:0]};//lh
@@ -321,12 +327,14 @@ module LSU(
     // B Channel
     ///////////////////////////////////////
    assign axi.bready = (lsu_state == LSU_WAIT_B);
+
+`ifdef VERILATOR
     always @(posedge clk) begin
         if(b_fire) begin
             perf_event(PERF_LSU_STORE);
         end
     end
-
+`endif
 // `endif
 
 endmodule

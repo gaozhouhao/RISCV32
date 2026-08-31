@@ -1,3 +1,4 @@
+`include "params.vh"
 module IFU(
     input                               clk,
     input                               reset,
@@ -16,8 +17,11 @@ module IFU(
     output                              out_ready
 );
 
+`ifdef VERILATOR
     import perf_pkg::*;
     import "DPI-C" function void get_inst(input int inst);
+`endif
+
 
 // `ifdef ARCH_NPC
 //     
@@ -49,19 +53,17 @@ module IFU(
     localparam IDLE    = 2'b00;
     localparam SEND_AR = 2'b01;
     localparam WAIT_R  = 2'b10;
-
+`ifdef VERILATOR
     always @(posedge clk) begin
         if (!reset) begin
             perf_event(PERF_CYCLE);
-
             if (out_valid && !in_ready)
                 perf_event(PERF_IFU_STALL);
-
             if (state == WAIT_R && !(axi.rvalid && axi.rready))
                 perf_event(PERF_IFU_MEM_WAIT);
         end
     end
-
+`endif
 
     reg [1:0] state;
     reg start_up;
@@ -107,8 +109,10 @@ module IFU(
             if (axi.rvalid && axi.rready) begin
                 out_inst  <= axi.rdata;
                 out_valid <= 1'b1;
-                get_inst(axi.rdata);
-                perf_event(PERF_IFU_FETCH);
+                `ifdef VERILATOR
+                    get_inst(axi.rdata);
+                    perf_event(PERF_IFU_FETCH);
+                `endif
             end
             else if (out_valid && in_ready) begin
                 out_valid <= 1'b0;

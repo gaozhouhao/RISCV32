@@ -1,3 +1,4 @@
+`include "params.vh"
 module ysyx_25120302(
     input           clock,
     input           reset,
@@ -82,9 +83,15 @@ AXI_IF          axi_clint();
 AXI_IF          axi_mem();
 AXI_IF          axi_uart();
 
+
+
 assign axi_soc.awready   = io_master_awready;
 assign io_master_awvalid = axi_soc.awvalid;
 assign io_master_awaddr  = axi_soc.awaddr;
+assign io_master_awid    = 4'b0;
+assign io_master_awlen   = 8'b0;
+assign io_master_awsize  = 3'b000;
+assign io_master_awburst = 2'b0;
 
 assign axi_soc.wready   = io_master_wready;
 assign io_master_wvalid = axi_soc.wvalid;
@@ -99,6 +106,27 @@ assign axi_soc.bresp    = io_master_bresp;
 assign axi_soc.arready   = io_master_arready;
 assign io_master_arvalid = axi_soc.arvalid;
 assign io_master_araddr  = axi_soc.araddr;
+assign io_master_arid    = 4'b0;
+assign io_master_arlen   = 8'b0;
+assign io_master_arsize  = 3'b000;
+assign io_master_arburst = 2'b0;
+
+
+assign io_slave_awready  = 1'b0;
+
+assign io_slave_wready   = 1'b0;
+
+assign io_slave_bvalid   = 1'b0;
+assign io_slave_bresp    = 2'b0;
+assign io_slave_bid      = 4'b0;
+
+assign io_slave_arready  = 1'b0;
+
+assign io_slave_rvalid   = 1'b0;
+assign io_slave_rresp    = 2'b0;
+assign io_slave_rdata    = 32'b0;
+assign io_slave_rlast    = 1'b0;
+assign io_slave_rid      = 4'b0;
 
 assign io_master_rready = axi_soc.rready;
 assign axi_soc.rresp    = io_master_rresp;

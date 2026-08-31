@@ -21,21 +21,23 @@ always @(posedge clk or posedge reset) begin
         axi.rvalid <= 1'b0;
     end
     else begin
-        if(axi.arvalid) begin
+        if(axi.arvalid && axi.arready) begin
             //$display("%x", axi.araddr);
             if(axi.araddr == 32'h48)
                 axi.rdata <= mtime_lo;
             else if(axi.araddr == 32'h4c)
                 axi.rdata <= mtime_hi;
             else
+            `ifdef VERILATOR
                 $fatal("Unexpected CLINT read");
+            `endif
             axi.rresp <= 0;
             axi.rvalid <= 1;
         end
-        else if(axi.rready) begin
+        else if(axi.rvalid && axi.rready) begin
             axi.rvalid <= 0;
         end
-        axi.arready <= 1'b1;
+        axi.arready <= !axi.rvalid;
     end
 end
 

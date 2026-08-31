@@ -1,6 +1,21 @@
 `ifndef NPC_PARAMS_VH
 `define NPC_PARAMS_VH
 
+`ifndef ARCH_NPC
+`ifndef ARCH_YSYXSOC
+    `define ARCH_YSYXSOC
+`endif
+`endif
+
+// RESET_PC
+`ifndef RESET_PC
+    `ifdef ARCH_NPC
+        `define RESET_PC 32'h8000_0000
+    `elsif ARCH_YSYXSOC
+        `define RESET_PC 32'h3000_0000
+    `endif
+`endif
+
 // Global width
 `define NPC_XLEN 32
 

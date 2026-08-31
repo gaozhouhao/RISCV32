@@ -103,7 +103,6 @@ CSRCS += $(SRC_AUTO_BIND)
 endif
 
 
-
 all:
 	@echo "Write this Makefile by your self."
 
@@ -123,17 +122,35 @@ ifeq ($(CONFIG_GTKWAVE), y)
 endif
 
 RTL_FILES ?=
-RTL_FILES += $(NPC_HOME)/vsrc/wrapper/$(file)_TOP.v
-RTL_FILES += $(NPC_HOME)/vsrc/$(file).sv
+RTL_FILES := $(shell find $(NPC_HOME)/vsrc \
+	-type f \( -name "*.v" -o -name "*.sv" -o -name "*.vh" \))
+
+RTL_FILES := $(filter-out $(NPC_HOME)/vsrc/wrapper/%,$(RTL_FILES))
+RTL_FILES := $(filter-out \
+	$(NPC_HOME)/vsrc/MEM.sv \
+	$(NPC_HOME)/vsrc/UART.sv \
+	$(NPC_HOME)/vsrc/perf_pkg.sv, \
+	$(RTL_FILES))
+# RTL_FILES += $(NPC_HOME)/vsrc/wrapper/$(file)_TOP.v
+# RTL_FILES += $(NPC_HOME)/vsrc/$(file).sv
 
 sta:
-	@echo RTL_FILES=$(RTL_FILES)
 	$(MAKE) -C $(HOME)/yosys-sta/ sta \
-    	DESIGN=mydesign SDC_FILE=$(NPC_HOME)/scripts/my.sdc \
-    	CLK_FREQ_MHZ=2000 CLK_PORT_NAME=clk O=$(NPC_HOME)/result \
-    	RTL_FILES="$(RTL_FILES)"
+		DESIGN=ysyx_25120302 \
+		SDC_FILE=$(NPC_HOME)/scripts/my.sdc \
+		CLK_FREQ_MHZ=2000 \
+		CLK_PORT_NAME=clock \
+		O=$(NPC_HOME)/result \
+		RTL_FILES="$(RTL_FILES)" 
 
 
+submodule-sync:
+	git submodule sync --recursive
+	git submodule update --init --recursive --checkout
+
+perf: submodule-sync
+	$(MAKE) sim
+	$(MAKE) sta
 
 
 gdb: $(BIN)
@@ -141,6 +158,8 @@ gdb: $(BIN)
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+.PHONY: submodule-sync perf gdb clean sta sim all
 
 
 include $(NPC_HOME)/scripts/config.mk

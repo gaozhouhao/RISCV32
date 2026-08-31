@@ -46,8 +46,10 @@ module IDU(
     output          [ 4:0]  idu_decode_src1,
     output          [ 4:0]  idu_decode_src2
 );
-import perf_pkg::*;
 
+`ifdef VERILATOR
+    import perf_pkg::*;
+`endif
 wire    [31:0]  immI, immS, immB, immU, immJ;
 
 wire    [6:0]   opcode;
@@ -108,7 +110,7 @@ reg     [11:0]  csr_addr    ;
 reg     [31:0]  src1_data   ;
 reg     [31:0]  src2_data   ;
 
-
+`ifdef VERILATOR
 always @(posedge clk) begin
     if (out_valid && !in_ready) perf_event(PERF_IDU_STALL);
     if (out_valid && in_ready) begin
@@ -116,6 +118,7 @@ always @(posedge clk) begin
         if (out_is_jal || out_is_jalr) perf_event(PERF_JUMP);
     end
 end
+`endif
 
 always @(posedge clk) begin
     if (reset == 1'b1) begin

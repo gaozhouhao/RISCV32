@@ -51,6 +51,8 @@ module EXU (
     output                      out_ready,
     output                      out_valid
 );
+
+`ifdef VERILATOR
 import perf_pkg::*;
 import "DPI-C" function void ebreak(input bit is_ebreak);
 
@@ -60,6 +62,8 @@ always @(posedge clk) begin
         if (in_is_branch && branch_taken) perf_event(PERF_BRANCH_TAKEN);
     end
 end
+
+`endif
 
 reg     [31:0]      jalr_target;
 reg     [31:0]      jal_target;
@@ -72,9 +76,11 @@ always @(posedge clk) begin
         end
         else begin
             if (in_valid & out_ready) begin
-                perf_event(PERF_EXU_DONE);
+                `ifdef VERILATOR
+                    perf_event(PERF_EXU_DONE);
+                    ebreak(in_is_ebreak);
+                `endif
                 out_valid <= 1'b1;
-                ebreak(in_is_ebreak);
                 out_is_load         <= in_is_load       ;
                 out_is_store        <= in_is_store      ;
                 out_load_size       <= in_load_size     ;
@@ -141,9 +147,13 @@ ALU alu(
 assign out_ready = in_ready;
 assign store_data = in_is_store ? in_src2_data : 32'b0;
 
+`ifdef VERILATOR
+
 import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
 import "DPI-C" function void pmem_write(
     input int unsigned waddr, input int unsigned wdata, input byte wmask);
+
+`endif
 
 always @(*) begin
     case (in_branch_op)

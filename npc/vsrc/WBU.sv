@@ -15,10 +15,15 @@ module WBU(
     output              out_ready,
     output              out_valid
 );
+
+`ifdef VERILATOR
     import perf_pkg::*;
+`endif
     always @(posedge clk) begin
         if (out_valid && in_ready) begin
-
+            `ifdef VERILATOR
+                perf_event(PERF_INSTRET);
+            `endif
         end
     end
 
@@ -34,11 +39,11 @@ module WBU(
             out_valid <= 1'b0;
         end
         else if (in_valid && out_ready) begin
-            if (in_rf_we) 
+            if (in_rf_we) begin
                 if(in_waddr != 5'b0) begin
                     rf[in_waddr] <= in_wdata;
                 end
-            perf_event(PERF_INSTRET);
+            end
             out_valid <= 1'b1;
         end
         else if (out_valid && in_ready) begin
