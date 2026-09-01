@@ -18,6 +18,13 @@ package perf_pkg;
         PERF_IFU_MEM_WAIT,
         PERF_LSU_LOAD_WAIT,
         PERF_LSU_STORE_WAIT,
+
+        PERF_ICACHE_ACCESS,
+        PERF_ICACHE_HIT,
+        PERF_ICACHE_MISS,
+        PERF_ICACHE_HIT_CYCLES,
+        PERF_ICACHE_MISS_CYCLES,
+        PERF_ICACHE_MISS_PENALTY,
         PERF_MAX
     } perf_event_t;
     perf_event_t event_id;

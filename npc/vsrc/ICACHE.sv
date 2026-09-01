@@ -51,14 +51,25 @@ module ICACHE(
             case (state)
                 IDLE: begin
                     if (axi_in.arvalid && axi_in.arready) begin
+                        `ifdef VERILATOR
+                            perf_event(PERF_ICACHE_ACCESS);
+                        `endif
                         if (valid_array[index] && tag_array[index] == tag) begin
                             axi_in.rdata <= data_array[index];
                             axi_in.rvalid <= 1'b1;
                             axi_in.rresp <= 2'b00;
                             state <= CACHE_HIT;
+                            `ifdef VERILATOR
+                                perf_event(PERF_ICACHE_HIT);
+                                perf_event(PERF_ICACHE_HIT_CYCLES);
+                            `endif
                         end
                         else begin
                             state <= CACHE_MISS;
+                            `ifdef VERILATOR
+                                perf_event(PERF_ICACHE_MISS);
+                                perf_event(PERF_ICACHE_MISS_CYCLES);
+                            `endif
                             req_addr <= axi_in.araddr;
                         end
                     end
@@ -70,17 +81,26 @@ module ICACHE(
                     end
                 end
                 CACHE_MISS: begin
+                    `ifdef VERILATOR
+                        perf_event(PERF_ICACHE_MISS_CYCLES);
+                    `endif
                     axi_out.araddr <= req_addr;
                     axi_out.arvalid <= 1'b1;
                     state <= SEND_AR;
                 end
                 SEND_AR: begin
+                    `ifdef VERILATOR
+                        perf_event(PERF_ICACHE_MISS_CYCLES);
+                    `endif
                     if (axi_out.arvalid && axi_out.arready) begin
                         axi_out.arvalid <= 1'b0;
                         state <= WAIT_R;
                     end
                 end
                 WAIT_R: begin
+                    `ifdef VERILATOR
+                        perf_event(PERF_ICACHE_MISS_CYCLES);
+                    `endif
                     if (axi_out.rvalid && axi_out.rready) begin
                         data_array[req_addr[OFFSET_WIDTH+INDEX_WIDTH-1:OFFSET_WIDTH]] <= axi_out.rdata;
                         tag_array[req_addr[OFFSET_WIDTH+INDEX_WIDTH-1:OFFSET_WIDTH]] <= req_addr[31:OFFSET_WIDTH+INDEX_WIDTH];

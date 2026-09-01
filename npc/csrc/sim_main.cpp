@@ -195,35 +195,59 @@ int main(int argc, char** argv){
 
 void print_perf_cnt() {
     float ipc = 0.0f;
+    float cache_hit_rate = 0.0f;
+    float cache_access_time = 0.0f;
+    float cache_miss_time = 0.0f;
+    float cache_miss_penalty = 0.0f;
+    float AMAT = 0.0f;
 
     if (perf_cnt[PERF_CYCLE] != 0) {
         ipc = (float)perf_cnt[PERF_INSTRET] / (float)perf_cnt[PERF_CYCLE];
     }
 
+    if (perf_cnt[PERF_ICACHE_HIT] != 0) {
+        cache_access_time = (float)perf_cnt[PERF_ICACHE_HIT_CYCLES] / (float)perf_cnt[PERF_ICACHE_HIT];
+    }
+    if (perf_cnt[PERF_ICACHE_MISS] != 0) {
+        cache_miss_time = (float)perf_cnt[PERF_ICACHE_MISS_CYCLES] / (float)perf_cnt[PERF_ICACHE_MISS];
+        cache_miss_penalty = cache_miss_time - cache_access_time;
+    }
+    if (perf_cnt[PERF_ICACHE_ACCESS] != 0) {
+        cache_hit_rate = (float)perf_cnt[PERF_ICACHE_HIT] / (float)perf_cnt[PERF_ICACHE_ACCESS];
+        AMAT = cache_access_time + (1 - cache_hit_rate) * cache_miss_penalty;
+    }
+    
+
     printf("========== Performance ==========\n");
 
-    printf("IPC             : %f\n", ipc);
+    printf("IPC                 : %f\n", ipc);
 
-    printf("Cycle           : %lu\n", perf_cnt[PERF_CYCLE]);
-    printf("Instret         : %lu\n", perf_cnt[PERF_INSTRET]);
+    printf("Cycle               : %lu\n", perf_cnt[PERF_CYCLE]);
+    printf("Instret             : %lu\n", perf_cnt[PERF_INSTRET]);
 
-    printf("IFU fetch       : %lu\n", perf_cnt[PERF_IFU_FETCH]);
-    printf("LSU load        : %lu\n", perf_cnt[PERF_LSU_LOAD]);
-    printf("LSU store       : %lu\n", perf_cnt[PERF_LSU_STORE]);
-    printf("EXU done        : %lu\n", perf_cnt[PERF_EXU_DONE]);
+    printf("Cache Hit Rate      : %f\n", cache_hit_rate);
+    printf("Cache Miss Penalty  : %f\n", cache_miss_penalty);
+    printf("AMAT                : %f\n", AMAT);
 
-    printf("Branch          : %lu\n", perf_cnt[PERF_BRANCH]);
-    printf("Branch taken    : %lu\n", perf_cnt[PERF_BRANCH_TAKEN]);
-    printf("Jump            : %lu\n", perf_cnt[PERF_JUMP]);
+    printf("---------------------------------\n");
+    
+    printf("IFU fetch           : %lu\n", perf_cnt[PERF_IFU_FETCH]);
+    printf("LSU load            : %lu\n", perf_cnt[PERF_LSU_LOAD]);
+    printf("LSU store           : %lu\n", perf_cnt[PERF_LSU_STORE]);
+    printf("EXU done            : %lu\n", perf_cnt[PERF_EXU_DONE]);
 
-    printf("IFU stall       : %lu\n", perf_cnt[PERF_IFU_STALL]);
-    printf("IDU stall       : %lu\n", perf_cnt[PERF_IDU_STALL]);
-    printf("EXU stall       : %lu\n", perf_cnt[PERF_EXU_STALL]);
-    printf("LSU stall       : %lu\n", perf_cnt[PERF_LSU_STALL]);
+    printf("Branch              : %lu\n", perf_cnt[PERF_BRANCH]);
+    printf("Branch taken        : %lu\n", perf_cnt[PERF_BRANCH_TAKEN]);
+    printf("Jump                : %lu\n", perf_cnt[PERF_JUMP]);
 
-    printf("IFU mem wait    : %lu\n", perf_cnt[PERF_IFU_MEM_WAIT]);
-    printf("LSU load wait   : %lu\n", perf_cnt[PERF_LSU_LOAD_WAIT]);
-    printf("LSU store wait  : %lu\n", perf_cnt[PERF_LSU_STORE_WAIT]);
+    printf("IFU stall           : %lu\n", perf_cnt[PERF_IFU_STALL]);
+    printf("IDU stall           : %lu\n", perf_cnt[PERF_IDU_STALL]);
+    printf("EXU stall           : %lu\n", perf_cnt[PERF_EXU_STALL]);
+    printf("LSU stall           : %lu\n", perf_cnt[PERF_LSU_STALL]);
+
+    printf("IFU mem wait        : %lu\n", perf_cnt[PERF_IFU_MEM_WAIT]);
+    printf("LSU load wait       : %lu\n", perf_cnt[PERF_LSU_LOAD_WAIT]);
+    printf("LSU store wait      : %lu\n", perf_cnt[PERF_LSU_STORE_WAIT]);
 
     printf("=================================\n");
 }
