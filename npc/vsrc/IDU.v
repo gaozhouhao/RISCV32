@@ -114,7 +114,6 @@ reg     [31:0]  src2_data   ;
 always @(posedge clk) begin
     if (out_valid && !in_ready) perf_event(PERF_IDU_STALL);
     if (out_valid && in_ready) begin
-        if (out_is_branch) perf_event(PERF_BRANCH);
         if (out_is_jal || out_is_jalr) perf_event(PERF_JUMP);
     end
 end

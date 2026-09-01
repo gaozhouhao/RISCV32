@@ -378,6 +378,10 @@ WBU wbu (
     .out_valid(wbu_to_ifu_valid)
 );
 
+
+
+`ifdef ARCH_NPC
+
 Arbiter arbiter(
     .clk(clock),
     .reset(reset),
@@ -385,8 +389,6 @@ Arbiter arbiter(
     .axi_lsu(axi_lsu),
     .axi_arb(axi_arb)
 );
-
-`ifdef ARCH_NPC
 
 Xbar xbar(
     .clk(clock),
@@ -416,6 +418,22 @@ MEM mem(
 );
 
 `elsif ARCH_YSYXSOC
+
+Arbiter arbiter(
+    .clk(clock),
+    .reset(reset),
+    .axi_ifu(axi_icache),
+    .axi_lsu(axi_lsu),
+    .axi_arb(axi_arb)
+);
+
+AXI_IF  axi_icache();
+ICACHE icache(
+    .clk(clock),
+    .reset(reset),
+    .axi_in(axi_ifu),
+    .axi_out(axi_icache)
+);
 
 SoCXbar socxbar(
     .clk(clock),
