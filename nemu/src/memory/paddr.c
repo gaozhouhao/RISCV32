@@ -28,7 +28,8 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 static uint8_t mrom[CONFIG_MROM_SIZE];
 static uint8_t sram[CONFIG_SRAM_SIZE];
 static uint8_t psram[CONFIG_PSRAM_SIZE];
-static uint8_t flash[CONFIG_FLASH_SIZE];
+uint8_t flash[CONFIG_FLASH_SIZE];
+static uint8_t sdram[CONFIG_SDRAM_SIZE];
 
 void itrace_dump();
 
@@ -73,6 +74,11 @@ static word_t flash_read(paddr_t addr, int len) {
     return ret;
 }
 
+static word_t sdram_read(paddr_t addr, int len) {
+    word_t ret = host_read(sdram + addr - CONFIG_SDRAM_BASE, len);
+    return ret;
+}
+
 static void pmem_write(paddr_t addr, int len, word_t data) {
   host_write(guest_to_host(addr), len, data);
 #ifdef CONFIG_MTRACE_COND
@@ -97,6 +103,10 @@ static void flash_write(paddr_t addr, int len, word_t data) {
     host_write(flash + addr - CONFIG_FLASH_BASE, len, data);
 }
 
+static void sdram_write(paddr_t addr, int len, word_t data) {
+    host_write(sdram + addr - CONFIG_SDRAM_BASE, len, data);
+}
+
 static void out_of_bound(paddr_t addr) {
   panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
       addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
@@ -117,12 +127,26 @@ word_t paddr_read(paddr_t addr, int len) {
   if (likely(in_mrom(addr))) return mrom_read(addr, len);
   if (likely(in_flash(addr))) return flash_read(addr, len);
   // if (likely(in_psram(addr))) return psram_read(addr, len);
+  if (likely(in_sdram(addr))) return sdram_read(addr, len);
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
 
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   IFDEF(CONFIG_ITRACE, itrace_dump());
   
+#ifdef CONFIG_PC_TRACE
+  if (addr >= 0x10000000 && addr < 0x10000000 + 0x1000) { // UART is readable
+    if (addr == 0x10000005) return 0x20; 
+  }
+  else if (addr >= 0x02000000 && addr < 0x0200ffff) {
+    return 0;
+  }
+  else {
+    out_of_bound(addr);
+  }
+#else
   out_of_bound(addr);
+#endif
+
   return 0;
 }
 
@@ -132,9 +156,26 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
   if (likely(in_flash(addr))) { flash_write(addr, len, data); return; }
   // if (likely(in_psram(addr))) { psram_write(addr, len, data); return; }
+  if (likely(in_sdram(addr))) { sdram_write(addr, len, data); return; }
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   IFDEF(CONFIG_ITRACE, itrace_dump());
-  
+
+#ifdef CONFIG_PC_TRACE
+  if (addr >= 0x1000000 && addr < 0x10000000 + 0x1000) { // UART is writable
+    if (addr == 0x10000000) {
+      putchar(data & 0xff);
+      return;
+    }
+  }
+  else if (addr >= 0x02000000 && addr < 0x0200ffff) {
+    return;
+  }
+  else {
+    out_of_bound(addr);
+  }
+#else
   out_of_bound(addr);
+#endif
+  
 }

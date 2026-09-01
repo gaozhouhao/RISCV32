@@ -30,6 +30,9 @@ paddr_t host_to_guest(uint8_t *haddr);
 uint8_t* mrom_guest_to_host(paddr_t paddr);
 uint8_t* flash_guest_to_host(paddr_t paddr);
 
+extern uint8_t flash[CONFIG_FLASH_SIZE];
+
+
 static inline bool in_pmem(paddr_t addr) {
   return addr - CONFIG_MBASE < CONFIG_MSIZE;
 }
@@ -48,6 +51,10 @@ static inline bool in_flash(paddr_t addr) {
 
 static inline bool in_psram(paddr_t addr) {
   return addr - CONFIG_PSRAM_BASE < CONFIG_PSRAM_SIZE;
+}
+
+static inline bool in_sdram(paddr_t addr) {
+  return addr - CONFIG_SDRAM_BASE < CONFIG_SDRAM_SIZE;
 }
 
 word_t paddr_read(paddr_t addr, int len);

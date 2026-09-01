@@ -128,7 +128,7 @@ menu "Testing and Debugging"
 
 config TRACE
   bool "Enable tracer"
-  default y
+  default n
 
 config TRACE_START
   depends on TRACE
@@ -189,6 +189,17 @@ config ETRACE_COND
   depends on ETRACE
   string "Only trace errors when the condition is true"
   default "true"
+
+config PC_TRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable PC tracer"
+  default n
+
+config PC_TRACE_COND
+  depends on PC_TRACE
+  string "Only trace PC when the condition is true"
+  default "true"
+
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
