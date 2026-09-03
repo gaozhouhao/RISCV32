@@ -2,6 +2,7 @@
 #include "sdb.h"
 #include <elf.h>
 #include <memory/paddr.h>
+#include "trace.h"
 
 #define NR_RB 16
 
@@ -95,5 +96,20 @@ const char *find_func(vaddr_t addr) {
     }
     return "???";
 }
+
+FILE *pc_trace_fp = NULL;
+void pc_trace_init() {
+    pc_trace_fp = fopen("./../npc/tools/cachesim/traces/pc_trace.txt", "w");
+    Assert(pc_trace_fp, "Can not open pc_trace.txt");
+}
+
+void pc_trace_push(vaddr_t pc) {
+    fwrite(&pc, sizeof(pc), 1, pc_trace_fp);
+//     fprintf(pc_trace_fp, "%08x\n", pc);
+}
+
+void pc_trace_close() {
+    fclose(pc_trace_fp);
+} 
 
 

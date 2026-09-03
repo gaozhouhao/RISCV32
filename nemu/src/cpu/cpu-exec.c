@@ -19,6 +19,7 @@
 #include <locale.h>
 #include "../monitor/sdb/sdb.h"
 #include <memory/vaddr.h>
+#include "../monitor/sdb/trace.h"
 
 
 /* The assembly code of instructions executed is only output to the screen
@@ -111,6 +112,9 @@ static void exec_once(Decode *s, vaddr_t pc) {
   // itrace_dump();
 
 #endif
+
+  IFDEF(CONFIG_PC_TRACE, pc_trace_push(s->pc));
+
 
 
 }

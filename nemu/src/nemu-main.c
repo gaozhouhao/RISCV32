@@ -15,6 +15,7 @@
 
 #include <common.h>
 #include <../src/monitor/sdb/sdb.h>
+#include <../src/monitor/sdb/trace.h>
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
@@ -63,5 +64,6 @@ int main(int argc, char *argv[]) {
   //test_expr();
   /* Start engine. */
   engine_start();
+  IFDEF(CONFIG_PC_TRACE, pc_trace_close());
   return is_exit_status_bad();
 };

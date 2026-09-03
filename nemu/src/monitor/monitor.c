@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
+#include "./sdb/trace.h"
 
 void init_rand();
 void init_log(const char *log_file);
@@ -67,10 +68,8 @@ static long load_img() {
     fseek(fp, 0, SEEK_SET);
     int ret = fread(flash, size, 1, fp);
 
-    // used for am test "flash-test", "flash-read" and "xip-test"
-    // for (int i = 0; i < 0x10000; i += 1){
-    //    flash[i] = 0x30000000 + i*4;
-    // }
+    pc_trace_init();
+
 #else
 
   if (img_file == NULL) {
