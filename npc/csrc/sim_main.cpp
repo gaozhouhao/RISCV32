@@ -102,7 +102,7 @@ void exec_once(Decode *s) {
 #endif
     
 #ifdef CONFIG_ITRACE
-    if (DUT_INST_VALID) {
+    if (DUT_ALLOW_FETCH) {
         char *p = s->logbuf;
         p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":\t", s->pc);
         int i;
@@ -225,6 +225,9 @@ void print_perf_cnt() {
     printf("Cycle               : %lu\n", perf_cnt[PERF_CYCLE]);
     printf("Instret             : %lu\n", perf_cnt[PERF_INSTRET]);
 
+    printf("Cache Access        : %lu\n", perf_cnt[PERF_ICACHE_ACCESS]);
+    printf("Cache Hit           : %lu\n", perf_cnt[PERF_ICACHE_HIT]);
+    printf("Cache Miss          : %lu\n", perf_cnt[PERF_ICACHE_MISS]);
     printf("Cache Hit Rate      : %f\n", cache_hit_rate);
     printf("Cache Miss Penalty  : %f\n", cache_miss_penalty);
     printf("AMAT                : %f\n", AMAT);

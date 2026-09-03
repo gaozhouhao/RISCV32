@@ -27,7 +27,7 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
 static uint8_t mrom[CONFIG_MROM_SIZE];
 static uint8_t sram[CONFIG_SRAM_SIZE];
-static uint8_t psram[CONFIG_PSRAM_SIZE];
+uint8_t psram[CONFIG_PSRAM_SIZE];
 uint8_t flash[CONFIG_FLASH_SIZE];
 static uint8_t sdram[CONFIG_SDRAM_SIZE];
 
@@ -59,10 +59,10 @@ static word_t mrom_read(paddr_t addr, int len) {
     return ret;
 }
 
-// static word_t psram_read(paddr_t addr, int len) {
-//     word_t ret = host_read(psram + addr - CONFIG_PSRAM_BASE, len);
-//     return ret;
-// }
+static word_t psram_read(paddr_t addr, int len) {
+    word_t ret = host_read(psram + addr - CONFIG_PSRAM_BASE, len);
+    return ret;
+}
 
 static word_t sram_read(paddr_t addr, int len) {
     word_t ret = host_read(sram + addr - CONFIG_SRAM_BASE, len);
@@ -95,9 +95,9 @@ static void sram_write(paddr_t addr, int len, word_t data) {
     host_write(sram + addr - CONFIG_SRAM_BASE, len, data);
 }
 
-// static void psram_write(paddr_t addr, int len, word_t data) {
-//     host_write(psram + addr - CONFIG_PSRAM_BASE, len, data);
-// }
+static void psram_write(paddr_t addr, int len, word_t data) {
+    host_write(psram + addr - CONFIG_PSRAM_BASE, len, data);
+}
 
 static void flash_write(paddr_t addr, int len, word_t data) {
     host_write(flash + addr - CONFIG_FLASH_BASE, len, data);
@@ -126,7 +126,7 @@ word_t paddr_read(paddr_t addr, int len) {
   if (likely(in_sram(addr))) return sram_read(addr, len);
   if (likely(in_mrom(addr))) return mrom_read(addr, len);
   if (likely(in_flash(addr))) return flash_read(addr, len);
-  // if (likely(in_psram(addr))) return psram_read(addr, len);
+  if (likely(in_psram(addr))) return psram_read(addr, len);
   if (likely(in_sdram(addr))) return sdram_read(addr, len);
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
 
@@ -155,7 +155,7 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   if (likely(in_sram(addr))) { sram_write(addr, len, data); return; }
   if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
   if (likely(in_flash(addr))) { flash_write(addr, len, data); return; }
-  // if (likely(in_psram(addr))) { psram_write(addr, len, data); return; }
+  if (likely(in_psram(addr))) { psram_write(addr, len, data); return; }
   if (likely(in_sdram(addr))) { sdram_write(addr, len, data); return; }
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);

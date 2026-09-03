@@ -31,7 +31,7 @@ uint8_t* mrom_guest_to_host(paddr_t paddr);
 uint8_t* flash_guest_to_host(paddr_t paddr);
 
 extern uint8_t flash[CONFIG_FLASH_SIZE];
-
+extern uint8_t psram[CONFIG_PSRAM_SIZE];
 
 static inline bool in_pmem(paddr_t addr) {
   return addr - CONFIG_MBASE < CONFIG_MSIZE;

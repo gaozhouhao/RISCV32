@@ -379,13 +379,23 @@ WBU wbu (
 );
 
 
+AXI_IF  axi_icache();
+
+
+ICACHE icache(
+    .clk(clock),
+    .reset(reset),
+    .axi_in(axi_ifu),
+    .axi_out(axi_icache)
+);
+
 
 `ifdef ARCH_NPC
 
 Arbiter arbiter(
     .clk(clock),
     .reset(reset),
-    .axi_ifu(axi_ifu),
+    .axi_ifu(axi_icache),
     .axi_lsu(axi_lsu),
     .axi_arb(axi_arb)
 );
@@ -427,13 +437,7 @@ Arbiter arbiter(
     .axi_arb(axi_arb)
 );
 
-AXI_IF  axi_icache();
-ICACHE icache(
-    .clk(clock),
-    .reset(reset),
-    .axi_in(axi_ifu),
-    .axi_out(axi_icache)
-);
+
 
 SoCXbar socxbar(
     .clk(clock),

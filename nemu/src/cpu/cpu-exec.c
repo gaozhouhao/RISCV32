@@ -115,8 +115,6 @@ static void exec_once(Decode *s, vaddr_t pc) {
 
   IFDEF(CONFIG_PC_TRACE, pc_trace_push(s->pc));
 
-
-
 }
 
 static void execute(uint64_t n) {

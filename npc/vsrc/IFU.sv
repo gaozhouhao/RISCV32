@@ -122,7 +122,6 @@ module IFU(
     
 // `endif
 
-
     wire allow_fetch/* verilator public_flat_rd */;
     wire inst_done/* verilator public_flat_rd */;
     assign inst_done = in_wb_done;

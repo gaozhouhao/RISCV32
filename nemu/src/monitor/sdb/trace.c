@@ -105,7 +105,7 @@ void pc_trace_init() {
 
 void pc_trace_push(vaddr_t pc) {
     fwrite(&pc, sizeof(pc), 1, pc_trace_fp);
-//     fprintf(pc_trace_fp, "%08x\n", pc);
+    // fprintf(pc_trace_fp, "%08x\n", pc);
 }
 
 void pc_trace_close() {

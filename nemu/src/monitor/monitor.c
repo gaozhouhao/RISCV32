@@ -58,7 +58,7 @@ static long load_img() {
     //***************
 #if CONFIG_PC_TRACE
 
-    img_file = "/home/gao-zhouhao/ysyx-workbench/am-kernels/benchmarks/microbench/build/microbench-riscv32e-ysyxsoc.bin";
+    img_file = "/home/gao-zhouhao/ysyx-workbench/am-kernels/benchmarks/microbench/build/microbench-riscv32e-npc.bin";
     FILE *fp = fopen(img_file, "rb");
     Assert(fp, "Can not open '%s'", img_file);
     Log("Image is given: %s.", img_file);
@@ -66,7 +66,8 @@ static long load_img() {
     
     long size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    int ret = fread(flash, size, 1, fp);
+    // int ret = fread(flash, size, 1, fp);
+    int ret = fread(psram, size, 1, fp);
 
     pc_trace_init();
 
@@ -92,6 +93,7 @@ static long load_img() {
 
 #endif
   assert(ret == 1);
+
 
   fclose(fp);
   return size;
@@ -137,6 +139,8 @@ static int parse_args(int argc, char *argv[]) {
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
     cpu.csr[0x300] = 0x1800;
+    cpu.csr[0xf11] = 0x79737978;
+    cpu.csr[0xf12] = 0x017F4E2E;
   /* Parse arguments. */
   parse_args(argc, argv);
 
