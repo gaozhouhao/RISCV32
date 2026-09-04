@@ -12,17 +12,17 @@
 
 #define REPLACE_POLICY REPLACE_RANDOM
 
-#define OFFSET_WIDTH 2
-#define INDEX_WIDTH 4
-#define SET_WIDTH 2
-#define WAY_WIDTH INDEX_WIDTH - SET_WIDTH
+// #define OFFSET_WIDTH 2
+// #define INDEX_WIDTH 4
+// #define SET_WIDTH 2
+#define WAY_WIDTH (INDEX_WIDTH - SET_WIDTH)
 
 #define CACHE_LINE_BYTES (1 << OFFSET_WIDTH)
 #define CACHE_NUM_LINES  (1 << INDEX_WIDTH)
 #define CACHE_NUM_SETS   (1 << SET_WIDTH)
 #define CACHE_NUM_WAYS   (1 << WAY_WIDTH)
 
-#define TAG_WIDTH (32 - OFFSET_WIDTH - INDEX_WIDTH + WAY_WIDTH)
+#define TAG_WIDTH (32 - OFFSET_WIDTH - SET_WIDTH)
 
 
 uint32_t valids[CACHE_NUM_SETS][CACHE_NUM_WAYS] = {0};
@@ -35,7 +35,7 @@ uint32_t find_set(uint32_t addr) {
 
 
 uint32_t find_tag(uint32_t addr) {
-    return (addr >> (OFFSET_WIDTH + SET_WIDTH)) & ((1 << TAG_WIDTH ) - 1);
+    return (addr >> (OFFSET_WIDTH + SET_WIDTH));
 }
 
 uint64_t cache_access_count = 0;
@@ -46,7 +46,7 @@ uint64_t cache_miss_count = 0;
 int main() {
     srand(1);
     static char *pc_trace_file = NULL;
-    pc_trace_file = "./traces/pc_trace.txt";
+    pc_trace_file = (char *)"./traces/pc_trace.txt";
     FILE *fp = fopen(pc_trace_file, "rb");
     assert(fp != NULL);
 
@@ -89,12 +89,31 @@ int main() {
         }
     }
     assert(cache_access_count == cache_hit_count + cache_miss_count);
-    printf("Cache access count: %llu\n", cache_access_count);
-    printf("Cache hit count: %llu\n", cache_hit_count);
-    printf("Cache miss count: %llu\n", cache_miss_count);
-    printf("Cache hit rate: %.2f%%\n", (double)cache_hit_count / cache_access_count * 100.0);
 
     fclose(fp);
+
+#ifdef BATCH_MODE
+    char filename[256];
+    sprintf(filename, "results/o%d_i%d_s%d.csv", OFFSET_WIDTH, INDEX_WIDTH, SET_WIDTH);
+    fp = fopen(filename, "w");
+    assert(fp != NULL);
+
+    fprintf(fp, "%d\t|%d\t|%d\t|%lu\t\t|%lu\t\t|%lu\t\t|%.6f\n",
+            OFFSET_WIDTH,
+            INDEX_WIDTH,
+            SET_WIDTH,
+            cache_access_count,      // access
+            cache_hit_count,        // hit
+            cache_miss_count,       // miss
+            (double)cache_hit_count / cache_access_count);  // hit rate
+    fclose(fp);
+#else
+    printf("Cache access count: %lu\n", cache_access_count);
+    printf("Cache hit count: %lu\n", cache_hit_count);
+    printf("Cache miss count: %lu\n", cache_miss_count);
+    printf("Cache hit rate: %.2f%%\n", (double)cache_hit_count / cache_access_count * 100.0);
+#endif
+    
 
     return 0;
 }
