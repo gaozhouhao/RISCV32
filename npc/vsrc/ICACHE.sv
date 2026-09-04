@@ -11,26 +11,59 @@ module ICACHE(
     import "DPI-C" function void get_inst(input int inst);
 `endif
 
-    localparam int OFFSET_WIDTH = 2;
+    parameter DATA_WIDTH = 32;
+    parameter ADDR_WIDTH = 32;
+    localparam BYTE_NUM     = DATA_WIDTH / 8;
+    localparam BYTE_OFFSET_WIDTH = $clog2(BYTE_NUM);
+
+
+    localparam int OFFSET_WIDTH = 4;
     localparam int INDEX_WIDTH  = 4;
 
     localparam int CACHE_LINE_BYTES = 2 ** OFFSET_WIDTH;
     localparam int CACHE_NUM_LINES  = 2 ** INDEX_WIDTH;
     localparam int CACHE_SIZE_BYTES = CACHE_LINE_BYTES * CACHE_NUM_LINES;
 
-    localparam int TAG_WIDTH    = 32 - OFFSET_WIDTH - INDEX_WIDTH;
+    localparam int TAG_WIDTH    = ADDR_WIDTH - OFFSET_WIDTH - INDEX_WIDTH;
+
+    reg [ADDR_WIDTH-1:0] req_addr;
+    reg [ADDR_WIDTH-1:0] refill_addr;
 
     wire [TAG_WIDTH-1:0] tag;
     wire [INDEX_WIDTH-1:0] index;
     wire [OFFSET_WIDTH-1:0] offset;
 
-    assign tag    = axi_in.araddr[31:OFFSET_WIDTH+INDEX_WIDTH];
+    assign tag    = axi_in.araddr[ADDR_WIDTH-1:OFFSET_WIDTH+INDEX_WIDTH];
     assign index  = axi_in.araddr[OFFSET_WIDTH+INDEX_WIDTH-1:OFFSET_WIDTH];
     assign offset = axi_in.araddr[OFFSET_WIDTH-1:0];
+
+    wire [INDEX_WIDTH-1:0] refill_index;
+    wire [TAG_WIDTH-1:0]   refill_tag;
+    wire [OFFSET_WIDTH-1:0] refill_offset;
+
+    assign refill_index  = refill_addr[OFFSET_WIDTH+INDEX_WIDTH-1:OFFSET_WIDTH];
+    assign refill_tag    = refill_addr[ADDR_WIDTH-1:OFFSET_WIDTH+INDEX_WIDTH];
+    assign refill_offset = refill_addr[OFFSET_WIDTH-1:0];
+
+    wire [INDEX_WIDTH-1:0] req_index;
+    wire [OFFSET_WIDTH-1:0] req_offset;
+    wire [TAG_WIDTH-1:0] req_tag;
+
+    assign req_index    = req_addr[OFFSET_WIDTH+INDEX_WIDTH-1:OFFSET_WIDTH];
+    assign req_tag      = req_addr[ADDR_WIDTH-1:OFFSET_WIDTH+INDEX_WIDTH];
+    assign req_offset   = req_addr[OFFSET_WIDTH-1:0];
+
 
     reg [TAG_WIDTH-1:0] tag_array [0:CACHE_NUM_LINES-1];
     reg [CACHE_LINE_BYTES*8-1:0] data_array [0:CACHE_NUM_LINES-1];
     reg [CACHE_NUM_LINES-1:0] valid_array;
+
+    localparam REFILL_CNT_WIDTH =
+        (OFFSET_WIDTH == BYTE_OFFSET_WIDTH)
+        ? 1
+        : OFFSET_WIDTH - BYTE_OFFSET_WIDTH;
+    reg [REFILL_CNT_WIDTH-1:0] refill_cnt;
+    localparam WORDS_PER_LINE = 1 << (OFFSET_WIDTH - BYTE_OFFSET_WIDTH);
 
     localparam IDLE = 3'b000;
     localparam CACHE_HIT = 3'b001;
@@ -39,9 +72,11 @@ module ICACHE(
     localparam WAIT_R = 3'b100;
     localparam SEND_R = 3'b101;
     reg [2:0] state;
-    reg [31:0]  req_addr;
+
+
     always @(posedge clk) begin
         if (reset == 1'b1) begin
+            refill_addr <= 0;
             valid_array <= {CACHE_NUM_LINES{1'b0}};
             axi_in.rvalid <= 1'b0;
             axi_out.arvalid <= 1'b0;
@@ -55,7 +90,7 @@ module ICACHE(
                             perf_event(PERF_ICACHE_ACCESS);
                         `endif
                         if (valid_array[index] && tag_array[index] == tag) begin
-                            axi_in.rdata <= data_array[index];
+                            axi_in.rdata <= data_array[index][offset * 8 +: DATA_WIDTH];
                             axi_in.rvalid <= 1'b1;
                             axi_in.rresp <= 2'b00;
                             state <= CACHE_HIT;
@@ -70,7 +105,9 @@ module ICACHE(
                                 perf_event(PERF_ICACHE_MISS);
                                 perf_event(PERF_ICACHE_MISS_CYCLES);
                             `endif
+                            refill_cnt <= 0;
                             req_addr <= axi_in.araddr;
+                            refill_addr <= {axi_in.araddr[ADDR_WIDTH-1:OFFSET_WIDTH], {{OFFSET_WIDTH}{1'b0}}} ; // align to cache line
                         end
                     end
                 end
@@ -84,7 +121,7 @@ module ICACHE(
                     `ifdef VERILATOR
                         perf_event(PERF_ICACHE_MISS_CYCLES);
                     `endif
-                    axi_out.araddr <= req_addr;
+                    axi_out.araddr <= refill_addr;
                     axi_out.arvalid <= 1'b1;
                     state <= SEND_AR;
                 end
@@ -102,13 +139,27 @@ module ICACHE(
                         perf_event(PERF_ICACHE_MISS_CYCLES);
                     `endif
                     if (axi_out.rvalid && axi_out.rready) begin
-                        data_array[req_addr[OFFSET_WIDTH+INDEX_WIDTH-1:OFFSET_WIDTH]] <= axi_out.rdata;
-                        tag_array[req_addr[OFFSET_WIDTH+INDEX_WIDTH-1:OFFSET_WIDTH]] <= req_addr[31:OFFSET_WIDTH+INDEX_WIDTH];
-                        valid_array[req_addr[OFFSET_WIDTH+INDEX_WIDTH-1:OFFSET_WIDTH]] <= 1'b1;
-                        axi_in.rdata <= axi_out.rdata;
-                        axi_in.rvalid <= 1'b1;
-                        axi_in.rresp <= 2'b00;
-                        state <= SEND_R;
+                        data_array[refill_index][refill_offset * 8 +: DATA_WIDTH] <= axi_out.rdata;
+                        if (refill_cnt == WORDS_PER_LINE - 1) begin
+                            valid_array[refill_index] <= 1'b1;
+                            tag_array[refill_index] <= refill_tag;
+                            if (req_addr == refill_addr) begin
+                                axi_in.rdata <= axi_out.rdata;
+                            end
+                            else begin
+                                axi_in.rdata <= data_array[req_index][req_offset*8 +: DATA_WIDTH];
+                            end
+                            axi_in.rvalid <= 1'b1;
+                            axi_in.rresp <= 2'b00;
+                            state <= SEND_R;
+                        end
+                        else begin
+                            axi_out.araddr <= refill_addr + BYTE_NUM;
+                            refill_addr <= refill_addr + BYTE_NUM;
+                            state <= SEND_AR;
+                            axi_out.arvalid <= 1'b1;
+                            refill_cnt <= refill_cnt + 1'b1;
+                        end
                     end
                 end
                 SEND_R: begin
