@@ -139,12 +139,27 @@ module LSU(
     lsu_state_t lsu_state;
 
 `ifdef VERILATOR
-    always @(posedge clk) begin
-        if (out_valid && !in_ready) perf_event(PERF_LSU_STALL);
-        if (lsu_state == LSU_WAIT_R) perf_event(PERF_LSU_LOAD_WAIT);
-        if (lsu_state == LSU_WAIT_B) perf_event(PERF_LSU_STORE_WAIT);
+always @(posedge clk) begin
+    if (reset == 1'b0) begin
+        if (out_valid && !in_ready)
+            perf_event(PERF_LSU_STALL);
+
+        if (lsu_state == LSU_READ_ADDR && axi.arvalid && !ar_fire)
+            perf_event(PERF_LSU_LOAD_WAIT);
+
+        if (lsu_state == LSU_WAIT_R && !r_fire)
+            perf_event(PERF_LSU_LOAD_WAIT);
+
+        if (lsu_state == LSU_WRITE_REQ &&
+            ((axi.awvalid && !aw_fire) ||
+             (axi.wvalid  && !w_fire)))
+            perf_event(PERF_LSU_STORE_WAIT);
+
+        if (lsu_state == LSU_WAIT_B && !b_fire)
+            perf_event(PERF_LSU_STORE_WAIT);
     end
-`endif 
+end
+`endif
 
 
     assign out_ready = (lsu_state == LSU_IDLE) && !out_valid;
