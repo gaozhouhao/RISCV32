@@ -58,11 +58,12 @@ interface AXI_IF();
      modport slaver(
         input       araddr,
         input       arvalid,
+        output      arready,
+        input       arid,
         input       arburst,
         input       arlen,
         input       arsize,
         
-        output      arready,
         output      rdata,
         output      rresp,
         output      rvalid,
