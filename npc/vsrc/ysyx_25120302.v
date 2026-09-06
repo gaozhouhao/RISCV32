@@ -107,9 +107,15 @@ assign axi_soc.arready   = io_master_arready;
 assign io_master_arvalid = axi_soc.arvalid;
 assign io_master_araddr  = axi_soc.araddr;
 assign io_master_arid    = 4'b0;
-assign io_master_arlen   = 8'b0;
-assign io_master_arsize  = 3'b000;
-assign io_master_arburst = 2'b0;
+assign io_master_arlen   = axi_soc.arlen;
+assign io_master_arsize  = axi_soc.arsize;
+assign io_master_arburst = axi_soc.arburst;
+
+assign axi_soc.rresp    = io_master_rresp;
+assign axi_soc.rvalid   = io_master_rvalid;
+assign axi_soc.rdata    = io_master_rdata;
+assign io_master_rready = axi_soc.rready;
+assign axi_soc.rlast    = io_master_rlast;
 
 
 assign io_slave_awready  = 1'b0;
@@ -128,10 +134,8 @@ assign io_slave_rdata    = 32'b0;
 assign io_slave_rlast    = 1'b0;
 assign io_slave_rid      = 4'b0;
 
-assign io_master_rready = axi_soc.rready;
-assign axi_soc.rresp    = io_master_rresp;
-assign axi_soc.rvalid   = io_master_rvalid;
-assign axi_soc.rdata    = io_master_rdata;
+
+
 
 wire            ifu_to_idu_valid;
 wire            idu_to_ifu_ready;

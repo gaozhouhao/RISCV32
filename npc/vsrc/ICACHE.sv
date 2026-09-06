@@ -66,13 +66,10 @@ module ICACHE(
     localparam WORDS_PER_LINE = 1 << (OFFSET_WIDTH - BYTE_OFFSET_WIDTH);
 
     localparam IDLE = 3'b000;
-    localparam CACHE_HIT = 3'b001;
-    localparam CACHE_MISS = 3'b010;
+    localparam RESP = 3'b001;
     localparam SEND_AR = 3'b011;
     localparam WAIT_R = 3'b100;
-    localparam SEND_R = 3'b101;
     reg [2:0] state;
-
 
     always @(posedge clk) begin
         if (reset == 1'b1) begin
@@ -93,14 +90,13 @@ module ICACHE(
                             axi_in.rdata <= data_array[index][offset * 8 +: DATA_WIDTH];
                             axi_in.rvalid <= 1'b1;
                             axi_in.rresp <= 2'b00;
-                            state <= CACHE_HIT;
+                            state <= RESP;
                             `ifdef VERILATOR
                                 perf_event(PERF_ICACHE_HIT);
                                 perf_event(PERF_ICACHE_HIT_CYCLES);
                             `endif
                         end
                         else begin
-                            state <= CACHE_MISS;
                             `ifdef VERILATOR
                                 perf_event(PERF_ICACHE_MISS);
                                 perf_event(PERF_ICACHE_MISS_CYCLES);
@@ -108,22 +104,20 @@ module ICACHE(
                             refill_cnt <= 0;
                             req_addr <= axi_in.araddr;
                             refill_addr <= {axi_in.araddr[ADDR_WIDTH-1:OFFSET_WIDTH], {{OFFSET_WIDTH}{1'b0}}} ; // align to cache line
+                            axi_out.araddr <= {axi_in.araddr[ADDR_WIDTH-1:OFFSET_WIDTH], {{OFFSET_WIDTH}{1'b0}}};
+                            axi_out.arvalid <= 1'b1;
+                            axi_out.arburst <= 2'b01;
+                            axi_out.arlen <= 8'h3;
+                            axi_out.arsize <= 3'b010;
+                            state <= SEND_AR;
                         end
                     end
                 end
-                CACHE_HIT: begin
+                RESP: begin
                     if (axi_in.rvalid && axi_in.rready) begin
                         axi_in.rvalid <= 1'b0;
                         state <= IDLE;
                     end
-                end
-                CACHE_MISS: begin
-                    `ifdef VERILATOR
-                        perf_event(PERF_ICACHE_MISS_CYCLES);
-                    `endif
-                    axi_out.araddr <= refill_addr;
-                    axi_out.arvalid <= 1'b1;
-                    state <= SEND_AR;
                 end
                 SEND_AR: begin
                     `ifdef VERILATOR
@@ -131,6 +125,9 @@ module ICACHE(
                     `endif
                     if (axi_out.arvalid && axi_out.arready) begin
                         axi_out.arvalid <= 1'b0;
+                        axi_out.arburst <= 2'b0;
+                        axi_out.arlen <= 8'b0;
+                        axi_out.arsize <= 3'b0;
                         state <= WAIT_R;
                     end
                 end
@@ -140,7 +137,7 @@ module ICACHE(
                     `endif
                     if (axi_out.rvalid && axi_out.rready) begin
                         data_array[refill_index][refill_offset * 8 +: DATA_WIDTH] <= axi_out.rdata;
-                        if (refill_cnt == WORDS_PER_LINE - 1) begin
+                        if (axi_out.rlast == 1'b1) begin
                             valid_array[refill_index] <= 1'b1;
                             tag_array[refill_index] <= refill_tag;
                             if (req_addr == refill_addr) begin
@@ -151,21 +148,13 @@ module ICACHE(
                             end
                             axi_in.rvalid <= 1'b1;
                             axi_in.rresp <= 2'b00;
-                            state <= SEND_R;
+                            state <= RESP;
                         end
                         else begin
-                            axi_out.araddr <= refill_addr + BYTE_NUM;
                             refill_addr <= refill_addr + BYTE_NUM;
-                            state <= SEND_AR;
-                            axi_out.arvalid <= 1'b1;
+                            state <= WAIT_R;
                             refill_cnt <= refill_cnt + 1'b1;
                         end
-                    end
-                end
-                SEND_R: begin
-                    if (axi_in.rvalid && axi_in.rready) begin
-                        axi_in.rvalid <= 1'b0;
-                        state <= IDLE;
                     end
                 end
                 default: ;

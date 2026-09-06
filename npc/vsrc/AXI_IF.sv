@@ -3,12 +3,17 @@ interface AXI_IF();
     logic       [31:0]      araddr;
     logic                   arvalid;
     logic                   arready;
-    
+    logic       [ 3:0]      arid;
+    logic       [ 7:0]      arlen;
+    logic       [ 2:0]      arsize;
+    logic       [ 1:0]      arburst;
+
     //R
     logic       [31:0]      rdata;
     logic       [ 1:0]      rresp;
     logic                   rvalid;
     logic                   rready;
+    logic                   rlast;
     //AW
     logic       [31:0]      awaddr;
     logic                   awvalid;
@@ -27,10 +32,17 @@ interface AXI_IF();
         output      araddr,
         output      arvalid,
         input       arready,
+        output      arid,
+        output      arlen,
+        output      arsize,
+        output      arburst,
+
         input       rdata,
         input       rresp,
         input       rvalid,
         output      rready,
+        input       rlast,
+
         output      awaddr,
         output      awvalid,
         input       awready,
@@ -46,11 +58,17 @@ interface AXI_IF();
      modport slaver(
         input       araddr,
         input       arvalid,
+        input       arburst,
+        input       arlen,
+        input       arsize,
+        
         output      arready,
         output      rdata,
         output      rresp,
         output      rvalid,
         input       rready,
+        output      rlast,
+
         input       awaddr,
         input       awvalid,
         output      awready,

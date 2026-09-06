@@ -18,19 +18,9 @@ typedef enum logic [1:0] {
 slave_owner_t read_slave;
 
 
-typedef enum logic [1:0] {
-    IDLE,
-    LSU,
-    IFU
-} owner_t;
-
-owner_t read_owner;
-owner_t write_owner;
-
 //READ
 always@(posedge clk) begin
     if (reset == 1'b1) begin
-        read_owner <= IDLE;
         read_slave <= SLAVE_IDLE;
     end
     if(axi_arb.arvalid && axi_arb.arready) begin
@@ -39,31 +29,16 @@ always@(posedge clk) begin
         else
             read_slave <= SLAVE_SOC;
 
-        if(axi_lsu.arvalid) begin
-            read_owner <= LSU;
-        end
-        else if(axi_ifu.arvalid) read_owner <= IFU;
     end
     else if(axi_arb.rvalid && axi_arb.rready) begin
-        read_owner <= IDLE;
-        read_slave <= SLAVE_IDLE;
+        if (read_slave == SLAVE_SOC) begin
+            if (axi_arb.rlast == 1'b1)
+                read_slave <= SLAVE_IDLE;
+        end
+        else if (read_slave == SLAVE_CLINT)
+            read_slave <= SLAVE_IDLE;
     end
 end
-
-//WRITE
-always@(posedge clk) begin
-    if (reset == 1'b1) begin
-        write_owner <= IDLE;
-    end
-    if(axi_arb.awvalid && axi_arb.awready) begin
-        if(axi_lsu.awvalid) write_owner <= LSU;
-        else if(axi_ifu.awvalid) write_owner <= IFU;
-    end
-    else if(axi_arb.bvalid && axi_arb.bready) begin
-        write_owner <= IDLE;
-    end
-end
-
 
 
 /////////////////////////
@@ -84,6 +59,9 @@ always@(*) begin
 
     axi_soc.araddr  = 0;
     axi_soc.arvalid = 0;
+    axi_soc.arburst = 0;
+    axi_soc.arlen   = 0;
+    axi_soc.arsize  = 0;
     axi_soc.rready  = 0;
 
     axi_soc.awaddr  = 0;
@@ -104,6 +82,7 @@ always@(*) begin
             axi_arb.rdata = axi_soc.rdata;
             axi_arb.rresp = axi_soc.rresp;
             axi_arb.rvalid = axi_soc.rvalid;
+            axi_arb.rlast  = axi_soc.rlast;
             axi_soc.rready = axi_arb.rready;
         end
         SLAVE_IDLE: begin
@@ -129,6 +108,9 @@ always@(*) begin
     else begin
         axi_soc.araddr  = axi_arb.araddr;
         axi_soc.arvalid = axi_arb.arvalid;
+        axi_soc.arburst = axi_arb.arburst;
+        axi_soc.arlen   = axi_arb.arlen;
+        axi_soc.arsize  = axi_arb.arsize;
         axi_arb.arready = axi_soc.arready;
 
     end

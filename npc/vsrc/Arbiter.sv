@@ -10,15 +10,6 @@ module Arbiter (
 );
 
 typedef enum logic [1:0] {
-    SLAVE_IDLE,
-    SLAVE_SOC,
-    SLAVE_CLINT
-} slave_owner_t;
-
-slave_owner_t read_slave;
-
-
-typedef enum logic [1:0] {
     IDLE,
     LSU,
     IFU
@@ -31,22 +22,21 @@ owner_t write_owner;
 always@(posedge clk) begin
     if (reset == 1'b1) begin
         read_owner <= IDLE;
-        read_slave <= SLAVE_IDLE;
     end
     if(axi_arb.arvalid && axi_arb.arready) begin
-        if (axi_arb.araddr >= `CLINT_BASE && axi_arb.araddr <  `CLINT_END)
-            read_slave <= SLAVE_CLINT;
-        else
-            read_slave <= SLAVE_SOC;
-
         if(axi_lsu.arvalid) begin
             read_owner <= LSU;
         end
-        else if(axi_ifu.arvalid) read_owner <= IFU;
+        else if(axi_ifu.arvalid) 
+            read_owner <= IFU;
     end
     else if(axi_arb.rvalid && axi_arb.rready) begin
-        read_owner <= IDLE;
-        read_slave <= SLAVE_IDLE;
+        if (read_owner == IFU) begin
+            if (axi_arb.rlast == 1'b1)
+                read_owner <= IDLE;
+        end
+        else if (read_owner == LSU)
+            read_owner <= IDLE;
     end
 end
 
@@ -72,6 +62,7 @@ always@(*) begin
     axi_ifu.arready = 0;
     axi_ifu.rdata   = (read_owner == IFU) ? axi_arb.rdata : 0;
     axi_ifu.rresp   = (read_owner == IFU) ? axi_arb.rresp : 0;
+    axi_ifu.rlast   = (read_owner == IFU) ? axi_arb.rlast : 0;
     axi_ifu.rvalid  = 0;
 
     axi_ifu.awready = 0;
@@ -92,6 +83,10 @@ always@(*) begin
     // master default
     axi_arb.araddr  = 0;
     axi_arb.arvalid = 0;
+    axi_arb.arburst = 0;
+    axi_arb.arlen   = 0;
+    axi_arb.arsize  = 0;
+
     axi_arb.rready  = 0;
 
     axi_arb.awaddr  = 0;
@@ -120,11 +115,15 @@ always@(*) begin
     else if (axi_ifu.arvalid || read_owner == IFU) begin
         axi_arb.araddr  = axi_ifu.araddr;
         axi_arb.arvalid = axi_ifu.arvalid;
+        axi_arb.arburst = axi_ifu.arburst;
+        axi_arb.arlen   = axi_ifu.arlen;
+        axi_arb.arsize  = axi_ifu.arsize;
         axi_ifu.arready = axi_arb.arready;
 
         axi_ifu.rdata   = axi_arb.rdata;
         axi_ifu.rresp   = axi_arb.rresp;
         axi_ifu.rvalid  = axi_arb.rvalid;
+        axi_ifu.rlast   = axi_arb.rlast;
         axi_arb.rready  = axi_ifu.rready;
     end
 
