@@ -2,8 +2,6 @@
 module ALU(
     input           [31:0]  alu_src1,
     input           [31:0]  alu_src2,
-    input           [1:0]   alu_src1_sel,
-    input           [1:0]   alu_src2_sel,
     input           [3:0]   alu_op,
 
     input           [31:0]  src1_data,
@@ -28,13 +26,13 @@ always @(*) begin
     //$display("OP:%d\n", alu_op);
     case (alu_op)
         `NPC_ALU_ADD:   alu_result = alu_src1 + alu_src2;
-        `NPC_ALU_SUB:   alu_result = alu_src1 +  ~alu_src2 + 1'b1;
+        `NPC_ALU_SUB:   alu_result = alu_diff;
         `NPC_ALU_AND:   alu_result = alu_src1 & alu_src2;
         `NPC_ALU_OR:    alu_result = alu_src1 | alu_src2;
         `NPC_ALU_XOR:   alu_result = alu_src1 ^ alu_src2;
         `NPC_ALU_SLL:   alu_result = alu_src1 << alu_src2[4:0];
         `NPC_ALU_SRL:   alu_result = alu_src1 >> alu_src2[4:0]; 
-        `NPC_ALU_SRA:   alu_result = {32{alu_src1[31]}} << (32-alu_src2[4:0]) | alu_src1 >> alu_src2[4:0]; 
+        `NPC_ALU_SRA:   alu_result = $signed(alu_src1) >>> alu_src2[4:0];
         `NPC_ALU_SLT:   alu_result = {31'b0, alu_negative^alu_overflow}; 
         `NPC_ALU_SLTU:  alu_result = {31'b0, ~alu_no_borrow};
         default:        alu_result = 32'hffff;

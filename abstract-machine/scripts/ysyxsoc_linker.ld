@@ -9,9 +9,10 @@ MEMORY {
   sdram : ORIGIN = 0xa0000000, LENGTH = 128M
   run_addr : ORIGIN = 0xa0000000, LENGTH = 128M
 }
-
+CACHELINE_SIZE = 16;
 
 SECTIONS {
+    . = ALIGN(CACHELINE_SIZE);
     .fsbl_text : {
         *(.fsbl_entry)
         *(.fsbl_text)
@@ -20,6 +21,7 @@ SECTIONS {
     } > flash
     _fsbl_text_lma = LOADADDR(.fsbl_text);
 
+    . = ALIGN(CACHELINE_SIZE);
     .ssbl_text : {
         _ssbl_text_start = .;
         *(.ssbl_entry)
@@ -29,6 +31,7 @@ SECTIONS {
     } > sram AT > flash
     _ssbl_text_lma = LOADADDR(.ssbl_text);
 
+    . = ALIGN(CACHELINE_SIZE);
     .text : {
         _text_start = .;
         *(entry)
@@ -37,6 +40,7 @@ SECTIONS {
     } > run_addr AT> flash
     _text_lma = LOADADDR(.text);
 
+    . = ALIGN(CACHELINE_SIZE);
     .rodata : {
         _rodata_start = .;
         *(.rodata*)
@@ -44,6 +48,7 @@ SECTIONS {
     } > run_addr AT> flash
     _rodata_lma = LOADADDR(.rodata);
 
+    . = ALIGN(CACHELINE_SIZE);
     .data : {
         _data_start = .;
         *(.data*)
@@ -53,7 +58,7 @@ SECTIONS {
     } > run_addr AT> flash
     _data_lma = LOADADDR(.data);
 
-
+    . = ALIGN(CACHELINE_SIZE);
     .data.extra : {
         _data_extra_start = .;
         /* section information for finsh shell */
@@ -87,7 +92,7 @@ SECTIONS {
     } > run_addr AT > flash
     _data_extra_lma = LOADADDR(.data.extra);
 
-
+    . = ALIGN(CACHELINE_SIZE);
     .bss : {
         _bss_start = .;
         *(.bss*)
@@ -97,6 +102,7 @@ SECTIONS {
         _bss_end = .;
     } > run_addr
 
+    . = ALIGN(CACHELINE_SIZE);
     .bss.extra : {
         _bss_extra_start = .;
         . = ALIGN(8);

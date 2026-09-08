@@ -19,7 +19,7 @@ owner_t read_owner;
 owner_t write_owner;
 
 //READ
-always@(posedge clk) begin
+always @(posedge clk) begin
     if (reset == 1'b1) begin
         read_owner <= IDLE;
     end
@@ -41,7 +41,7 @@ always@(posedge clk) begin
 end
 
 //WRITE
-always@(posedge clk) begin
+always @(posedge clk) begin
     if (reset == 1'b1) begin
         write_owner <= IDLE;
     end
@@ -88,6 +88,7 @@ always@(*) begin
     axi_arb.arsize  = 0;
 
     axi_arb.rready  = 0;
+    // axi_arb.rdata   = 32'b0;
 
     axi_arb.awaddr  = 0;
     axi_arb.awvalid = 0;

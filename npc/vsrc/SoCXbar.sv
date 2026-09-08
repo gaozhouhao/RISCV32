@@ -71,6 +71,10 @@ always@(*) begin
     axi_soc.wvalid  = 0;
     axi_soc.bready  = 0;
 
+    axi_arb.rlast   = 1'b0;
+    axi_arb.rdata   = 32'b0;
+    axi_arb.rvalid  = 1'b0;
+    axi_arb.rresp   = 2'b0;
     case (read_slave)
         SLAVE_CLINT: begin
             axi_arb.rdata = axi_clint.rdata;

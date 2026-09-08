@@ -57,6 +57,8 @@ BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
+O ?= $(NPC_HOME)/result
+
 default: $(BIN)
 
 $(shell mkdir -p $(BUILD_DIR))
@@ -121,27 +123,37 @@ ifeq ($(CONFIG_GTKWAVE), y)
 	gtkwave $(OBJ_DIR)/wave.fst
 endif
 
-RTL_FILES ?=
-RTL_FILES := $(shell find $(NPC_HOME)/vsrc \
-	-type f \( -name "*.v" -o -name "*.sv" -o -name "*.vh" \))
+RTL_FILES = \
+    $(NPC_HOME)/vsrc/addr_map_pkg.sv \
+    $(NPC_HOME)/vsrc/AXI_IF.sv \
+    $(NPC_HOME)/vsrc/ICACHE.sv \
+    $(NPC_HOME)/vsrc/CSR.sv \
+    $(NPC_HOME)/vsrc/CLINT.sv \
+    $(NPC_HOME)/vsrc/IFU.sv \
+    $(NPC_HOME)/vsrc/ALU.sv \
+    $(NPC_HOME)/vsrc/EXU.sv \
+    $(NPC_HOME)/vsrc/IDU.v \
+    $(NPC_HOME)/vsrc/LSU.sv \
+    $(NPC_HOME)/vsrc/WBU.sv \
+    $(NPC_HOME)/vsrc/Arbiter.sv \
+    $(NPC_HOME)/vsrc/SoCXbar.sv \
+    $(NPC_HOME)/vsrc/ysyx_25120302.v
 
-RTL_FILES := $(filter-out $(NPC_HOME)/vsrc/wrapper/%,$(RTL_FILES))
-RTL_FILES := $(filter-out \
-	$(NPC_HOME)/vsrc/MEM.sv \
-	$(NPC_HOME)/vsrc/UART.sv \
-	$(NPC_HOME)/vsrc/perf_pkg.sv, \
-	$(RTL_FILES))
-# RTL_FILES += $(NPC_HOME)/vsrc/wrapper/$(file)_TOP.v
-# RTL_FILES += $(NPC_HOME)/vsrc/$(file).sv
+SV2V_OUT := $(O)/ysyx_sv2v.v
 
-sta:
+$(SV2V_OUT): $(RTL_FILES)
+	@mkdir -p $(dir $(SV2V_OUT))
+	sv2v $(RTL_FILES) > $(SV2V_OUT)
+
+
+sta: $(SV2V_OUT)
 	$(MAKE) -C $(HOME)/yosys-sta/ sta \
 		DESIGN=ysyx_25120302 \
 		SDC_FILE=$(NPC_HOME)/scripts/my.sdc \
 		CLK_FREQ_MHZ=2000 \
 		CLK_PORT_NAME=clock \
 		O=$(NPC_HOME)/result \
-		RTL_FILES="$(RTL_FILES)" 
+		RTL_FILES="$(SV2V_OUT)" 
 
 
 submodule-sync:

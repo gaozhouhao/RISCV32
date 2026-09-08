@@ -138,8 +138,6 @@ end
 ALU alu(
     .alu_src1(alu_src1),
     .alu_src2(alu_src2),
-    .alu_src1_sel(in_alu_src1_sel),
-    .alu_src2_sel(in_alu_src2_sel),
     .alu_op(in_alu_op),
     .src1_data(in_src1_data),
     .src2_data(in_src2_data),

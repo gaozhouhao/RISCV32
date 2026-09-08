@@ -28,11 +28,12 @@ module WBU(
     end
 
 
-    reg [31:0] rf [31:0]/* verilator public_flat_rd */;
+    reg [31:0] rf [0:15]/* verilator public_flat_rd */;
     integer i;
     initial begin
-        for (i = 0; i < 32; i = i + 1) rf[i] = 32'b0;
+        for (i = 0; i < 16; i = i + 1) rf[i] = 32'b0;
     end
+
     assign out_wb_done = out_valid && in_ready;
     always @(posedge clk) begin
         if (reset == 1'b1) begin
@@ -41,7 +42,7 @@ module WBU(
         else if (in_valid && out_ready) begin
             if (in_rf_we) begin
                 if(in_waddr != 5'b0) begin
-                    rf[in_waddr] <= in_wdata;
+                    rf[in_waddr[3:0]] <= in_wdata;
                 end
             end
             out_valid <= 1'b1;
@@ -52,8 +53,8 @@ module WBU(
     end
 
     assign out_ready = in_ready;
-    assign out_rdata1 = (in_raddr1 == 5'b0)?{32{1'b0}}:rf[in_raddr1];
-    assign out_rdata2 = (in_raddr2 == 5'b0)?{32{1'b0}}:rf[in_raddr2];
+    assign out_rdata1 = (in_raddr1 == 5'b0)?32'b0:rf[in_raddr1[3:0]];
+    assign out_rdata2 = (in_raddr2 == 5'b0)?32'b0:rf[in_raddr2[3:0]];
     
 
 endmodule

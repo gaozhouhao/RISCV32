@@ -13,16 +13,12 @@ module CSR(
 
 reg     [31:0]      mcycle/* verilator public_flat_rd */;
 reg     [31:0]      mcycleh/* verilator public_flat_rd */;
-reg     [31:0]      mvendorid/* verilator public_flat_rd */;
-reg     [31:0]      marchid/* verilator public_flat_rd */;
 
 reg     [31:0]      mstatus/* verilator public_flat_rd */; //0x300
 reg     [31:0]      mtvec/* verilator public_flat_rd */; //0x305
 reg     [31:0]      mepc/* verilator public_flat_rd */; //0x341
 reg     [31:0]      mcause/* verilator public_flat_rd */; //0x342
 
-initial mvendorid = 32'h79737978;
-initial marchid = 32'h17F4E2E;
 
 always @(*) begin
     mtvec_data = mtvec;
@@ -34,13 +30,13 @@ always @(*) begin
     case (csr_addr)
         12'hB00: csr_rdata = mcycle;
         12'hB80: csr_rdata = mcycleh;
-        12'hF11: csr_rdata = mvendorid;
-        12'hF12: csr_rdata = marchid;
+        12'hF11: csr_rdata = 32'h79737978;
+        12'hF12: csr_rdata = 32'h17F4E2E;
         12'h300: csr_rdata = mstatus;
         12'h305: csr_rdata = mtvec;
         12'h341: csr_rdata = mepc;
         12'h342: csr_rdata = mcause;
-        default: csr_rdata = csr_rdata;
+        default: csr_rdata = 32'b0;
     endcase
 end
 

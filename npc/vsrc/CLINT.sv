@@ -10,7 +10,7 @@ always @(posedge clk or posedge reset) begin
         {mtime_hi, mtime_lo} <= 64'b0;
     end
     else begin
-        {mtime_hi, mtime_lo} <= {mtime_hi, mtime_lo} + 64'd100;
+        {mtime_hi, mtime_lo} <= {mtime_hi, mtime_lo} + 64'b1;
     end
 end
 
@@ -22,7 +22,6 @@ always @(posedge clk or posedge reset) begin
     end
     else begin
         if(axi.arvalid && axi.arready) begin
-            //$display("%x", axi.araddr);
             if(axi.araddr == 32'h48)
                 axi.rdata <= mtime_lo;
             else if(axi.araddr == 32'h4c)
