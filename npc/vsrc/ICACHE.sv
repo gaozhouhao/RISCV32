@@ -18,7 +18,7 @@ module ICACHE(
 
 
     localparam int OFFSET_WIDTH = 4;
-    localparam int INDEX_WIDTH  = 4;
+    localparam int INDEX_WIDTH  = 3;
 
     localparam int CACHE_LINE_BYTES = 2 ** OFFSET_WIDTH;
     localparam int CACHE_NUM_LINES  = 2 ** INDEX_WIDTH;
@@ -107,7 +107,7 @@ module ICACHE(
                             axi_out.araddr <= {axi_in.araddr[ADDR_WIDTH-1:OFFSET_WIDTH], {{OFFSET_WIDTH}{1'b0}}};
                             axi_out.arvalid <= 1'b1;
                             axi_out.arburst <= 2'b01;
-                            axi_out.arlen <= 8'h3;
+                            axi_out.arlen <= (1 << (OFFSET_WIDTH - BYTE_OFFSET_WIDTH)) - 1;
                             axi_out.arsize <= 3'b010;
                             state <= SEND_AR;
                         end
