@@ -18,7 +18,7 @@ module ICACHE(
 
 
     localparam int OFFSET_WIDTH = 4;
-    localparam int INDEX_WIDTH  = 3;
+    localparam int INDEX_WIDTH  = 2;
 
     localparam int CACHE_LINE_BYTES = 2 ** OFFSET_WIDTH;
     localparam int CACHE_NUM_LINES  = 2 ** INDEX_WIDTH;

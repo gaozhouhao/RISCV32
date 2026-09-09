@@ -7,7 +7,7 @@ rm -f tasks.txt
 touch tasks.txt
 
 for OFFSET in 2 3 4; do
-    for INDEX in 4 5 6; do
+    for INDEX in 2 3 4 5 ; do
         for SET in 0 1 2; do
             echo "$OFFSET $INDEX $SET" >> tasks.txt
         done
