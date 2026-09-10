@@ -11,6 +11,13 @@ always @(posedge clk or posedge reset) begin
     end
     else begin
         {mtime_hi, mtime_lo} <= {mtime_hi, mtime_lo} + 64'b1;
+        if (mtime_lo == 32'hffff_ffff) begin
+            mtime_hi <= mtime_hi + 32'b1;
+            mtime_lo <= 32'b0;
+        end
+        else begin
+            mtime_lo <= mtime_lo + 32'b1;
+        end
     end
 end
 

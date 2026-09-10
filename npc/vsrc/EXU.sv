@@ -193,16 +193,10 @@ assign redirect_pc =
 
 wire [31:0] mtvec_data, mepc_data;
 always @(*) begin
-    jal_target = 0;
-    jalr_target = 0;
-    branch_target = 0; 
+    jal_target = in_imm + pc;
+    jalr_target = (in_imm + in_src1_data) & ~1;
+    branch_target = jal_target; 
     trap_pc = 0;
-    if(in_is_jal)
-        jal_target = in_imm + pc;
-    if(in_is_jalr)
-        jalr_target = (in_imm + in_src1_data) & ~1;
-    if(in_is_branch)
-        branch_target = in_imm + pc;
     if(in_is_ecall)
         trap_pc = mtvec_data;
     if(in_is_mret)

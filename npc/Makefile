@@ -150,7 +150,7 @@ sta: $(SV2V_OUT)
 	$(MAKE) -C $(HOME)/yosys-sta/ sta \
 		DESIGN=ysyx_25120302 \
 		SDC_FILE=$(NPC_HOME)/scripts/my.sdc \
-		CLK_FREQ_MHZ=2000 \
+		CLK_FREQ_MHZ=1000 \
 		CLK_PORT_NAME=clock \
 		O=$(NPC_HOME)/result \
 		RTL_FILES="$(SV2V_OUT)" 
