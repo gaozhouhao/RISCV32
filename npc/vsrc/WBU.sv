@@ -6,12 +6,14 @@ module WBU(
     input       [31:0]  in_wdata,
     input       [ 4:0]  in_waddr,
     input               in_rf_we,
+    input               in_is_fencei,
     input       [ 4:0]  in_raddr1,
     input       [ 4:0]  in_raddr2,
 
     output      [31:0]  out_rdata1,
     output      [31:0]  out_rdata2,
     output  reg         out_wb_done,
+    output  reg         out_fencei_done,
     output              out_ready,
     output              out_valid
 );
@@ -35,6 +37,7 @@ module WBU(
     end
 
     assign out_wb_done = out_valid && in_ready;
+    assign out_fencei_done = out_wb_done && in_is_fencei;
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             out_valid <= 1'b0;
@@ -46,6 +49,7 @@ module WBU(
                 end
             end
             out_valid <= 1'b1;
+            //out_fencei_done <= (in_is_fencei == 1'b1) ? 1'b1 : 1'b0;
         end
         else if (out_valid && in_ready) begin
             out_valid <= 1'b0;

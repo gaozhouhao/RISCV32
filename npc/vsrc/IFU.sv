@@ -1,20 +1,22 @@
 `include "params.vh"
 module IFU(
-    input                               clk,
-    input                               reset,
-    AXI_IF.master                       axi,
+    input                   clk,
+    input                   reset,
+    AXI_IF.master           axi,
 
-    input                               in_wb_done,
-    input       [31:0]                  in_redirect_pc,
-    input                               in_redirect_valid,
-    input                               in_ready,
-    input                               in_valid,
+    input                   in_wb_done,
+    input                   in_fencei_done,
+    input       [31:0]      in_redirect_pc,
+    input                   in_redirect_valid,
+    input                   in_ready,
+    input                   in_valid,
 
-    output reg  [31:0]                  pc/* verilator public_flat_rd */,
-    output reg  [31:0]                  out_inst,
+    output reg  [31:0]      pc/* verilator public_flat_rd */,
+    output reg  [31:0]      out_inst,
+    output reg              out_icache_flush,
 
-    output reg                          out_valid/* verilator public_flat_rd */,
-    output                              out_ready
+    output reg              out_valid/* verilator public_flat_rd */,
+    output                  out_ready
 );
 
 `ifdef VERILATOR
@@ -23,9 +25,10 @@ module IFU(
 `endif
 
 
-    localparam IDLE    = 2'b00;
-    localparam SEND_AR = 2'b01;
-    localparam WAIT_R  = 2'b10;
+    localparam IDLE     = 2'b00;
+    localparam SEND_AR  = 2'b01;
+    localparam WAIT_R   = 2'b10;
+    localparam FENCEI   = 2'b11;
 `ifdef VERILATOR
     always @(posedge clk) begin
         if (!reset) begin
@@ -37,6 +40,7 @@ module IFU(
         end
     end
 `endif
+
 
     reg [1:0] state;
     reg start_up;
@@ -51,11 +55,16 @@ module IFU(
         if (reset) begin
             state    <= IDLE;
             start_up <= 1'b0;
+            out_icache_flush <= 1'b0;
         end
         else begin
             case (state)
                 IDLE: begin
-                    if (allow_fetch) begin
+                    if (in_fencei_done) begin
+                        out_icache_flush <= 1'b1;
+                        state <= FENCEI;
+                    end
+                    else if (allow_fetch) begin
                         state    <= SEND_AR;
                         start_up <= 1'b1;
                     end
@@ -67,6 +76,11 @@ module IFU(
                 WAIT_R: begin
                     if (axi.rvalid && axi.rready)
                         state <= IDLE;
+                end
+                FENCEI: begin
+                    out_icache_flush <= 1'b0;
+                    state    <= SEND_AR;
+                    start_up <= 1'b1;
                 end
                 default: ;
             endcase
@@ -92,6 +106,7 @@ module IFU(
             end
         end
     end
+
     
 
     wire allow_fetch/* verilator public_flat_rd */;

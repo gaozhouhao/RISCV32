@@ -19,6 +19,7 @@ module EXU (
     input   reg                 in_is_jal,
     input                       in_is_ecall,
     input                       in_is_mret,
+    input                       in_is_fencei,
     input   reg                 in_trap_valid,
 
     input                       in_csr_wen,
@@ -37,6 +38,7 @@ module EXU (
 
     output  reg                 out_is_load,
     output  reg                 out_is_store,
+    output  reg                 out_is_fencei,
     output          [ 2:0]      out_load_size,
     output          [ 2:0]      out_store_size,
     output  reg     [31:0]      out_wb_data,
@@ -86,6 +88,7 @@ always @(posedge clk) begin
                 out_valid <= 1'b1;
                 out_is_load         <= in_is_load       ;
                 out_is_store        <= in_is_store      ;
+                out_is_fencei       <= in_is_fencei     ;
                 out_load_size       <= in_load_size     ;
                 out_store_size      <= in_store_size    ;
                 out_rf_we           <= in_rf_we         ;

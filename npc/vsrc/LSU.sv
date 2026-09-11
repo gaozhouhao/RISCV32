@@ -7,6 +7,7 @@ module LSU(
     input                               in_rf_we,
     input       reg                     in_is_load,
     input       reg                     in_is_store,
+    input                               in_is_fencei,
     
     input               [ 4:0]          in_src1,
     input               [ 4:0]          in_src2,
@@ -22,6 +23,7 @@ module LSU(
     input       wire    [31:0]          in_store_data,
     input       wire    [31:0]          in_wb_data,
 
+    output      reg                     out_is_fencei,
     output              [ 4:0]          out_rd,
     output              [ 4:0]          out_src1,
     output              [ 4:0]          out_src2,
@@ -129,6 +131,7 @@ end
             out_src1 <= in_src1;
             out_src2 <= in_src2;
             out_rf_we <= in_rf_we;
+            out_is_fencei <= in_is_fencei;
             out_redirect_pc <= in_redirect_pc;
             out_redirect_valid <= in_redirect_valid;
         end

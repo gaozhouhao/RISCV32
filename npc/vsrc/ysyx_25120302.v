@@ -152,6 +152,10 @@ wire            wbu_to_lsu_ready;
 wire            wbu_to_ifu_valid;
 wire            ifu_to_wbu_ready;
 
+
+// IFU Output
+wire            ifu_icache_flush;
+
 // IDU Output
 wire            idu_rf_we;
 wire            idu_csr_wen;
@@ -165,6 +169,7 @@ wire            idu_is_jal;
 wire            idu_is_branch;
 wire            idu_is_load;
 wire            idu_is_store;
+wire            idu_is_fencei;
 wire            idu_trap_valid;
 wire    [ 2:0]  idu_branch_op;
 wire    [ 2:0]  idu_load_size;
@@ -186,6 +191,7 @@ wire    [ 4:0]  idu_decode_src2;
 //  EXU Output
 wire            exu_is_load;
 wire            exu_is_store;
+wire            exu_is_fencei;
 wire    [2 :0]  exu_load_size;
 wire    [2 :0]  exu_store_size;
 wire    [31:0]  exu_wb_data;
@@ -204,6 +210,7 @@ wire    [31:0]  lsu_wb_data;
 wire    [ 4:0]  lsu_rd;
 wire    [ 4:0]  lsu_src1;
 wire    [ 4:0]  lsu_src2;
+wire            lsu_is_fencei;
 wire            lsu_redirect_valid;
 wire    [31:0]  lsu_redirect_pc;
 
@@ -211,6 +218,7 @@ wire    [31:0]  lsu_redirect_pc;
 wire    [31:0]  wbu_src1_data;
 wire    [31:0]  wbu_src2_data;
 wire            wbu_wb_done;
+wire            wbu_fencei_done;
 
 IFU ifu(
     .axi(axi_ifu),
@@ -218,13 +226,15 @@ IFU ifu(
     .reset(reset),
     .in_ready(idu_to_ifu_ready),
     .in_wb_done(wbu_wb_done),
+    .in_fencei_done(wbu_fencei_done),
     .pc(pc),
     .in_redirect_pc(lsu_redirect_pc),
     .in_redirect_valid(lsu_redirect_valid),
     .in_valid(wbu_to_ifu_valid),
 
     .out_valid(ifu_to_idu_valid),
-    .out_inst(inst),    
+    .out_inst(inst),
+    .out_icache_flush(ifu_icache_flush),
     .out_ready(ifu_to_wbu_ready)
 );
 
@@ -249,6 +259,7 @@ IDU idu(
     .out_is_load(idu_is_load),
     .out_is_store(idu_is_store),
     .out_is_branch(idu_is_branch),
+    .out_is_fencei(idu_is_fencei),
     .out_trap_valid(idu_trap_valid),
     .out_wb_sel(idu_wb_sel),
     .out_csr_op_sel(idu_csr_op_sel),
@@ -288,6 +299,7 @@ EXU exu(
     .in_is_ebreak(idu_is_ebreak),
     .in_is_load(idu_is_load),
     .in_is_store(idu_is_store),
+    .in_is_fencei(idu_is_fencei),
     .in_src1(idu_src1),
     .in_src2(idu_src2),
     .in_src1_data(idu_src1_data),
@@ -320,6 +332,7 @@ EXU exu(
     .out_store_size(exu_store_size),
     .out_is_load(exu_is_load),
     .out_is_store(exu_is_store),
+    .out_is_fencei(exu_is_fencei),
 
     .out_redirect_valid(exu_redirect_valid),
     .out_redirect_pc(exu_redirect_pc),
@@ -339,6 +352,7 @@ LSU lsu(
     .in_src2(exu_src2),
     .in_is_load(exu_is_load),
     .in_is_store(exu_is_store),
+    .in_is_fencei(exu_is_fencei),
     .in_ready(wbu_to_lsu_ready),
     .in_redirect_valid(exu_redirect_valid),
     .in_redirect_pc(exu_redirect_pc),
@@ -354,6 +368,7 @@ LSU lsu(
     .out_ready(lsu_to_exu_ready),
     .out_valid(lsu_to_wbu_valid),
     
+    .out_is_fencei(lsu_is_fencei),
     .out_wb_data(lsu_wb_data),
     .out_rd(lsu_rd),
     .out_src1(lsu_src1),
@@ -367,6 +382,7 @@ LSU lsu(
 WBU wbu (
     .clk(clock),
     .reset(reset),
+    .in_is_fencei(lsu_is_fencei),
     .in_wdata(lsu_wb_data),
     .in_waddr(lsu_rd),
     .in_rf_we(lsu_rf_we),
@@ -378,6 +394,7 @@ WBU wbu (
     .out_rdata1(wbu_src1_data),
     .out_rdata2(wbu_src2_data),
     .out_wb_done(wbu_wb_done),
+    .out_fencei_done(wbu_fencei_done),
     .out_ready(wbu_to_lsu_ready),
     .out_valid(wbu_to_ifu_valid)
 );
@@ -389,6 +406,7 @@ AXI_IF  axi_icache();
 ICACHE icache(
     .clk(clock),
     .reset(reset),
+    .in_icache_flush(ifu_icache_flush),
     .axi_in(axi_ifu),
     .axi_out(axi_icache)
 );

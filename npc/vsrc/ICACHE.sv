@@ -2,6 +2,7 @@
 module ICACHE(
     input                               clk,
     input                               reset,
+    input                               in_icache_flush,
     AXI_IF.slaver                       axi_in,
     AXI_IF.master                       axi_out
 );
@@ -78,6 +79,9 @@ module ICACHE(
             axi_in.rvalid <= 1'b0;
             axi_out.arvalid <= 1'b0;
             state <= IDLE;
+        end
+        else if (in_icache_flush == 1'b1) begin
+            valid_array <= {CACHE_NUM_LINES{1'b0}};
         end
         else begin
             case (state)

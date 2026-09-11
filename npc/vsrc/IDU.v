@@ -25,6 +25,7 @@ module IDU(
     output  reg             out_is_branch,
     output  reg             out_is_load,
     output  reg             out_is_store,
+    output  reg             out_is_fencei,
     output  reg             out_trap_valid,
 
     output          [ 2:0]  out_branch_op,
@@ -94,6 +95,7 @@ reg             is_jal      ;
 reg             is_branch   ;
 reg             is_load     ;
 reg             is_store    ;
+reg             is_fencei   ;
 reg             trap_valid  ;
 reg     [ 2:0]  branch_op   ;
 reg     [ 2:0]  load_size   ;
@@ -139,6 +141,7 @@ always @(posedge clk) begin
         out_is_branch       <=  is_branch       ;
         out_is_load         <=  is_load         ;
         out_is_store        <=  is_store        ;
+        out_is_fencei       <=  is_fencei       ;
         out_trap_valid      <=  trap_valid      ;
         out_branch_op       <=  branch_op       ;
         out_load_size       <=  load_size       ;
@@ -194,6 +197,7 @@ always @(*) begin
     csr_wen = 0;
     rf_we = 0;
     wb_sel = `NPC_ALU;
+    is_fencei = 0;
     if(in_valid && out_ready) begin
         if(opcode == 7'b0110011) begin
             rf_we = 1;
@@ -313,6 +317,9 @@ always @(*) begin
                 if(src1 == 0) csr_wen = 0;
                 csr_op_sel = `CSR_SET;
             end
+        end
+        if (opcode == 7'b0001111) begin // Fence.i
+            if (funct3 == 3'b001) is_fencei = 1;
         end
     end
 
