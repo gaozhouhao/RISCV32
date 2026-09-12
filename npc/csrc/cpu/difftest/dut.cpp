@@ -31,7 +31,7 @@ static bool is_skip_ref = false;
 static int skip_dut_nr_inst = 0;
 
 bool isa_difftest_checkregs(CPUArchState *ref_r, uint32_t pc) {
-    for (int i = 0; i < 32; i ++){
+    for (int i = 0; i < 16; i ++){
         if (cpu.gpr[i] == ref_r->gpr[i]) continue;
         else {
             printf("cpu.gpr[%d]:%08x\n", i, cpu.gpr[i]);   

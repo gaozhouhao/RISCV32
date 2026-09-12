@@ -24,6 +24,7 @@ module LSU(
     input       wire    [31:0]          in_wb_data,
 
     output      reg                     out_is_fencei,
+    output                              out_is_mmio,
     output              [ 4:0]          out_rd,
     output              [ 4:0]          out_src1,
     output              [ 4:0]          out_src2,
@@ -56,6 +57,16 @@ module LSU(
         LSU_DONE
     } lsu_state_t;
     lsu_state_t lsu_state;
+
+
+    assign out_is_mmio =
+       is_uart
+    || is_clint
+    || is_other_peripheral;
+
+    wire is_uart = (mem_addr >= `UART_BASE) && (mem_addr <= `UART_END);
+    wire is_clint;
+    wire is_other_peripheral;
 
 `ifdef VERILATOR
 always @(posedge clk) begin

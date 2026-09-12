@@ -6,6 +6,7 @@ module WBU(
     input       [31:0]  in_wdata,
     input       [ 4:0]  in_waddr,
     input               in_rf_we,
+    input               in_is_mmio,
     input               in_is_fencei,
     input       [ 4:0]  in_raddr1,
     input       [ 4:0]  in_raddr2,
@@ -36,8 +37,17 @@ module WBU(
         for (i = 0; i < 16; i = i + 1) rf[i] = 32'b0;
     end
 
+    reg is_mmio/* verilator public_flat_rd */;
+
     assign out_wb_done = out_valid && in_ready;
     assign out_fencei_done = out_wb_done && in_is_fencei;
+
+
+    always @(posedge clk) begin
+        if(out_wb_done)
+            is_mmio <= in_is_mmio;
+    end
+
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             out_valid <= 1'b0;

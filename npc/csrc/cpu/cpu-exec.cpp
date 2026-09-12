@@ -16,7 +16,7 @@ static bool g_print_step = false;
 void exec_once(Decode *s);
 
 static void trace_and_difftest(Decode *_this) {
-    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, _this->dnpc));
+    
     IFDEF(CONFIG_ITRACE, log_write("%s\n", _this->logbuf));
     if (g_print_step) { IFDEF(CONFIG_ITRACE, printf("%s\n", _this->logbuf)); }
 #ifdef CONFIG_DIFFTEST
@@ -35,7 +35,13 @@ static void trace_and_difftest(Decode *_this) {
     if(_this->pc >= SDRAM_ADDR && _this->pc <= SDRAM_ADDR + SDRAM_SIZE){
         difftest_skip_ref();
     }
-    difftest_step(_this->pc, _this->dnpc);
+    if(_this->pc >= UART_ADDR && _this->pc <= UART_ADDR + UART_SIZE){
+        difftest_skip_ref();
+    }
+    if (DUT_IS_MMIO) {
+        difftest_skip_ref();
+    }
+    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, _this->dnpc));
 #endif
 
 #ifdef CONFIG_WATCHPOINT

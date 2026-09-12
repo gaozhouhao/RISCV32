@@ -210,6 +210,7 @@ wire    [31:0]  lsu_wb_data;
 wire    [ 4:0]  lsu_rd;
 wire    [ 4:0]  lsu_src1;
 wire    [ 4:0]  lsu_src2;
+wire            lsu_is_mmio;
 wire            lsu_is_fencei;
 wire            lsu_redirect_valid;
 wire    [31:0]  lsu_redirect_pc;
@@ -369,6 +370,7 @@ LSU lsu(
     .out_valid(lsu_to_wbu_valid),
     
     .out_is_fencei(lsu_is_fencei),
+    .out_is_mmio(lsu_is_mmio),
     .out_wb_data(lsu_wb_data),
     .out_rd(lsu_rd),
     .out_src1(lsu_src1),
@@ -382,6 +384,7 @@ LSU lsu(
 WBU wbu (
     .clk(clock),
     .reset(reset),
+    .in_is_mmio(lsu_is_mmio),
     .in_is_fencei(lsu_is_fencei),
     .in_wdata(lsu_wb_data),
     .in_waddr(lsu_rd),

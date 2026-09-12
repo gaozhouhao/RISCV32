@@ -22,6 +22,9 @@
 #define MEM_LEFT    0x80000000
 #define MEM_RIGHT   0x88000000
 
+#define UART_ADDR   0x10000000
+#define UART_SIZE   0x1000
+
 enum {
     PERF_IFU_FETCH = 0,
     PERF_LSU_LOAD,
@@ -80,6 +83,7 @@ void nvboard_bind_all_pins(TOP_NAME* top);
 #define DUT_NEXT_PC     (top->rootp->ysyx_25120302__DOT__ifu__DOT__next_pc)
 #define DUT_RF          (top->rootp->ysyx_25120302__DOT__wbu__DOT__rf)
 
+
 // #define IFU_VALID(top) \
 //     top->rootp->top__DOT__cpu__DOT__ifu__DOT__out_valid
 
@@ -94,6 +98,7 @@ void nvboard_bind_all_pins(TOP_NAME* top);
 #define DUT_PC          (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__pc)
 #define DUT_NEXT_PC     (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__next_pc)
 #define DUT_RF          (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__rf)
+#define DUT_IS_MMIO     (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__is_mmio)
 
 #endif
 
