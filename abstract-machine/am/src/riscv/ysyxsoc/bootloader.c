@@ -73,9 +73,34 @@ static void ssbl_zero(uint32_t *dst, size_t size)
     }
 }
 
+// __attribute__((section(".ssbl_text")))
+// static void fill_nop_ret(uint32_t *start, uint32_t *end)
+// {
+//     uint32_t *p = start;
+
+//     if (start >= end) {
+//         return;
+//     }
+
+//     while (p + 1 < end) {
+//         *p++ = 0x00000013;   // nop
+//     }
+
+//     *p = 0x00008067;       // ret
+// }
+
 __attribute__((section(".ssbl_text")))
 void ss_bootloader(void)
 {
+    //     fill_nop_ret(&_text_start, (uint32_t *)((uintptr_t)(&_text_start) + (1<<6)));
+
+    //     asm volatile(
+    //     "jalr ra, 0(%0)"
+    //     :
+    //     : "r"(&_text_start)
+    //     : "ra", "memory"
+    // );
+
     ssbl_copy(&_text_start, &_text_lma, (size_t)(&_text_end - &_text_start));
 
     ssbl_copy(&_rodata_start, &_rodata_lma, (size_t)(&_rodata_end - &_rodata_start));
@@ -85,6 +110,8 @@ void ss_bootloader(void)
 
     ssbl_zero(&_bss_start, (size_t)(&_bss_end - &_bss_start));
     ssbl_zero(&_bss_extra_start, (size_t)(&_bss_extra_end - &_bss_extra_start));
+
+    asm volatile("fence.i" : : : );
 
     asm volatile(
         "jalr x0, 0(%0)"
