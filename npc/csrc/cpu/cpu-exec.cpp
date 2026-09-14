@@ -38,9 +38,11 @@ static void trace_and_difftest(Decode *_this) {
     if(_this->pc >= UART_ADDR && _this->pc <= UART_ADDR + UART_SIZE){
         difftest_skip_ref();
     }
+#ifdef ARCH_YSYXSOC
     if (DUT_IS_MMIO) {
         difftest_skip_ref();
     }
+#endif
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, _this->dnpc));
 #endif
 

@@ -155,8 +155,10 @@ wire            ifu_to_wbu_ready;
 
 // IFU Output
 wire            ifu_icache_flush;
+wire    [31:0]  ifu_pc;
 
 // IDU Output
+wire    [31:0]  idu_pc;
 wire            idu_rf_we;
 wire            idu_csr_wen;
 wire    [ 1:0]  idu_wb_sel;
@@ -228,7 +230,7 @@ IFU ifu(
     .in_ready(idu_to_ifu_ready),
     .in_wb_done(wbu_wb_done),
     .in_fencei_done(wbu_fencei_done),
-    .pc(pc),
+    .out_pc(ifu_pc),
     .in_redirect_pc(lsu_redirect_pc),
     .in_redirect_valid(lsu_redirect_valid),
     .in_valid(wbu_to_ifu_valid),
@@ -243,6 +245,7 @@ IDU idu(
     .clk(clock),
     .reset(reset),
     .in_inst(inst),
+    .in_pc(ifu_pc),
     .in_src1_data(wbu_src1_data),
     .in_src2_data(wbu_src2_data),
     .in_valid(ifu_to_idu_valid),
@@ -250,6 +253,7 @@ IDU idu(
 
     .out_valid(idu_to_exu_valid),
     .out_ready(idu_to_ifu_ready),
+    .out_pc(idu_pc),
     .out_rf_we(idu_rf_we),
     .out_csr_wen(idu_csr_wen),
     .out_is_ecall(idu_is_ecall),
@@ -286,7 +290,7 @@ IDU idu(
 EXU exu(
     .clk(clock),
     .reset(reset),
-    .pc(pc),
+    .in_pc(idu_pc),
     .in_rf_we(idu_rf_we),
     .in_wb_sel(idu_wb_sel),
     .in_alu_src1_sel(idu_alu_src1_sel),
@@ -345,7 +349,6 @@ EXU exu(
 LSU lsu(
     .clk(clock),
     .reset(reset),
-    .pc(pc),
 
     .in_rf_we(exu_rf_we),
     .in_rd(exu_rd),
@@ -403,16 +406,7 @@ WBU wbu (
 );
 
 
-AXI_IF  axi_icache();
 
-
-ICACHE icache(
-    .clk(clock),
-    .reset(reset),
-    .in_icache_flush(ifu_icache_flush),
-    .axi_in(axi_ifu),
-    .axi_out(axi_icache)
-);
 
 
 `ifdef ARCH_NPC
@@ -420,7 +414,7 @@ ICACHE icache(
 Arbiter arbiter(
     .clk(clock),
     .reset(reset),
-    .axi_ifu(axi_icache),
+    .axi_ifu(axi_ifu),
     .axi_lsu(axi_lsu),
     .axi_arb(axi_arb)
 );
@@ -453,6 +447,18 @@ MEM mem(
 );
 
 `elsif ARCH_YSYXSOC
+
+AXI_IF  axi_icache();
+
+
+ICACHE icache(
+    .clk(clock),
+    .reset(reset),
+    .in_icache_flush(ifu_icache_flush),
+    .axi_in(axi_ifu),
+    .axi_out(axi_icache)
+);
+
 
 Arbiter arbiter(
     .clk(clock),

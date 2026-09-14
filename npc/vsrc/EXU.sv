@@ -2,7 +2,7 @@
 module EXU (
     input                       clk,
     input                       reset,
-    input   reg     [31:0]      pc,
+    input   reg     [31:0]      in_pc,
     input   wire    [ 1:0]      in_wb_sel,
     input   wire    [ 1:0]      in_alu_src1_sel,
     input   reg     [ 1:0]      in_alu_src2_sel,
@@ -125,7 +125,7 @@ always @(*) begin
 
     case (in_alu_src1_sel)
         `NPC_RS1_DATA: alu_src1 = in_src1_data;
-        `NPC_CUR_PC:  alu_src1 = pc;
+        `NPC_CUR_PC:  alu_src1 = in_pc;
         `NPC_ZERO:  alu_src1 = 32'b0;
         default:;
     endcase
@@ -148,8 +148,13 @@ ALU alu(
     .alu_flags(alu_flags)
 );
 
-assign out_ready = in_ready;
+assign out_ready = !out_valid || in_ready;
 assign store_data = in_is_store ? in_src2_data : 32'b0;
+
+    wire exu_in_fire;
+    wire exu_out_fire;
+    assign exu_in_fire = in_valid && out_ready;
+    assign exu_out_fire = out_valid && in_ready;
 
 `ifdef VERILATOR
 
@@ -174,7 +179,7 @@ end
 always @(*) begin
     case (in_wb_sel)
         `NPC_ALU: wb_data = alu_result;
-        `NPC_PC4: wb_data = pc + 32'h4;
+        `NPC_PC4: wb_data = in_pc + 32'h4;
         `NPC_CSR: wb_data = csr_rdata;
         `NPC_MEM: wb_data = 32'b0;
     endcase
@@ -196,7 +201,7 @@ assign redirect_pc =
 
 wire [31:0] mtvec_data, mepc_data;
 always @(*) begin
-    jal_target = in_imm + pc;
+    jal_target = in_imm + in_pc;
     jalr_target = (in_imm + in_src1_data) & ~1;
     branch_target = jal_target; 
     trap_pc = 0;
@@ -210,7 +215,7 @@ wire    [31:0]  csr_rdata;
 wire    [31:0]  csr_wdata = (in_csr_op_sel == `CSR_WRITE) ? in_src1_data : (csr_rdata | in_src1_data);
 CSR csr(
     .clk(clk),
-    .pc(pc),
+    .pc(in_pc),
     .csr_addr(in_csr_addr),
     .csr_wen(in_csr_wen && in_valid && out_ready),
     .is_ecall(in_is_ecall && in_valid && out_ready),

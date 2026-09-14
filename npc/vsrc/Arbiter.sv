@@ -23,12 +23,14 @@ always @(posedge clk) begin
     if (reset == 1'b1) begin
         read_owner <= IDLE;
     end
-    if(axi_arb.arvalid && axi_arb.arready) begin
-        if(axi_lsu.arvalid) begin
-            read_owner <= LSU;
+    else if(axi_arb.arvalid && axi_arb.arready) begin
+        if (read_owner == IDLE) begin
+            if(axi_lsu.arvalid) begin
+                read_owner <= LSU;
+            end
+            else if(axi_ifu.arvalid) 
+                read_owner <= IFU;
         end
-        else if(axi_ifu.arvalid) 
-            read_owner <= IFU;
     end
     else if(axi_arb.rvalid && axi_arb.rready) begin
         if (read_owner == IFU) begin
@@ -102,30 +104,38 @@ always@(*) begin
     // READ
     // LSU priority
 
-    if (axi_lsu.arvalid || read_owner == LSU) begin
+    if (read_owner == LSU) begin
         axi_arb.araddr  = axi_lsu.araddr;
-        axi_arb.arvalid = axi_lsu.arvalid;
-        axi_lsu.arready = axi_arb.arready;
+        axi_arb.arvalid = 1'b0;
 
         axi_lsu.rdata   = axi_arb.rdata;
         axi_lsu.rresp   = axi_arb.rresp;
         axi_lsu.rvalid  = axi_arb.rvalid;
         axi_arb.rready  = axi_lsu.rready;
     end
-
-    else if (axi_ifu.arvalid || read_owner == IFU) begin
-        axi_arb.araddr  = axi_ifu.araddr;
-        axi_arb.arvalid = axi_ifu.arvalid;
-        axi_arb.arburst = axi_ifu.arburst;
-        axi_arb.arlen   = axi_ifu.arlen;
-        axi_arb.arsize  = axi_ifu.arsize;
-        axi_ifu.arready = axi_arb.arready;
+    else if (read_owner == IFU) begin
+        axi_arb.arvalid = 1'b0;
 
         axi_ifu.rdata   = axi_arb.rdata;
         axi_ifu.rresp   = axi_arb.rresp;
         axi_ifu.rvalid  = axi_arb.rvalid;
         axi_ifu.rlast   = axi_arb.rlast;
         axi_arb.rready  = axi_ifu.rready;
+    end
+    else begin // read_owner == IDLE
+        if (axi_lsu.arvalid) begin
+            axi_arb.araddr   = axi_lsu.araddr;
+            axi_arb.arvalid  = axi_lsu.arvalid;
+            axi_lsu.arready  = axi_arb.arready;
+        end
+        else if (axi_ifu.arvalid) begin
+            axi_arb.araddr   = axi_ifu.araddr;
+            axi_arb.arvalid  = axi_ifu.arvalid;
+            axi_arb.arburst  = axi_ifu.arburst;
+            axi_arb.arlen    = axi_ifu.arlen;
+            axi_arb.arsize   = axi_ifu.arsize;
+            axi_ifu.arready  = axi_arb.arready;
+        end
     end
 
     // WRITE

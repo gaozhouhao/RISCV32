@@ -2,7 +2,6 @@
 module LSU(
     input                               clk,
     input                               reset,
-    input       reg     [31:0]          pc,
     AXI_IF.master                       axi,
     input                               in_rf_we,
     input       reg                     in_is_load,

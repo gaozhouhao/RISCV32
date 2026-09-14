@@ -3,6 +3,7 @@ module IDU(
     input                   clk,
     input                   reset,
     input   reg     [31:0]  in_inst,
+    input           [31:0]  in_pc,
     input                   in_valid,
     input                   in_ready,
 
@@ -34,6 +35,7 @@ module IDU(
 
     output  reg     [ 1:0]  out_alu_src2_sel,
     output  reg     [ 1:0]  out_alu_src1_sel,
+    output  reg     [31:0]  out_pc,
     output  reg     [ 3:0]  out_alu_op,
     output          [ 4:0]  out_src1,
     output          [ 4:0]  out_src2,
@@ -80,7 +82,7 @@ assign csr_addr = in_inst[31:20];
 assign branch_op = funct3;
 assign load_size = funct3;
 assign store_size = funct3;
-assign out_ready = in_ready;
+assign out_ready = !out_valid || in_ready;
 
 
 reg             rf_we       ;
@@ -123,11 +125,18 @@ always @(posedge clk) begin
 end
 `endif
 
+    
+    wire idu_in_fire;
+    wire idu_out_fire;
+    assign idu_in_fire = in_valid && out_ready;
+    assign idu_out_fire = out_valid && in_ready;
+
+
 always @(posedge clk) begin
     if (reset == 1'b1) begin
         out_valid <= 1'b0;
     end
-    else if (in_valid & out_ready) begin
+    else if (idu_in_fire) begin
         out_valid           <=  1'b1            ;
         out_rf_we           <=  rf_we           ;
         out_csr_wen         <=  csr_wen         ;
@@ -157,9 +166,10 @@ always @(posedge clk) begin
         out_csr_addr        <=  csr_addr        ;
         out_src1_data       <=  src1_data       ;
         out_src2_data       <=  src2_data       ;
+        out_pc              <=  in_pc           ;
 
     end
-    else if (out_valid & in_ready) begin
+    else if (idu_out_fire) begin
         out_valid <= 1'b0;
     end
 end

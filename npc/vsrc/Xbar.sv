@@ -71,6 +71,10 @@ assign axi_arb.rvalid = (owner_rd == UART) ? axi_uart.rvalid :
                         (owner_rd == SRAM) ? axi_mem.rvalid :
                         (owner_rd == CLINT) ? axi_clint.rvalid :
                         0;
+assign axi_arb.rlast =  (owner_rd == UART) ? axi_uart.rlast :
+                        (owner_rd == SRAM) ? axi_mem.rlast :
+                        (owner_rd == CLINT) ? axi_clint.rlast :
+                        0;
 ///////////
 logic fire_aw, fire_w;
 assign fire_aw = axi_arb.awvalid && axi_arb.awready;

@@ -58,13 +58,13 @@ void exec_once(Decode *s) {
     
     IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
     IFDEF(CONFIG_NVBOARD, nvboard_update());
-    if(DUT_ALLOW_FETCH) {
+    if(DUT_IFU_EMPTY) {
         s->inst = current_inst;
     }
-    if(DUT_INST_DONE) {
-        s->dnpc = DUT_NEXT_PC;
-        s->pc = s->dnpc;
-    }
+    // if(DUT_INST_DONE) {
+    //     s->dnpc = DUT_NEXT_PC;
+    //     s->pc = s->dnpc;
+    // }
     //s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc;
 
 #ifdef CONFIG_FTRACE
@@ -119,7 +119,7 @@ void exec_once(Decode *s) {
     itrace_push(s->logbuf);
 #endif
 
-    for (int i = 0; i < 32; i ++){
+    for (int i = 0; i < 16; i ++){
         cpu.gpr[i] = DUT_RF[i];
         cpu.gpr[0] = 0;
     }

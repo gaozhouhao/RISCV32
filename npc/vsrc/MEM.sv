@@ -20,11 +20,13 @@ always@(posedge clk) begin
         axi.rdata <= pmem_read(axi.araddr);
         axi.rresp <= 0;
         axi.rvalid <= 1;
+        axi.rlast <= 1;
         is_busy_ar <= 1;
     end
     else if(axi.rready) begin
         axi.rvalid <= 0;
         is_busy_ar <= 0;
+        axi.rlast <= 0;
     end
 end
 ///

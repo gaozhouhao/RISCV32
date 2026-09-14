@@ -66,7 +66,7 @@ module WBU(
         end
     end
 
-    assign out_ready = in_ready;
+    assign out_ready = !out_valid || in_ready;
     assign out_rdata1 = (in_raddr1 == 5'b0)?32'b0:rf[in_raddr1[3:0]];
     assign out_rdata2 = (in_raddr2 == 5'b0)?32'b0:rf[in_raddr2[3:0]];
     

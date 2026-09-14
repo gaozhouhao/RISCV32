@@ -11,7 +11,7 @@ module IFU(
     input                   in_ready,
     input                   in_valid,
 
-    output reg  [31:0]      pc/* verilator public_flat_rd */,
+    output reg  [31:0]      out_pc/* verilator public_flat_rd */,
     output reg  [31:0]      out_inst,
     output reg              out_icache_flush,
 
@@ -24,110 +24,134 @@ module IFU(
     import "DPI-C" function void get_inst(input int inst);
 `endif
 
-
-    localparam IDLE     = 2'b00;
-    localparam SEND_AR  = 2'b01;
-    localparam WAIT_R   = 2'b10;
-    localparam FENCEI   = 2'b11;
 `ifdef VERILATOR
     always @(posedge clk) begin
         if (!reset) begin
             perf_event(PERF_CYCLE);
             if (out_valid && !in_ready)
                 perf_event(PERF_IFU_STALL);
-            if (state == WAIT_R && !(axi.rvalid && axi.rready))
+            if (axi_state == AXI_WAIT_R && !(axi.rvalid && axi.rready))
                 perf_event(PERF_IFU_MEM_WAIT);
+            if (axi.rvalid && axi.rready)begin
+                get_inst(axi.rdata);
+                perf_event(PERF_IFU_FETCH);
+            end
         end
     end
 `endif
 
 
-    reg [1:0] state;
-    reg start_up;
+    wire ifu_in_fire;
+    wire ifu_out_fire;
+    assign ifu_in_fire = in_valid && out_ready;
+    assign ifu_out_fire = out_valid && in_ready;
 
-    assign out_ready = (state == IDLE);
-    assign axi.araddr  = pc;
-    assign axi.arvalid = (state == SEND_AR);
-    assign axi.rready = (state == WAIT_R) && (!out_valid || in_ready);
+    typedef enum logic [1:0] {
+        AXI_IDLE,
+        AXI_SEND_AR,
+        AXI_WAIT_R
+    } axi_state_t;
+    axi_state_t axi_state;
 
+    reg [31:0] fetch_pc;
+    assign axi.araddr  = fetch_pc;
+    assign axi.arvalid = (axi_state == AXI_SEND_AR);
+    assign axi.rready = (axi_state == AXI_WAIT_R) && (!out_valid || in_ready);
 
+    
     always @(posedge clk) begin
         if (reset) begin
-            state    <= IDLE;
-            start_up <= 1'b0;
-            out_icache_flush <= 1'b0;
+            axi_state    <= AXI_IDLE;
         end
         else begin
-            case (state)
-                IDLE: begin
-                    if (in_fencei_done) begin
-                        out_icache_flush <= 1'b1;
-                        state <= FENCEI;
-                    end
-                    else if (allow_fetch) begin
-                        state    <= SEND_AR;
-                        start_up <= 1'b1;
+            case (axi_state)
+                AXI_IDLE: begin
+                    if (ifu_state == IFU_EMPTY && fencei_state == FENCEI_IDLE && !in_fencei_done) begin
+                        axi_state    <= AXI_SEND_AR;
                     end
                 end
-                SEND_AR: begin
+                AXI_SEND_AR: begin
                     if (axi.arvalid && axi.arready)
-                        state <= WAIT_R;
+                        axi_state <= AXI_WAIT_R;
                 end
-                WAIT_R: begin
+                AXI_WAIT_R: begin
                     if (axi.rvalid && axi.rready)
-                        state <= IDLE;
-                end
-                FENCEI: begin
-                    out_icache_flush <= 1'b0;
-                    state    <= SEND_AR;
-                    start_up <= 1'b1;
+                        axi_state <= AXI_IDLE;
                 end
                 default: ;
             endcase
         end
     end
 
+
+    typedef enum logic {
+        FENCEI_IDLE,
+        FENCEI_BUSY
+    } fencei_state_t;
+    fencei_state_t fencei_state;
+
     always @(posedge clk) begin
-        if (reset) begin
-            out_valid <= 1'b0;
-            out_inst  <= 32'b0;
+        if (reset == 1'b1) begin
+            fencei_state <= FENCEI_IDLE;
+            out_icache_flush <= 1'b0;
         end
         else begin
-            if (axi.rvalid && axi.rready) begin
-                out_inst  <= axi.rdata;
-                out_valid <= 1'b1;
-                `ifdef VERILATOR
-                    get_inst(axi.rdata);
-                    perf_event(PERF_IFU_FETCH);
-                `endif
-            end
-            else if (out_valid && in_ready) begin
-                out_valid <= 1'b0;
-            end
+            case (fencei_state)
+                FENCEI_IDLE: begin
+                    if (in_fencei_done) begin
+                        fencei_state <= FENCEI_BUSY;
+                        out_icache_flush <= 1'b1;
+                    end
+                end
+                FENCEI_BUSY: begin
+                    fencei_state <= FENCEI_IDLE;
+                    out_icache_flush <= 1'b0;
+                end
+            endcase
         end
     end
-
     
 
-    wire allow_fetch/* verilator public_flat_rd */;
-    wire inst_done/* verilator public_flat_rd */;
-    assign inst_done = in_wb_done;
-    assign allow_fetch = in_wb_done || !start_up;
 
-    wire [31:0] next_pc/* verilator public_flat_rd */;
-
-    assign next_pc = in_redirect_valid ? in_redirect_pc : pc + 32'd4;
-    wire [31:0] fetch_pc;
-    assign fetch_pc = in_wb_done ? next_pc : pc;
+    typedef enum logic {
+        IFU_EMPTY,
+        IFU_VALID
+    } ifu_state_t;
+    ifu_state_t ifu_state;
 
     always @(posedge clk) begin
-        if (reset) begin
-            pc <= `RESET_PC;
+        if (reset == 1'b1) begin
+            ifu_state <= IFU_EMPTY;
+            fetch_pc <= `RESET_PC;
+            out_pc <= 32'b0;
+            out_inst <= 32'b0;
         end
-        else if (inst_done) begin
-            pc <= next_pc;
-        end
+        else begin
+            case (ifu_state)
+                IFU_EMPTY: begin
+                    if (axi.rvalid && axi.rready) begin
+                        ifu_state <= IFU_VALID;
+                        out_inst  <= axi.rdata;
+                        out_pc <= fetch_pc;
+                        fetch_pc <= in_redirect_valid ? in_redirect_pc : fetch_pc + 32'd4;
+                    end
+                end
+                IFU_VALID: begin
+                    if (ifu_out_fire) begin
+                        ifu_state <= IFU_EMPTY;
+                    end
+                end
+            endcase
+        end 
     end
+
+    assign out_valid = (ifu_state == IFU_VALID);
+    assign out_ready = (ifu_state == IFU_EMPTY);
+    wire ifu_empty /* verilator public_flat_rd */;
+    assign ifu_empty = (ifu_state == IFU_EMPTY);
+
+    wire inst_done/* verilator public_flat_rd */;
+    assign inst_done = in_wb_done;
 
 
 endmodule
