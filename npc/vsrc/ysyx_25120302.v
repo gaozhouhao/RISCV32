@@ -149,9 +149,6 @@ wire            lsu_to_exu_ready;
 wire            lsu_to_wbu_valid;
 wire            wbu_to_lsu_ready;
 
-wire            wbu_to_ifu_valid;
-wire            ifu_to_wbu_ready;
-
 
 // IFU Output
 wire            ifu_icache_flush;
@@ -220,25 +217,23 @@ wire    [31:0]  lsu_redirect_pc;
 //  WBU Output
 wire    [31:0]  wbu_src1_data;
 wire    [31:0]  wbu_src2_data;
-wire            wbu_wb_done;
 wire            wbu_fencei_done;
+wire            wbu_commit_valid /* verilator public_flat_rd */;
+wire            wbu_commit_fire  /* verilator public_flat_rd */;
 
 IFU ifu(
     .axi(axi_ifu),
     .clk(clock),
     .reset(reset),
     .in_ready(idu_to_ifu_ready),
-    .in_wb_done(wbu_wb_done),
     .in_fencei_done(wbu_fencei_done),
     .out_pc(ifu_pc),
     .in_redirect_pc(lsu_redirect_pc),
     .in_redirect_valid(lsu_redirect_valid),
-    .in_valid(wbu_to_ifu_valid),
-
+    
     .out_valid(ifu_to_idu_valid),
     .out_inst(inst),
-    .out_icache_flush(ifu_icache_flush),
-    .out_ready(ifu_to_wbu_ready)
+    .out_icache_flush(ifu_icache_flush)
 );
 
 IDU idu(
@@ -393,16 +388,15 @@ WBU wbu (
     .in_waddr(lsu_rd),
     .in_rf_we(lsu_rf_we),
     .in_valid(lsu_to_wbu_valid),
-    .in_ready(ifu_to_wbu_ready),
     .in_raddr1(idu_decode_src1),
     .in_raddr2(idu_decode_src2),
-
+    .commit_ready(1'b1),
+    .commit_valid(wbu_commit_valid),
+    .commit_fire(wbu_commit_fire),
     .out_rdata1(wbu_src1_data),
     .out_rdata2(wbu_src2_data),
-    .out_wb_done(wbu_wb_done),
     .out_fencei_done(wbu_fencei_done),
-    .out_ready(wbu_to_lsu_ready),
-    .out_valid(wbu_to_ifu_valid)
+    .out_ready(wbu_to_lsu_ready)
 );
 
 

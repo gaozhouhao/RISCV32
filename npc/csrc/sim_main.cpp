@@ -50,22 +50,36 @@ void print_perf_cnt();
 CPUArchState cpu = {.pc=RESET_PC};
 
 void exec_once(Decode *s) {
-    s->pc = DUT_PC;
-    top->clock = 0; top->eval(); contextp->timeInc(1);
+    top->clock = 0;
+    top->eval();
+    const bool commit_fire = DUT_COMMIT_FIRE;
+    if (commit_fire){
+        s->pc = DUT_PC;
+    }
+
+    contextp->timeInc(1);
     IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
-    top->clock = 1; top->eval(); 
+
+    top->clock = 1;
+    top->eval(); 
     contextp->timeInc(1);
     
     IFDEF(CONFIG_GTKWAVE, tfp->dump(contextp->time()));
     IFDEF(CONFIG_NVBOARD, nvboard_update());
-    if(DUT_IFU_EMPTY) {
-        s->inst = current_inst;
+    
+    if (commit_fire) {
+        for (int i = 0; i < 16; i++) {
+            cpu.gpr[i] = DUT_RF[i];
+        }
+        cpu.gpr[0] = 0;
+
+        // 仍是临时错误来源，第 3 项必须替换。
+        cpu.pc = DUT_PC;
     }
-    // if(DUT_INST_DONE) {
-    //     s->dnpc = DUT_NEXT_PC;
-    //     s->pc = s->dnpc;
-    // }
-    //s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__next_pc;
+
+    // 原有 ebreak/flag 处理暂时保留，第 4 项再修。
+    return commit_fire;
+
 
 #ifdef CONFIG_FTRACE
     static int call_depth = 0;

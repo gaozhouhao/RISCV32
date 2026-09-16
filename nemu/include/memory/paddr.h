@@ -29,6 +29,7 @@ paddr_t host_to_guest(uint8_t *haddr);
 
 uint8_t* mrom_guest_to_host(paddr_t paddr);
 uint8_t* flash_guest_to_host(paddr_t paddr);
+uint8_t* psram_guest_to_host(paddr_t paddr);
 
 extern uint8_t flash[CONFIG_FLASH_SIZE];
 extern uint8_t psram[CONFIG_PSRAM_SIZE];

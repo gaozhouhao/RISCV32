@@ -13,36 +13,36 @@
 uint64_t g_nr_guest_inst = 0;
 static bool g_print_step = false;
 
-void exec_once(Decode *s);
+bool exec_once(Decode *s);
 
 static void trace_and_difftest(Decode *_this) {
     
     IFDEF(CONFIG_ITRACE, log_write("%s\n", _this->logbuf));
     if (g_print_step) { IFDEF(CONFIG_ITRACE, printf("%s\n", _this->logbuf)); }
 #ifdef CONFIG_DIFFTEST
-    if(_this->pc >= MROM_ADDR && _this->pc < MROM_ADDR + MROM_SIZE){
-        difftest_skip_ref();
-    }
-    if(_this->pc >= SRAM_ADDR && _this->pc < SRAM_ADDR + SRAM_SIZE){
-        difftest_skip_ref();
-    }
-    if(_this->pc >= PSRAM_ADDR && _this->pc < PSRAM_ADDR + PSRAM_SIZE){
-        difftest_skip_ref();
-    }
-    if(_this->pc >= FLASH_ADDR && _this->pc <= FLASH_ADDR + FLASH_SIZE){
-        difftest_skip_ref();
-    }
-    if(_this->pc >= SDRAM_ADDR && _this->pc <= SDRAM_ADDR + SDRAM_SIZE){
-        difftest_skip_ref();
-    }
-    if(_this->pc >= UART_ADDR && _this->pc <= UART_ADDR + UART_SIZE){
-        difftest_skip_ref();
-    }
-#ifdef ARCH_YSYXSOC
-    if (DUT_IS_MMIO) {
-        difftest_skip_ref();
-    }
-#endif
+//     if(_this->pc >= MROM_ADDR && _this->pc < MROM_ADDR + MROM_SIZE){
+//         difftest_skip_ref();
+//     }
+//     if(_this->pc >= SRAM_ADDR && _this->pc < SRAM_ADDR + SRAM_SIZE){
+//         difftest_skip_ref();
+//     }
+//     if(_this->pc >= PSRAM_ADDR && _this->pc < PSRAM_ADDR + PSRAM_SIZE){
+//         difftest_skip_ref();
+//     }
+//     if(_this->pc >= FLASH_ADDR && _this->pc <= FLASH_ADDR + FLASH_SIZE){
+//         difftest_skip_ref();
+//     }
+//     if(_this->pc >= SDRAM_ADDR && _this->pc <= SDRAM_ADDR + SDRAM_SIZE){
+//         difftest_skip_ref();
+//     }
+//     if(_this->pc >= UART_ADDR && _this->pc <= UART_ADDR + UART_SIZE){
+//         difftest_skip_ref();
+//     }
+// #ifdef ARCH_YSYXSOC
+//     if (DUT_IS_MMIO) {
+//         difftest_skip_ref();
+//     }
+// #endif
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, _this->dnpc));
 #endif
 
@@ -63,21 +63,21 @@ static void trace_and_difftest(Decode *_this) {
 #endif
 }
 
-static void execute(uint64_t  n) {
-    Decode s;
-    for (; n > 0; n --) {
-        exec_once(&s);
-        g_nr_guest_inst ++;
-        static int inst_done_r;
-        static int owner_rd_r, owner_wr_r;
-        if(DUT_INST_DONE == 0 && inst_done_r == 1) {
+static void execute(uint64_t n) {
+    Decode s = {};
+
+    while (n > 0) {
+        const bool committed = exec_once(&s);
+
+        if (committed) {
+            g_nr_guest_inst ++;
             trace_and_difftest(&s);
+            n --;
         }
-        inst_done_r = DUT_INST_DONE;
-        if (npc_state.state != NPC_RUNNING) break;
-        // if (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_valid) {
-        //     n --;
-        // }
+
+        if (npc_state.state != NPC_RUNNING) {
+            break;
+        }
     }
 }
 

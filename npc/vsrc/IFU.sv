@@ -4,19 +4,16 @@ module IFU(
     input                   reset,
     AXI_IF.master           axi,
 
-    input                   in_wb_done,
     input                   in_fencei_done,
     input       [31:0]      in_redirect_pc,
     input                   in_redirect_valid,
     input                   in_ready,
-    input                   in_valid,
 
     output reg  [31:0]      out_pc/* verilator public_flat_rd */,
     output reg  [31:0]      out_inst,
     output reg              out_icache_flush,
 
     output reg              out_valid/* verilator public_flat_rd */,
-    output                  out_ready
 );
 
 `ifdef VERILATOR
@@ -40,10 +37,7 @@ module IFU(
     end
 `endif
 
-
-    wire ifu_in_fire;
     wire ifu_out_fire;
-    assign ifu_in_fire = in_valid && out_ready;
     assign ifu_out_fire = out_valid && in_ready;
 
     typedef enum logic [1:0] {
@@ -146,13 +140,8 @@ module IFU(
     end
 
     assign out_valid = (ifu_state == IFU_VALID);
-    assign out_ready = (ifu_state == IFU_EMPTY);
     wire ifu_empty /* verilator public_flat_rd */;
     assign ifu_empty = (ifu_state == IFU_EMPTY);
-
-    wire inst_done/* verilator public_flat_rd */;
-    assign inst_done = in_wb_done;
-
 
 endmodule
 

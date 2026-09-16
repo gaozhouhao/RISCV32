@@ -2,7 +2,6 @@ module WBU(
     input               clk,
     input               reset,
     input               in_valid,
-    input               in_ready,
     input       [31:0]  in_wdata,
     input       [ 4:0]  in_waddr,
     input               in_rf_we,
@@ -10,13 +9,14 @@ module WBU(
     input               in_is_fencei,
     input       [ 4:0]  in_raddr1,
     input       [ 4:0]  in_raddr2,
+    input               commit_ready,
 
+    output              commit_valid,
+    output              commit_fire
     output      [31:0]  out_rdata1,
     output      [31:0]  out_rdata2,
-    output  reg         out_wb_done,
     output  reg         out_fencei_done,
-    output              out_ready,
-    output              out_valid
+    output              out_ready
 );
 
 `ifdef VERILATOR
@@ -39,8 +39,10 @@ module WBU(
 
     reg is_mmio/* verilator public_flat_rd */;
 
-    assign out_wb_done = out_valid && in_ready;
-    assign out_fencei_done = out_wb_done && in_is_fencei;
+    assign commit_valid = in_valid;
+    assign commit_fire  = commit_valid && commit_ready;
+    assign out_ready = commit_ready;
+    assign out_fencei_done = commit_fire && in_is_fencei;
 
 
     always @(posedge clk) begin
@@ -50,7 +52,15 @@ module WBU(
 
     always @(posedge clk) begin
         if (reset == 1'b1) begin
-            out_valid <= 1'b0;
+            is_mmio <= 1'b0;
+        end
+        else if (commit_fire) begin
+            `ifdef VERILATOR
+                perf_event(PERF_INSTRET);
+            `endif
+            if (in_rf_we && in_waddr != 5'b0) begin
+                rf[in_waddr[3:0]] <= in_wdata;
+            end
         end
         else if (in_valid && out_ready) begin
             if (in_rf_we) begin
@@ -58,12 +68,9 @@ module WBU(
                     rf[in_waddr[3:0]] <= in_wdata;
                 end
             end
-            out_valid <= 1'b1;
-            //out_fencei_done <= (in_is_fencei == 1'b1) ? 1'b1 : 1'b0;
+            is_mmio <= in_is_mmio;
         end
-        else if (out_valid && in_ready) begin
-            out_valid <= 1'b0;
-        end
+
     end
 
     assign out_ready = !out_valid || in_ready;

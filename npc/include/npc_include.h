@@ -82,6 +82,9 @@ void nvboard_bind_all_pins(TOP_NAME* top);
 #define DUT_PC          (top->rootp->ysyx_25120302__DOT__idu_pc)
 // #define DUT_NEXT_PC     (top->rootp->ysyx_25120302__DOT__ifu__DOT__next_pc)
 #define DUT_RF          (top->rootp->ysyx_25120302__DOT__wbu__DOT__rf)
+#define DUT_COMMIT_VALID    (top->rootp->ysyx_25120302__DOT__wbu_commit_valid)
+
+#define DUT_COMMIT_FIRE (top->rootp->ysyx_25120302__DOT__wbu_commit_fire)
 
 
 // #define IFU_VALID(top) \
@@ -99,6 +102,9 @@ void nvboard_bind_all_pins(TOP_NAME* top);
 // #define DUT_NEXT_PC     (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__next_pc)
 #define DUT_RF          (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__rf)
 #define DUT_IS_MMIO     (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__is_mmio)
+#define DUT_COMMIT_VALID    (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_valid)
+
+#define DUT_COMMIT_FIRE (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_fire)
 
 #endif
 
