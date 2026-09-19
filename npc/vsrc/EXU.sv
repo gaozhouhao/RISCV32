@@ -2,7 +2,8 @@
 module EXU (
     input                       clk,
     input                       reset,
-    input   reg     [31:0]      in_pc,
+    input           [31:0]      in_pc,
+    input           [31:0]      in_inst,
     input   wire    [ 1:0]      in_wb_sel,
     input   wire    [ 1:0]      in_alu_src1_sel,
     input   reg     [ 1:0]      in_alu_src2_sel,
@@ -44,6 +45,10 @@ module EXU (
     output  reg     [31:0]      out_wb_data,
     output  reg     [31:0]      out_store_data,
     output  reg     [31:0]      out_mem_addr,
+    output  reg     [31:0]      out_inst,
+    output  reg     [31:0]      out_pc,
+    output  reg     [31:0]      out_npc,
+    output  reg                 out_is_ebreak,
     output                      out_redirect_valid,
     output  reg     [31:0]      out_redirect_pc,
     output                      out_rf_we,
@@ -98,9 +103,12 @@ always @(posedge clk) begin
                 out_mem_addr        <= alu_result       ;
                 out_store_data      <= store_data       ;
                 out_wb_data         <= wb_data          ;
+                out_pc              <= in_pc            ;
+                out_inst            <= in_inst          ;
+                out_npc             <= redirect_valid ? redirect_pc : (in_pc + 32'd4);
 
-                out_redirect_valid  <= redirect_valid;
-                out_redirect_pc     <= redirect_pc;
+                out_redirect_valid  <= redirect_valid   ;
+                out_redirect_pc     <= redirect_pc      ;
             end
             else if (out_valid & in_ready) begin
                 out_valid <= 1'b0;

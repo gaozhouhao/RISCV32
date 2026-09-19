@@ -156,6 +156,7 @@ wire    [31:0]  ifu_pc;
 
 // IDU Output
 wire    [31:0]  idu_pc;
+wire    [31:0]  idu_inst;
 wire            idu_rf_we;
 wire            idu_csr_wen;
 wire    [ 1:0]  idu_wb_sel;
@@ -202,6 +203,10 @@ wire    [ 4:0]  exu_src2;
 wire    [ 4:0]  exu_rd;
 wire            exu_redirect_valid;
 wire    [31:0]  exu_redirect_pc;
+wire    [31:0]  exu_pc;
+wire    [31:0]  exu_inst;
+wire    [31:0]  exu_npc;
+wire            exu_is_ebreak;
 
 //  LSU Output
 wire            lsu_rf_we;
@@ -213,13 +218,25 @@ wire            lsu_is_mmio;
 wire            lsu_is_fencei;
 wire            lsu_redirect_valid;
 wire    [31:0]  lsu_redirect_pc;
+wire    [31:0]  lsu_pc;
+wire    [31:0]  lsu_inst;
+wire    [31:0]  lsu_npc;
+wire            lsu_is_ebreak;
 
 //  WBU Output
 wire    [31:0]  wbu_src1_data;
 wire    [31:0]  wbu_src2_data;
 wire            wbu_fencei_done;
-wire            wbu_commit_valid /* verilator public_flat_rd */;
-wire            wbu_commit_fire  /* verilator public_flat_rd */;
+wire            wbu_commit_valid    /* verilator public_flat_rd */;
+wire            wbu_commit_fire     /* verilator public_flat_rd */;
+wire    [31:0]  wbu_commit_pc       /* verilator public_flat_rd */;
+wire    [31:0]  wbu_commit_inst     /* verilator public_flat_rd */;
+wire    [31:0]  wbu_commit_npc      /* verilator public_flat_rd */;
+wire            wbu_commit_ebreak   /* verilator public_flat_rd */;
+wire            wbu_commit_skip_ref /* verilator public_flat_rd */;
+wire            wbu_commit_wen      /* verilator public_flat_rd */;
+wire    [ 4:0]  wbu_commit_rd       /* verilator public_flat_rd */;
+wire    [31:0]  wbu_commit_wdata    /* verilator public_flat_rd */;
 
 IFU ifu(
     .axi(axi_ifu),
@@ -249,6 +266,7 @@ IDU idu(
     .out_valid(idu_to_exu_valid),
     .out_ready(idu_to_ifu_ready),
     .out_pc(idu_pc),
+    .out_inst(idu_inst),
     .out_rf_we(idu_rf_we),
     .out_csr_wen(idu_csr_wen),
     .out_is_ecall(idu_is_ecall),
@@ -286,6 +304,7 @@ EXU exu(
     .clk(clock),
     .reset(reset),
     .in_pc(idu_pc),
+    .in_inst(idu_inst),
     .in_rf_we(idu_rf_we),
     .in_wb_sel(idu_wb_sel),
     .in_alu_src1_sel(idu_alu_src1_sel),
@@ -322,6 +341,10 @@ EXU exu(
     .in_ready(lsu_to_exu_ready),
     .in_valid(idu_to_exu_valid),
 
+    .out_pc(exu_pc),
+    .out_inst(exu_inst),
+    .out_npc(exu_npc),
+    .out_is_ebreak(exu_is_ebreak),
     .out_wb_data(exu_wb_data),
     .out_store_data(exu_store_data),
     .out_src1(exu_src1),
@@ -345,6 +368,10 @@ LSU lsu(
     .clk(clock),
     .reset(reset),
 
+    .in_pc(exu_pc),
+    .in_inst(exu_inst),
+    .in_npc(exu_npc),
+    .in_is_ebreak(exu_is_ebreak),
     .in_rf_we(exu_rf_we),
     .in_rd(exu_rd),
     .in_src1(exu_src1),
@@ -367,6 +394,10 @@ LSU lsu(
     .out_ready(lsu_to_exu_ready),
     .out_valid(lsu_to_wbu_valid),
     
+    .out_pc(lsu_pc),
+    .out_inst(lsu_inst),
+    .out_npc(lsu_npc),
+    .out_is_ebreak(lsu_is_ebreak),
     .out_is_fencei(lsu_is_fencei),
     .out_is_mmio(lsu_is_mmio),
     .out_wb_data(lsu_wb_data),
@@ -382,6 +413,10 @@ LSU lsu(
 WBU wbu (
     .clk(clock),
     .reset(reset),
+    .in_pc(lsu_pc),
+    .in_inst(lsu_inst),
+    .in_npc(lsu_npc),
+    .in_is_ebreak(lsu_is_ebreak),
     .in_is_mmio(lsu_is_mmio),
     .in_is_fencei(lsu_is_fencei),
     .in_wdata(lsu_wb_data),
@@ -393,6 +428,14 @@ WBU wbu (
     .commit_ready(1'b1),
     .commit_valid(wbu_commit_valid),
     .commit_fire(wbu_commit_fire),
+    .commit_pc(wbu_commit_pc),
+    .commit_inst(wbu_commit_inst),
+    .commit_npc(wbu_commit_npc),
+    .commit_ebreak(wbu_commit_ebreak),
+    .commit_skip_ref(wbu_commit_skip_ref),
+    .commit_wen(wbu_commit_wen),
+    .commit_rd(wbu_commit_rd),
+    .commit_wdata(wbu_commit_wdata),
     .out_rdata1(wbu_src1_data),
     .out_rdata2(wbu_src2_data),
     .out_fencei_done(wbu_fencei_done),

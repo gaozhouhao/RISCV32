@@ -13,7 +13,7 @@ module IFU(
     output reg  [31:0]      out_inst,
     output reg              out_icache_flush,
 
-    output reg              out_valid/* verilator public_flat_rd */,
+    output                  out_valid/* verilator public_flat_rd */
 );
 
 `ifdef VERILATOR

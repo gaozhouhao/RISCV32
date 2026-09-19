@@ -3,6 +3,11 @@ module LSU(
     input                               clk,
     input                               reset,
     AXI_IF.master                       axi,
+    input               [31:0]          in_pc,
+    input               [31:0]          in_inst,
+    input               [31:0]          in_npc,
+    input                               in_is_ebreak,
+
     input                               in_rf_we,
     input       reg                     in_is_load,
     input       reg                     in_is_store,
@@ -22,8 +27,12 @@ module LSU(
     input       wire    [31:0]          in_store_data,
     input       wire    [31:0]          in_wb_data,
 
+    output      reg     [31:0]          out_pc,
+    output      reg     [31:0]          out_inst,
+    output      reg     [31:0]          out_npc,
+    output      reg                     out_is_ebreak,
     output      reg                     out_is_fencei,
-    output                              out_is_mmio,
+    output      reg                     out_is_mmio,
     output              [ 4:0]          out_rd,
     output              [ 4:0]          out_src1,
     output              [ 4:0]          out_src2,
@@ -38,6 +47,23 @@ module LSU(
 `ifdef VERILATOR
     import perf_pkg::*;
 `endif
+
+    function automatic logic is_mmio_addr(input logic [31:0] addr);
+    begin
+        is_mmio_addr =
+            ((addr >= `UART_BASE)  && (addr <= `UART_END)) ||
+            ((addr >= `CLINT_BASE) && (addr <= `CLINT_END));
+
+    `ifdef ARCH_YSYXSOC
+        is_mmio_addr = is_mmio_addr ||
+            ((addr >= `SOC_SPI_CTRL_BASE) && (addr <= `SOC_SPI_CTRL_END)) ||
+            ((addr >= `SOC_GPIO_BASE)     && (addr <= `SOC_GPIO_END)) ||
+            ((addr >= `SOC_PS2_BASE)      && (addr <= `SOC_PS2_END)) ||
+            ((addr >= `SOC_VGA_BASE)      && (addr <= `SOC_VGA_END));
+    `endif
+    end
+    endfunction
+
     wire    aw_fire, w_fire, ar_fire, b_fire, r_fire;
     assign  aw_fire = axi.awvalid && axi.awready;
     assign  w_fire = axi.wvalid && axi.wready;
@@ -58,14 +84,6 @@ module LSU(
     lsu_state_t lsu_state;
 
 
-    assign out_is_mmio =
-       is_uart
-    || is_clint
-    || is_other_peripheral;
-
-    wire is_uart = (mem_addr >= `UART_BASE) && (mem_addr <= `UART_END);
-    wire is_clint;
-    wire is_other_peripheral;
 
 `ifdef VERILATOR
 always @(posedge clk) begin
@@ -130,7 +148,7 @@ end
     reg is_load, is_store;
     reg [ 2:0]  load_size, store_size;
     always @(posedge clk) begin
-        if (in_valid && out_ready)begin
+        if (in_fire)begin
             is_load <= in_is_load;
             is_store <= in_is_store;
             load_size <= in_load_size;
@@ -144,6 +162,14 @@ end
             out_is_fencei <= in_is_fencei;
             out_redirect_pc <= in_redirect_pc;
             out_redirect_valid <= in_redirect_valid;
+            out_pc        <= in_pc;
+            out_inst      <= in_inst;
+            out_npc       <= in_npc;
+            out_is_ebreak <= in_is_ebreak;
+
+            out_is_mmio <=
+                (in_is_load || in_is_store) &&
+                is_mmio_addr(in_mem_addr);
         end
     end
 

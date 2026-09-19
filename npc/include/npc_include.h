@@ -76,7 +76,6 @@ void nvboard_bind_all_pins(TOP_NAME* top);
 
 #ifdef ARCH_NPC
 
-#define DUT_INST_DONE   (top->rootp->ysyx_25120302__DOT__ifu__DOT__inst_done)
 #define DUT_IFU_EMPTY (top->rootp->ysyx_25120302__DOT__ifu__DOT__ifu_empty)
 #define DUT_INST_VALID  (top->rootp->ysyx_25120302__DOT__ifu__DOT__out_valid)
 #define DUT_PC          (top->rootp->ysyx_25120302__DOT__idu_pc)
@@ -95,7 +94,6 @@ void nvboard_bind_all_pins(TOP_NAME* top);
 
 #elif defined(ARCH_YSYXSOC)
 
-#define DUT_INST_DONE   (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__inst_done)
 #define DUT_IFU_EMPTY   (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__ifu_empty)
 #define DUT_INST_VALID  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__out_valid)
 #define DUT_PC          (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__idu_pc)

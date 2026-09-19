@@ -90,8 +90,23 @@
 
 `elsif ARCH_YSYXSOC
 
-`define  CLINT_BASE  32'h0200_0000
-`define  CLINT_END   32'h0200_02ff
+`define CLINT_BASE  32'h0200_0000
+`define CLINT_END   32'h0200_02ff
+
+`define SOC_SPI_CTRL_BASE 32'h1000_1000
+`define SOC_SPI_CTRL_END  32'h1000_1fff
+
+`define SOC_GPIO_BASE     32'h1000_2000
+`define SOC_GPIO_END      32'h1000_200f
+
+`define SOC_PS2_BASE      32'h1001_1000
+`define SOC_PS2_END       32'h1001_1007
+
+`define SOC_VGA_BASE      32'h2100_0000
+`define SOC_VGA_END       32'h211f_ffff
+
+
+
 
 `endif
 

@@ -36,6 +36,7 @@ module IDU(
     output  reg     [ 1:0]  out_alu_src2_sel,
     output  reg     [ 1:0]  out_alu_src1_sel,
     output  reg     [31:0]  out_pc,
+    output  reg     [31:0]  out_inst,
     output  reg     [ 3:0]  out_alu_op,
     output          [ 4:0]  out_src1,
     output          [ 4:0]  out_src2,
@@ -167,6 +168,7 @@ always @(posedge clk) begin
         out_src1_data       <=  src1_data       ;
         out_src2_data       <=  src2_data       ;
         out_pc              <=  in_pc           ;
+        out_inst            <=  in_inst         ;
 
     end
     else if (idu_out_fire) begin

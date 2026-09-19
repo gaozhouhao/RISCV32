@@ -49,7 +49,7 @@ extern "C" void perf_event(int event_id) {
 void print_perf_cnt();
 CPUArchState cpu = {.pc=RESET_PC};
 
-void exec_once(Decode *s) {
+bool exec_once(Decode *s) {
     top->clock = 0;
     top->eval();
     const bool commit_fire = DUT_COMMIT_FIRE;
@@ -77,8 +77,7 @@ void exec_once(Decode *s) {
         cpu.pc = DUT_PC;
     }
 
-    // 原有 ebreak/flag 处理暂时保留，第 4 项再修。
-    return commit_fire;
+    
 
 
 #ifdef CONFIG_FTRACE
@@ -133,25 +132,21 @@ void exec_once(Decode *s) {
     itrace_push(s->logbuf);
 #endif
 
-    for (int i = 0; i < 16; i ++){
-        cpu.gpr[i] = DUT_RF[i];
-        cpu.gpr[0] = 0;
-    }
     /*TODO
     cpu.csr[0x300] = top->rootp->top__DOT__csr__DOT__mstatus;
     cpu.csr[0x305] = top->rootp->top__DOT__csr__DOT__mtvec;
     cpu.csr[0x341] = top->rootp->top__DOT__csr__DOT__mepc;
     cpu.csr[0x342] = top->rootp->top__DOT__csr__DOT__mcause;
     */
-    cpu.pc = DUT_PC;
-    static int cnt = 0;
-    cnt ++;
+
     if(flag) { 
         if (cpu.gpr[10] == 0)
             npc_state.state = NPC_END;
         else
             npc_state.state = NPC_ABORT;
     }
+    // 原有 ebreak/flag 处理暂时保留，第 4 项再修。
+    return commit_fire;
 }
 
 static void reset() {
