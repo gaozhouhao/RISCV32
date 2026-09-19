@@ -35,10 +35,50 @@ module IFU(
             end
         end
     end
+
+    always @(posedge clk) begin
+        if (!reset && ifu_out_fire) begin
+            // $display(
+            //     "[PIPE] stage=IFU->IDU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+            //     out_pc, out_inst, out_valid, in_ready, $time
+            // );
+
+            if ((out_pc == 32'h00000000) ||
+                (out_inst == 32'h00000000)) begin
+                $error(
+                    "[PIPE ERROR] stage=IFU->IDU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+                    out_pc, out_inst, out_valid, in_ready, $time
+                );
+                $fatal(1);
+            end
+        end
+    end
+
+    always @(posedge clk) begin
+        if (!reset && ifu_r_fire) begin
+            // $display(
+            //     "[PIPE] stage=IFU-AXI-R pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+            //     fetch_pc, axi.rdata, axi.rvalid, axi.rready, $time
+            // );
+
+            if ((fetch_pc == 32'h00000000) ||
+                (axi.rdata == 32'h00000000)) begin
+                $error(
+                    "[PIPE ERROR] stage=IFU-AXI-R pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+                    fetch_pc, axi.rdata, axi.rvalid, axi.rready, $time
+                );
+                $fatal(1);
+            end
+        end
+    end
 `endif
 
     wire ifu_out_fire;
     assign ifu_out_fire = out_valid && in_ready;
+    wire ifu_ar_fire = axi.arvalid && axi.arready;
+    wire ifu_r_fire  = axi.rvalid && axi.rready;
+
+    reg [31:0] outstanding_pc;
 
     typedef enum logic [1:0] {
         AXI_IDLE,
@@ -116,6 +156,7 @@ module IFU(
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             ifu_state <= IFU_EMPTY;
+
             fetch_pc <= `RESET_PC;
             out_pc <= 32'b0;
             out_inst <= 32'b0;

@@ -74,6 +74,24 @@ always @(posedge clk) begin
     end
 end
 
+    always @(posedge clk) begin
+        if (!reset && exu_out_fire) begin
+            // $display(
+            //     "[PIPE] stage=EXU->LSU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+            //     out_pc, out_inst, out_valid, in_ready, $time
+            // );
+
+            if ((out_pc == 32'h00000000) ||
+                (out_inst == 32'h00000000)) begin
+                $error(
+                    "[PIPE ERROR] stage=EXU->LSU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+                    out_pc, out_inst, out_valid, in_ready, $time
+                );
+                $fatal(1);
+            end
+        end
+    end
+
 `endif
 
 reg     [31:0]      jalr_target;
@@ -84,6 +102,12 @@ reg     [31:0]      branch_target;
 always @(posedge clk) begin
         if (reset) begin
             out_valid <= 1'b0;
+            out_pc             <= 32'b0;
+            out_inst           <= 32'b0;
+            out_npc            <= 32'b0;
+            out_is_ebreak      <= 1'b0;
+            out_redirect_valid <= 1'b0;
+            out_redirect_pc    <= 32'b0;
         end
         else begin
             if (in_valid & out_ready) begin

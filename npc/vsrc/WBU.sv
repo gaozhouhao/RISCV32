@@ -33,6 +33,24 @@ module WBU(
 
 `ifdef VERILATOR
     import perf_pkg::*;
+
+    always @(posedge clk) begin
+        if (!reset && commit_fire) begin
+            // $display(
+            //     "[PIPE] stage=WBU-COMMIT pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+            //     commit_pc, commit_inst, commit_valid, out_ready, $time
+            // );
+
+            if ((commit_pc == 32'h00000000) ||
+                (commit_inst == 32'h00000000)) begin
+                $error(
+                    "[PIPE ERROR] stage=WBU-COMMIT pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+                    commit_pc, commit_inst, commit_valid, out_ready, $time
+                );
+                $fatal(1);
+            end
+        end
+    end
 `endif
 
     reg [31:0] rf [0:15]/* verilator public_flat_rd */;

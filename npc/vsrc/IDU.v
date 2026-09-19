@@ -124,6 +124,24 @@ always @(posedge clk) begin
         if (out_is_jal || out_is_jalr) perf_event(PERF_JUMP);
     end
 end
+
+always @(posedge clk) begin
+    if (!reset && idu_out_fire) begin
+        // $display(
+        //     "[PIPE] stage=IDU->EXU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+        //     out_pc, out_inst, out_valid, in_ready, $time
+        // );
+
+        if ((out_pc == 32'h00000000) ||
+            (out_inst == 32'h00000000)) begin
+            $error(
+                "[PIPE ERROR] stage=IDU->EXU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
+                out_pc, out_inst, out_valid, in_ready, $time
+            );
+            $fatal(1);
+        end
+    end
+end
 `endif
 
     
