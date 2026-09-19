@@ -52,9 +52,18 @@ CPUArchState cpu = {.pc=RESET_PC};
 bool exec_once(Decode *s) {
     top->clock = 0;
     top->eval();
-    const bool commit_fire = DUT_COMMIT_FIRE;
+    const bool commit_fire = (DUT_COMMIT_FIRE != 0);
+
     if (commit_fire){
-        s->pc = DUT_PC;
+        s->pc        = static_cast<uint32_t>(DUT_COMMIT_PC);
+        s->snpc      = s->pc + 4;
+        s->dnpc      = static_cast<uint32_t>(DUT_COMMIT_NPC);
+        s->inst      = static_cast<uint32_t>(DUT_COMMIT_INST);
+        s->is_ebreak = (DUT_COMMIT_EBREAK != 0);
+        s->skip_ref  = (DUT_COMMIT_SKIP_REF != 0);
+        s->wen       = (DUT_COMMIT_WEN != 0);
+        s->rd        = static_cast<uint8_t>(DUT_COMMIT_RD);
+        s->wdata     = static_cast<uint32_t>(DUT_COMMIT_WDATA);
     }
 
     contextp->timeInc(1);
@@ -73,8 +82,7 @@ bool exec_once(Decode *s) {
         }
         cpu.gpr[0] = 0;
 
-        // 仍是临时错误来源，第 3 项必须替换。
-        cpu.pc = DUT_PC;
+        cpu.pc = s->dnpc;
     }
 
     
@@ -82,7 +90,7 @@ bool exec_once(Decode *s) {
 
 #ifdef CONFIG_FTRACE
     static int call_depth = 0;
-    if(DUT_INST_VALID) {
+    if(commit_fire) {
         if((s->inst & 0x7f) == 0x6f) { //jal
             if (((s->inst >> 7) & 0x1f) == 0x1) { // rd = 1, call
                 printf("0x%08x:", s->pc);
@@ -100,7 +108,7 @@ bool exec_once(Decode *s) {
             }
         }
     }
-    if(DUT_INST_VALID) {
+    if(commit_fire) {
         if((s->inst & 0x7f) == 0x67) { //jalr
             if (((s->inst >> 7) & 0x1f) == 0x0 &&
                 ((s->inst >> 15) & 0x1f) == 0x1 &&

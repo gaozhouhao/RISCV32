@@ -106,6 +106,7 @@ always @(posedge clk) begin
                 out_pc              <= in_pc            ;
                 out_inst            <= in_inst          ;
                 out_npc             <= redirect_valid ? redirect_pc : (in_pc + 32'd4);
+                out_is_ebreak       <= in_is_ebreak     ;
 
                 out_redirect_valid  <= redirect_valid   ;
                 out_redirect_pc     <= redirect_pc      ;

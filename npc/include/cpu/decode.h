@@ -23,6 +23,12 @@ typedef struct Decode {
   uint32_t snpc; // static next pc
   uint32_t dnpc; // dynamic next pc
   uint32_t inst;
+
+  bool is_ebreak;
+  bool skip_ref;
+  bool wen;
+  uint8_t rd;
+  uint32_t wdata;
   IFDEF(CONFIG_ITRACE, char logbuf[128]);
 } Decode;
 

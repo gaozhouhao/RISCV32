@@ -20,30 +20,10 @@ static void trace_and_difftest(Decode *_this) {
     IFDEF(CONFIG_ITRACE, log_write("%s\n", _this->logbuf));
     if (g_print_step) { IFDEF(CONFIG_ITRACE, printf("%s\n", _this->logbuf)); }
 #ifdef CONFIG_DIFFTEST
-//     if(_this->pc >= MROM_ADDR && _this->pc < MROM_ADDR + MROM_SIZE){
-//         difftest_skip_ref();
-//     }
-//     if(_this->pc >= SRAM_ADDR && _this->pc < SRAM_ADDR + SRAM_SIZE){
-//         difftest_skip_ref();
-//     }
-//     if(_this->pc >= PSRAM_ADDR && _this->pc < PSRAM_ADDR + PSRAM_SIZE){
-//         difftest_skip_ref();
-//     }
-//     if(_this->pc >= FLASH_ADDR && _this->pc <= FLASH_ADDR + FLASH_SIZE){
-//         difftest_skip_ref();
-//     }
-//     if(_this->pc >= SDRAM_ADDR && _this->pc <= SDRAM_ADDR + SDRAM_SIZE){
-//         difftest_skip_ref();
-//     }
-//     if(_this->pc >= UART_ADDR && _this->pc <= UART_ADDR + UART_SIZE){
-//         difftest_skip_ref();
-//     }
-// #ifdef ARCH_YSYXSOC
-//     if (DUT_IS_MMIO) {
-//         difftest_skip_ref();
-//     }
-// #endif
-    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, _this->dnpc));
+    if (_this->skip_ref) {
+        difftest_skip_ref();
+    }
+    difftest_step(_this->pc, _this->dnpc);
 #endif
 
 #ifdef CONFIG_WATCHPOINT

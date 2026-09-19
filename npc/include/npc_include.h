@@ -85,6 +85,22 @@ void nvboard_bind_all_pins(TOP_NAME* top);
 
 #define DUT_COMMIT_FIRE (top->rootp->ysyx_25120302__DOT__wbu_commit_fire)
 
+#define DUT_COMMIT_PC \
+  (top->rootp->ysyx_25120302__DOT__wbu_commit_pc)
+#define DUT_COMMIT_INST \
+  (top->rootp->ysyx_25120302__DOT__wbu_commit_inst)
+#define DUT_COMMIT_NPC \
+  (top->rootp->ysyx_25120302__DOT__wbu_commit_npc)
+#define DUT_COMMIT_EBREAK \
+  (top->rootp->ysyx_25120302__DOT__wbu_commit_ebreak)
+#define DUT_COMMIT_SKIP_REF \
+  (top->rootp->ysyx_25120302__DOT__wbu_commit_skip_ref)
+#define DUT_COMMIT_WEN \
+  (top->rootp->ysyx_25120302__DOT__wbu_commit_wen)
+#define DUT_COMMIT_RD \
+  (top->rootp->ysyx_25120302__DOT__wbu_commit_rd)
+#define DUT_COMMIT_WDATA \
+  (top->rootp->ysyx_25120302__DOT__wbu_commit_wdata)
 
 // #define IFU_VALID(top) \
 //     top->rootp->top__DOT__cpu__DOT__ifu__DOT__out_valid
@@ -99,10 +115,26 @@ void nvboard_bind_all_pins(TOP_NAME* top);
 #define DUT_PC          (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__idu_pc)
 // #define DUT_NEXT_PC     (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu__DOT__next_pc)
 #define DUT_RF          (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__rf)
-#define DUT_IS_MMIO     (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu__DOT__is_mmio)
+
 #define DUT_COMMIT_VALID    (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_valid)
 
 #define DUT_COMMIT_FIRE (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_fire)
+#define DUT_COMMIT_PC \
+  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_pc)
+#define DUT_COMMIT_INST \
+  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_inst)
+#define DUT_COMMIT_NPC \
+  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_npc)
+#define DUT_COMMIT_EBREAK \
+  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_ebreak)
+#define DUT_COMMIT_SKIP_REF \
+  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_skip_ref)
+#define DUT_COMMIT_WEN \
+  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_wen)
+#define DUT_COMMIT_RD \
+  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_rd)
+#define DUT_COMMIT_WDATA \
+  (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu_commit_wdata)
 
 #endif
 
