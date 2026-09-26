@@ -201,6 +201,8 @@ wire            exu_rf_we;
 wire    [ 4:0]  exu_src1;
 wire    [ 4:0]  exu_src2;
 wire    [ 4:0]  exu_rd;
+wire            exu_redirect_fire;
+wire    [31:0]  exu_redirect_fire_pc;
 wire            exu_redirect_valid;
 wire    [31:0]  exu_redirect_pc;
 wire    [31:0]  exu_pc;
@@ -245,8 +247,8 @@ IFU ifu(
     .in_ready(idu_to_ifu_ready),
     .in_fencei_done(wbu_fencei_done),
     .out_pc(ifu_pc),
-    .in_redirect_pc(lsu_redirect_pc),
-    .in_redirect_valid(lsu_redirect_valid),
+    .in_redirect_pc(exu_redirect_fire_pc),
+    .in_redirect_fire(exu_redirect_fire),
     
     .out_valid(ifu_to_idu_valid),
     .out_inst(inst),
@@ -258,6 +260,7 @@ IDU idu(
     .reset(reset),
     .in_inst(inst),
     .in_pc(ifu_pc),
+    .in_flush(exu_redirect_fire),
     .in_src1_data(wbu_src1_data),
     .in_src2_data(wbu_src2_data),
     .in_valid(ifu_to_idu_valid),
@@ -357,6 +360,8 @@ EXU exu(
     .out_is_store(exu_is_store),
     .out_is_fencei(exu_is_fencei),
 
+    .out_redirect_fire(exu_redirect_fire),
+    .out_redirect_fire_pc(exu_redirect_fire_pc),
     .out_redirect_valid(exu_redirect_valid),
     .out_redirect_pc(exu_redirect_pc),
     .out_rf_we(exu_rf_we),

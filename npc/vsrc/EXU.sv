@@ -37,6 +37,8 @@ module EXU (
     input                       in_valid,
     input                       in_ready,
 
+    output                      out_redirect_fire,
+    output          [31:0]      out_redirect_fire_pc,
     output  reg                 out_is_load,
     output  reg                 out_is_store,
     output  reg                 out_is_fencei,
@@ -110,7 +112,7 @@ always @(posedge clk) begin
             out_redirect_pc    <= 32'b0;
         end
         else begin
-            if (in_valid & out_ready) begin
+            if (exu_in_fire) begin
                 `ifdef VERILATOR
                     ebreak(in_is_ebreak);
                 `endif
@@ -181,8 +183,11 @@ ALU alu(
     .alu_flags(alu_flags)
 );
 
-assign out_ready = !out_valid || in_ready;
-assign store_data = in_is_store ? in_src2_data : 32'b0;
+
+
+
+    assign out_ready = !out_valid || in_ready;
+    assign store_data = in_is_store ? in_src2_data : 32'b0;
 
     wire exu_in_fire;
     wire exu_out_fire;
@@ -231,6 +236,10 @@ assign redirect_pc =
         in_is_jalr                 ? jalr_target   :
         (in_is_branch & branch_taken)    ? branch_target :
                                   32'b0;
+
+assign out_redirect_fire_pc = redirect_pc;
+assign out_redirect_fire = !reset && exu_in_fire && redirect_valid;
+
 
 wire [31:0] mtvec_data, mepc_data;
 always @(*) begin

@@ -6,7 +6,7 @@ module IFU(
 
     input                   in_fencei_done,
     input       [31:0]      in_redirect_pc,
-    input                   in_redirect_valid,
+    input                   in_redirect_fire,
     input                   in_ready,
 
     output reg  [31:0]      out_pc/* verilator public_flat_rd */,
@@ -79,6 +79,9 @@ module IFU(
     wire ifu_r_fire  = axi.rvalid && axi.rready;
 
     reg [31:0] outstanding_pc;
+    reg outstanding_stale;
+
+    wire drop_response = ifu_r_fire && (outstanding_stale || in_redirect_fire);
 
     typedef enum logic [1:0] {
         AXI_IDLE,
@@ -88,7 +91,7 @@ module IFU(
     axi_state_t axi_state;
 
     reg [31:0] fetch_pc;
-    assign axi.araddr  = fetch_pc;
+    assign axi.araddr  = outstanding_pc;
     assign axi.arvalid = (axi_state == AXI_SEND_AR);
     assign axi.rready = (axi_state == AXI_WAIT_R) && (!out_valid || in_ready);
 
@@ -96,21 +99,33 @@ module IFU(
     always @(posedge clk) begin
         if (reset) begin
             axi_state    <= AXI_IDLE;
+            outstanding_pc <= `RESET_PC;
+            outstanding_stale <= 1'b0;
         end
         else begin
             case (axi_state)
                 AXI_IDLE: begin
-                    if (ifu_state == IFU_EMPTY && fencei_state == FENCEI_IDLE && !in_fencei_done) begin
+                    outstanding_stale <= 1'b0;
+                    if (ifu_state == IFU_EMPTY && fencei_state == FENCEI_IDLE && !in_fencei_done && !in_redirect_fire) begin
                         axi_state    <= AXI_SEND_AR;
+                        outstanding_pc <= fetch_pc;
                     end
                 end
                 AXI_SEND_AR: begin
-                    if (axi.arvalid && axi.arready)
+                    if (in_redirect_fire) begin
+                        outstanding_stale <= 1'b1;
+                    end
+                    if (ifu_ar_fire)
                         axi_state <= AXI_WAIT_R;
                 end
                 AXI_WAIT_R: begin
-                    if (axi.rvalid && axi.rready)
+                    if (ifu_r_fire) begin
                         axi_state <= AXI_IDLE;
+                        outstanding_stale <= 1'b0;
+                    end
+                    else if (in_redirect_fire) begin
+                        outstanding_stale <= 1'b1;
+                    end
                 end
                 default: ;
             endcase
@@ -161,14 +176,23 @@ module IFU(
             out_pc <= 32'b0;
             out_inst <= 32'b0;
         end
+        else if (in_redirect_fire) begin
+            ifu_state <= IFU_EMPTY;
+            fetch_pc <= in_redirect_pc;
+        end
         else begin
             case (ifu_state)
                 IFU_EMPTY: begin
-                    if (axi.rvalid && axi.rready) begin
-                        ifu_state <= IFU_VALID;
-                        out_inst  <= axi.rdata;
-                        out_pc <= fetch_pc;
-                        fetch_pc <= in_redirect_valid ? in_redirect_pc : fetch_pc + 32'd4;
+                    if (ifu_r_fire) begin
+                        if (drop_response) begin
+                            ifu_state <= IFU_EMPTY;
+                        end
+                        else begin
+                            ifu_state <= IFU_VALID;
+                            fetch_pc <= outstanding_pc + 32'd4;
+                            out_inst  <= axi.rdata;
+                            out_pc <= outstanding_pc;
+                        end
                     end
                 end
                 IFU_VALID: begin
@@ -180,7 +204,7 @@ module IFU(
         end 
     end
 
-    assign out_valid = (ifu_state == IFU_VALID);
+    assign out_valid = (ifu_state == IFU_VALID) && !in_redirect_fire;
     wire ifu_empty /* verilator public_flat_rd */;
     assign ifu_empty = (ifu_state == IFU_EMPTY);
 

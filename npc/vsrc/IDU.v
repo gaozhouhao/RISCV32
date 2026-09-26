@@ -4,6 +4,7 @@ module IDU(
     input                   reset,
     input   reg     [31:0]  in_inst,
     input           [31:0]  in_pc,
+    input                   in_flush,
     input                   in_valid,
     input                   in_ready,
 
@@ -153,6 +154,9 @@ end
 
 always @(posedge clk) begin
     if (reset == 1'b1) begin
+        out_valid <= 1'b0;
+    end
+    else if (in_flush) begin
         out_valid <= 1'b0;
     end
     else if (idu_in_fire) begin
