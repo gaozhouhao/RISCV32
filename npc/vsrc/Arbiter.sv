@@ -17,6 +17,7 @@ typedef enum logic [1:0] {
 
 owner_t read_owner;
 owner_t write_owner;
+owner_t read_grant;
 
 //READ
 always @(posedge clk) begin
@@ -25,19 +26,13 @@ always @(posedge clk) begin
     end
     else if(axi_arb.arvalid && axi_arb.arready) begin
         if (read_owner == IDLE) begin
-            if(axi_lsu.arvalid) begin
-                read_owner <= LSU;
-            end
-            else if(axi_ifu.arvalid) 
-                read_owner <= IFU;
+            read_owner <= read_grant;
         end
     end
-    else if(axi_arb.rvalid && axi_arb.rready) begin
-        if (read_owner == IFU) begin
-            if (axi_arb.rlast == 1'b1)
-                read_owner <= IDLE;
-        end
-        else if (read_owner == LSU)
+    else if (axi_arb.rvalid && axi_arb.rready) begin
+        if (read_owner == LSU)
+            read_owner <= IDLE;
+        else if (read_owner == IFU && axi_arb.rlast)
             read_owner <= IDLE;
     end
 end
@@ -47,7 +42,7 @@ always @(posedge clk) begin
     if (reset == 1'b1) begin
         write_owner <= IDLE;
     end
-    if(axi_arb.awvalid && axi_arb.awready) begin
+    else if(axi_arb.awvalid && axi_arb.awready) begin
         if(axi_lsu.awvalid) write_owner <= LSU;
         else if(axi_ifu.awvalid) write_owner <= IFU;
     end
@@ -55,6 +50,24 @@ always @(posedge clk) begin
         write_owner <= IDLE;
     end
 end
+
+// read grant
+always @(posedge clk) begin
+    if (reset) begin
+        read_grant <= IDLE;
+    end
+    else if (read_grant == IDLE && read_owner == IDLE) begin
+        // LSU priority
+        if (axi_lsu.arvalid)
+            read_grant <= LSU;
+        else if (axi_ifu.arvalid)
+            read_grant <= IFU;
+    end
+    else if (axi_arb.arvalid && axi_arb.arready) begin
+        read_grant <= IDLE;
+    end
+end
+
 
 /////////////////////////
 // Arbiter Fan In
@@ -101,12 +114,34 @@ always@(*) begin
 
     axi_arb.bready  = 0;
 
+
+    // AR channel: route request according to read_grant
+    if (read_grant == LSU) begin
+        axi_arb.araddr   = axi_lsu.araddr;
+        axi_arb.arvalid  = axi_lsu.arvalid;
+        axi_arb.arburst  = axi_lsu.arburst;
+        axi_arb.arlen    = axi_lsu.arlen;
+        axi_arb.arsize   = axi_lsu.arsize;
+
+        axi_lsu.arready  = axi_arb.arready;
+    end
+    else if (read_grant == IFU) begin
+        axi_arb.araddr   = axi_ifu.araddr;
+        axi_arb.arvalid  = axi_ifu.arvalid;
+        axi_arb.arburst  = axi_ifu.arburst;
+        axi_arb.arlen    = axi_ifu.arlen;
+        axi_arb.arsize   = axi_ifu.arsize;
+
+        axi_ifu.arready  = axi_arb.arready;
+    end
+
+
     // READ
     // LSU priority
-
+    // R Channel
     if (read_owner == LSU) begin
-        axi_arb.araddr  = axi_lsu.araddr;
-        axi_arb.arvalid = 1'b0;
+        // axi_arb.araddr  = axi_lsu.araddr;
+        // axi_arb.arvalid = 1'b0;
 
         axi_lsu.rdata   = axi_arb.rdata;
         axi_lsu.rresp   = axi_arb.rresp;
@@ -114,28 +149,13 @@ always@(*) begin
         axi_arb.rready  = axi_lsu.rready;
     end
     else if (read_owner == IFU) begin
-        axi_arb.arvalid = 1'b0;
+        // axi_arb.arvalid = 1'b0;
 
         axi_ifu.rdata   = axi_arb.rdata;
         axi_ifu.rresp   = axi_arb.rresp;
         axi_ifu.rvalid  = axi_arb.rvalid;
         axi_ifu.rlast   = axi_arb.rlast;
         axi_arb.rready  = axi_ifu.rready;
-    end
-    else begin // read_owner == IDLE
-        if (axi_lsu.arvalid) begin
-            axi_arb.araddr   = axi_lsu.araddr;
-            axi_arb.arvalid  = axi_lsu.arvalid;
-            axi_lsu.arready  = axi_arb.arready;
-        end
-        else if (axi_ifu.arvalid) begin
-            axi_arb.araddr   = axi_ifu.araddr;
-            axi_arb.arvalid  = axi_ifu.arvalid;
-            axi_arb.arburst  = axi_ifu.arburst;
-            axi_arb.arlen    = axi_ifu.arlen;
-            axi_arb.arsize   = axi_ifu.arsize;
-            axi_ifu.arready  = axi_arb.arready;
-        end
     end
 
     // WRITE
