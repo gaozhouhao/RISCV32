@@ -34,18 +34,18 @@ __EXPORT void difftest_regcpy(void *dut, bool direction) {
         for (int i = 0; i < 16; i ++) {
             cpu.gpr[i] = ctx->gpr[i];
         }
-        for(int i = 0; i < 4096; i ++){
-            cpu.csr[i] = ctx->csr[i];
-        }
+        // for(int i = 0; i < 4096; i ++){
+        //     cpu.csr[i] = ctx->csr[i];
+        // }
         cpu.pc = ctx->pc;
     }
     else {
         for (int i = 0; i < 16; i ++) {
             ctx->gpr[i] = cpu.gpr[i];
         }
-        for(int i = 0; i < 4096; i ++){
-            ctx->csr[i] = cpu.csr[i];
-        }
+        // for(int i = 0; i < 4096; i ++){
+        //     ctx->csr[i] = cpu.csr[i];
+        // }
         ctx->pc = cpu.pc;
     }
 }
@@ -63,4 +63,7 @@ __EXPORT void difftest_init(int port) {
   init_mem();
   /* Perform ISA dependent initialization. */
   init_isa();
+
+  cpu.csr[0xF11] = 0x79737978;
+  cpu.csr[0xF12] = 0x017F4E2E;
 }

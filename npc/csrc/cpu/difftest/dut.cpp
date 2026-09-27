@@ -39,15 +39,15 @@ bool isa_difftest_checkregs(CPUArchState *ref_r, uint32_t pc) {
             return false;
         }
     }
-    for (int i = 0; i < 4096; i ++){
-        if(i != 0x300  || i != 0x305 || i != 0x341 || i != 0x342) continue;
-        if (cpu.csr[i] == ref_r->csr[i]) continue;
-        else {
-            printf("cpu.csr[%d]:%08x\n", i, cpu.csr[i]);
-            printf("ref.csr[%d]:%08x\n", i, ref_r->csr[i]);
-            return false;
-        }
-    }
+    // for (int i = 0; i < 4096; i ++){
+    //     if(i != 0x300  && i != 0x305 && i != 0x341 && i != 0x342) continue;
+    //     if (cpu.csr[i] == ref_r->csr[i]) continue;
+    //     else {
+    //         printf("cpu.csr[%d]:%08x\n", i, cpu.csr[i]);
+    //         printf("ref.csr[%d]:%08x\n", i, ref_r->csr[i]);
+    //         return false;
+    //     }
+    // }
     if(cpu.pc == ref_r->pc) return true;
     else {
         printf("cpu.pc:%08x\n", cpu.pc);
