@@ -38,6 +38,7 @@ module LSU(
     output              [ 4:0]          out_src2,
     output      reg     [31:0]          out_wb_data,
     output      reg                     out_rf_we,
+    output                              out_pending_valid,
     output                              out_valid,
     output                              out_ready,
     output      reg     [31:0]          out_redirect_pc,
@@ -83,7 +84,7 @@ module LSU(
     } lsu_state_t;
     lsu_state_t lsu_state;
 
-
+    assign out_pending_valid = (lsu_state != LSU_IDLE) && !out_valid;
 
 `ifdef VERILATOR
 always @(posedge clk) begin

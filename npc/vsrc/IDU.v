@@ -11,6 +11,18 @@ module IDU(
     input           [31:0]  in_src1_data,
     input           [31:0]  in_src2_data,
 
+    input                   in_exu_valid,
+    input                   in_exu_rf_we,
+    input           [ 4:0]  in_exu_rd,
+
+    input                   in_lsu_pending_valid,
+    input                   in_lsu_rf_we,
+    input           [ 4:0]  in_lsu_rd,
+
+    input                   in_wbu_valid,
+    input                   in_wbu_rf_we,
+    input           [ 4:0]  in_wbu_rd,
+
     output                  out_ready,
     output                  out_valid,
     
@@ -65,10 +77,11 @@ assign opcode = in_inst[6:0];
 assign funct3 = in_inst[14:12];
 assign funct7 = in_inst[31:25];
 
-assign src1 = in_inst[19:15];
-assign src2 = in_inst[24:20];
-assign idu_decode_src1 = src1;
-assign idu_decode_src2 = src2;
+assign rs1_idx = in_inst[19:15];
+assign rs2_idx = in_inst[24:20];
+
+assign idu_decode_src1 = rs1_idx;
+assign idu_decode_src2 = rs2_idx;
 assign src1_data = in_src1_data;
 assign src2_data = in_src2_data;
 assign rd   = in_inst[11:7];
@@ -84,7 +97,7 @@ assign csr_addr = in_inst[31:20];
 assign branch_op = funct3;
 assign load_size = funct3;
 assign store_size = funct3;
-assign out_ready = !out_valid || in_ready;
+assign out_ready = (!out_valid || in_ready) && !raw_hazard;
 
 
 reg             rf_we       ;
@@ -107,8 +120,8 @@ reg     [ 2:0]  store_size  ;
 reg     [ 1:0]  alu_src2_sel;
 reg     [ 1:0]  alu_src1_sel;
 reg     [ 3:0]  alu_op      ;
-reg     [ 4:0]  src1        ;
-reg     [ 4:0]  src2        ;
+wire     [ 4:0]  rs1_idx        ;
+wire     [ 4:0]  rs2_idx        ;
 reg     [ 4:0]  rd          ;
 reg     [31:0]  imm         ;
 reg     [31:0]  shamt       ;
@@ -181,8 +194,8 @@ always @(posedge clk) begin
         out_alu_src2_sel    <=  alu_src2_sel    ;
         out_alu_src1_sel    <=  alu_src1_sel    ;
         out_alu_op          <=  alu_op          ;
-        out_src1            <=  src1            ;
-        out_src2            <=  src2            ;
+        out_src1            <=  rs1_idx         ;
+        out_src2            <=  rs2_idx         ;
         out_rd              <=  rd              ;
         out_imm             <=  imm             ;
         out_shamt           <=  shamt           ;
@@ -348,7 +361,7 @@ always @(*) begin
                 csr_wen = 1;
                 if(rd != 0) rf_we = 1;
                 wb_sel = `NPC_CSR;
-                if(src1 == 0) csr_wen = 0;
+                if(rs1_idx == 0) csr_wen = 0;
                 csr_op_sel = `CSR_SET;
             end
         end
@@ -356,8 +369,107 @@ always @(*) begin
             if (funct3 == 3'b001) is_fencei = 1;
         end
     end
-
 end
+
+reg uses_rs1;
+reg uses_rs2;
+
+always @(*) begin
+    uses_rs1 = 1'b0;
+    uses_rs2 = 1'b0;
+
+    case (opcode)
+        7'b0110011: begin       // OP
+            uses_rs1 = 1'b1;
+            uses_rs2 = 1'b1;
+        end
+        7'b0010011: begin       // OP-IMM
+            uses_rs1 = 1'b1;
+        end
+        7'b0000011: begin       // LOAD
+            uses_rs1 = 1'b1;
+        end
+        7'b0100011: begin       // STORE
+            uses_rs1 = 1'b1;    // address base
+            uses_rs2 = 1'b1;    // store data
+        end
+        7'b1100011: begin       // BRANCH
+            uses_rs1 = 1'b1;
+            uses_rs2 = 1'b1;
+        end
+        7'b1100111: begin       // JALR
+            if (funct3 == 3'b000)
+                uses_rs1 = 1'b1;
+        end
+        7'b1110011: begin
+            if ((funct3 == 3'b001) ||   // CSRRW
+                (funct3 == 3'b010))     // CSRRS
+                uses_rs1 = 1'b1;
+        end
+        default: begin
+            uses_rs1 = 1'b0;
+            uses_rs2 = 1'b0;
+        end
+    endcase
+end
+
+wire producer_match_rs1;
+wire producer_match_rs2;
+
+wire raw_hazard_rs1;
+wire raw_hazard_rs2;
+wire raw_hazard;
+
+assign producer_match_rs1 =
+       (out_valid && out_rf_we &&
+        (out_rd != 5'd0) &&
+        (out_rd == rs1_idx))
+
+    || (in_exu_valid && in_exu_rf_we &&
+        (in_exu_rd != 5'd0) &&
+        (in_exu_rd == rs1_idx))
+
+    || (in_lsu_pending_valid && in_lsu_rf_we &&
+        (in_lsu_rd != 5'd0) &&
+        (in_lsu_rd == rs1_idx))
+
+    || (in_wbu_valid && in_wbu_rf_we &&
+        (in_wbu_rd != 5'd0) &&
+        (in_wbu_rd == rs1_idx));
+
+assign producer_match_rs2 =
+       (out_valid && out_rf_we &&
+        (out_rd != 5'd0) &&
+        (out_rd == rs2_idx))
+
+    || (in_exu_valid && in_exu_rf_we &&
+        (in_exu_rd != 5'd0) &&
+        (in_exu_rd == rs2_idx))
+
+    || (in_lsu_pending_valid && in_lsu_rf_we &&
+        (in_lsu_rd != 5'd0) &&
+        (in_lsu_rd == rs2_idx))
+
+    || (in_wbu_valid && in_wbu_rf_we &&
+        (in_wbu_rd != 5'd0) &&
+        (in_wbu_rd == rs2_idx));
+
+assign raw_hazard_rs1 =
+    in_valid &&
+    uses_rs1 &&
+    (rs1_idx != 5'd0) &&
+    producer_match_rs1;
+
+assign raw_hazard_rs2 =
+    in_valid &&
+    uses_rs2 &&
+    (rs2_idx != 5'd0) &&
+    producer_match_rs2;
+
+assign raw_hazard =
+    raw_hazard_rs1 || raw_hazard_rs2;
+
+
 
 endmodule
 

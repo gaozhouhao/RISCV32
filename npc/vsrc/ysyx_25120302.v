@@ -218,6 +218,7 @@ wire    [ 4:0]  lsu_src1;
 wire    [ 4:0]  lsu_src2;
 wire            lsu_is_mmio;
 wire            lsu_is_fencei;
+wire            lsu_pending_valid;
 wire            lsu_redirect_valid;
 wire    [31:0]  lsu_redirect_pc;
 wire    [31:0]  lsu_pc;
@@ -265,6 +266,19 @@ IDU idu(
     .in_src2_data(wbu_src2_data),
     .in_valid(ifu_to_idu_valid),
     .in_ready(exu_to_idu_ready),
+
+    
+    .in_exu_valid(exu_to_lsu_valid),
+    .in_exu_rf_we(exu_rf_we),
+    .in_exu_rd(exu_rd),
+
+    .in_lsu_pending_valid(lsu_pending_valid),
+    .in_lsu_rf_we(lsu_rf_we),
+    .in_lsu_rd(lsu_rd),
+
+    .in_wbu_valid(wbu_commit_valid),
+    .in_wbu_rf_we(wbu_commit_wen),
+    .in_wbu_rd(wbu_commit_rd),
 
     .out_valid(idu_to_exu_valid),
     .out_ready(idu_to_ifu_ready),
@@ -409,6 +423,7 @@ LSU lsu(
     .out_rd(lsu_rd),
     .out_src1(lsu_src1),
     .out_src2(lsu_src2),
+    .out_pending_valid(lsu_pending_valid),
     .out_rf_we(lsu_rf_we),
     .out_redirect_valid(lsu_redirect_valid),
     .out_redirect_pc(lsu_redirect_pc)
