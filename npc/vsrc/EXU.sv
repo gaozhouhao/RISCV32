@@ -8,8 +8,6 @@ module EXU (
     input   wire    [ 1:0]      in_alu_src1_sel,
     input   reg     [ 1:0]      in_alu_src2_sel,
     input   reg     [ 3:0]      in_alu_op,
-    input           [ 4:0]      in_src1,
-    input           [ 4:0]      in_src2,
     input   reg                 in_rf_we,
 
     input   reg                 in_is_ebreak,
@@ -51,11 +49,7 @@ module EXU (
     output  reg     [31:0]      out_pc,
     output  reg     [31:0]      out_npc,
     output  reg                 out_is_ebreak,
-    output                      out_redirect_valid,
-    output  reg     [31:0]      out_redirect_pc,
     output                      out_rf_we,
-    output          [ 4:0]      out_src1,
-    output          [ 4:0]      out_src2,
     output          [ 4:0]      out_rd,
     output                      out_ready,
     output                      out_valid
@@ -63,7 +57,6 @@ module EXU (
 
 `ifdef VERILATOR
 import perf_pkg::*;
-import "DPI-C" function void ebreak(input bit is_ebreak);
 
 always @(posedge clk) begin
     if (in_valid && out_ready) begin
@@ -108,14 +101,9 @@ always @(posedge clk) begin
             out_inst           <= 32'b0;
             out_npc            <= 32'b0;
             out_is_ebreak      <= 1'b0;
-            out_redirect_valid <= 1'b0;
-            out_redirect_pc    <= 32'b0;
         end
         else begin
             if (exu_in_fire) begin
-                `ifdef VERILATOR
-                    ebreak(in_is_ebreak);
-                `endif
                 out_valid <= 1'b1;
                 out_is_load         <= in_is_load       ;
                 out_is_store        <= in_is_store      ;
@@ -123,8 +111,6 @@ always @(posedge clk) begin
                 out_load_size       <= in_load_size     ;
                 out_store_size      <= in_store_size    ;
                 out_rf_we           <= in_rf_we         ;
-                out_src1            <= in_src1          ;
-                out_src2            <= in_src2          ;
                 out_rd              <= in_rd            ;
                 out_mem_addr        <= alu_result       ;
                 out_store_data      <= store_data       ;
@@ -133,9 +119,6 @@ always @(posedge clk) begin
                 out_inst            <= in_inst          ;
                 out_npc             <= redirect_valid ? redirect_pc : (in_pc + 32'd4);
                 out_is_ebreak       <= in_is_ebreak     ;
-
-                out_redirect_valid  <= redirect_valid   ;
-                out_redirect_pc     <= redirect_pc      ;
             end
             else if (out_valid & in_ready) begin
                 out_valid <= 1'b0;

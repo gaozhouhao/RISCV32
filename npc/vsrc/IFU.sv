@@ -13,7 +13,10 @@ module IFU(
     output reg  [31:0]      out_inst,
     output reg              out_icache_flush,
 
-    output                  out_valid/* verilator public_flat_rd */
+    output                  out_valid/* verilator public_flat_rd */,
+
+    output reg              out_exception_valid,
+    output reg  [31:0]      out_exception_cause
 );
 
 `ifdef VERILATOR
@@ -43,8 +46,9 @@ module IFU(
             //     out_pc, out_inst, out_valid, in_ready, $time
             // );
 
-            if ((out_pc == 32'h00000000) ||
-                (out_inst == 32'h00000000)) begin
+            if (!out_exception_valid &&
+                ((out_pc == 32'h00000000) ||
+                (out_inst == 32'h00000000))) begin
                 $error(
                     "[PIPE ERROR] stage=IFU->IDU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
                     out_pc, out_inst, out_valid, in_ready, $time
@@ -72,6 +76,9 @@ module IFU(
         end
     end
 `endif
+
+    reg exception_pending;
+    wire fetch_pc_misaligned = |fetch_pc[1:0];
 
     wire ifu_out_fire;
     assign ifu_out_fire = out_valid && in_ready;
@@ -106,7 +113,12 @@ module IFU(
             case (axi_state)
                 AXI_IDLE: begin
                     outstanding_stale <= 1'b0;
-                    if (ifu_state == IFU_EMPTY && fencei_state == FENCEI_IDLE && !in_fencei_done && !in_redirect_fire) begin
+                    if (ifu_state == IFU_EMPTY &&
+                        fencei_state == FENCEI_IDLE &&
+                        !in_fencei_done &&
+                        !in_redirect_fire &&
+                        !fetch_pc_misaligned &&
+                        !exception_pending) begin
                         axi_state    <= AXI_SEND_AR;
                         outstanding_pc <= fetch_pc;
                     end
@@ -175,15 +187,29 @@ module IFU(
             fetch_pc <= `RESET_PC;
             out_pc <= 32'b0;
             out_inst <= 32'b0;
+            out_exception_valid <= 1'b0;
+            out_exception_cause <= 32'b0;
+            exception_pending <= 1'b0;
         end
         else if (in_redirect_fire) begin
             ifu_state <= IFU_EMPTY;
             fetch_pc <= in_redirect_pc;
+            out_exception_valid <= 1'b0;
+            out_exception_cause <= 32'b0;
+            exception_pending <= 1'b0;
         end
         else begin
             case (ifu_state)
                 IFU_EMPTY: begin
-                    if (ifu_r_fire) begin
+                    if (fetch_pc_misaligned && !exception_pending) begin
+                        ifu_state           <= IFU_VALID;
+                        out_pc              <= fetch_pc;
+                        out_inst            <= 32'b0;
+                        out_exception_valid <= 1'b1;
+                        out_exception_cause <= 32'd0;
+                        exception_pending   <= 1'b1;
+                    end
+                    else if (ifu_r_fire) begin
                         if (drop_response) begin
                             ifu_state <= IFU_EMPTY;
                         end
@@ -192,12 +218,15 @@ module IFU(
                             fetch_pc <= outstanding_pc + 32'd4;
                             out_inst  <= axi.rdata;
                             out_pc <= outstanding_pc;
+                            out_exception_valid <= 1'b0;
+                            out_exception_cause <= 32'b0;
                         end
                     end
                 end
                 IFU_VALID: begin
                     if (ifu_out_fire) begin
                         ifu_state <= IFU_EMPTY;
+                        out_exception_valid <= 1'b0;
                     end
                 end
             endcase
@@ -209,4 +238,3 @@ module IFU(
     assign ifu_empty = (ifu_state == IFU_EMPTY);
 
 endmodule
-

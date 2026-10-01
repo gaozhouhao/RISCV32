@@ -13,11 +13,7 @@ module LSU(
     input       reg                     in_is_store,
     input                               in_is_fencei,
     
-    input               [ 4:0]          in_src1,
-    input               [ 4:0]          in_src2,
     input               [ 4:0]          in_rd,
-    input       reg     [31:0]          in_redirect_pc,
-    input       reg                     in_redirect_valid,
     input                               in_valid,
     input                               in_ready,
 
@@ -34,15 +30,11 @@ module LSU(
     output      reg                     out_is_fencei,
     output      reg                     out_is_mmio,
     output              [ 4:0]          out_rd,
-    output              [ 4:0]          out_src1,
-    output              [ 4:0]          out_src2,
     output      reg     [31:0]          out_wb_data,
     output      reg                     out_rf_we,
     output                              out_pending_valid,
     output                              out_valid,
-    output                              out_ready,
-    output      reg     [31:0]          out_redirect_pc,
-    output      reg                     out_redirect_valid
+    output                              out_ready
 );
 
 `ifdef VERILATOR
@@ -163,24 +155,16 @@ end
     end
 
     reg [31:0]  mem_addr;
-    reg exu_to_lsu_valid_r;
-    reg is_load, is_store;
-    reg [ 2:0]  load_size, store_size;
+
+    reg [ 2:0]  load_size;
     always @(posedge clk) begin
         if (in_fire)begin
-            is_load <= in_is_load;
-            is_store <= in_is_store;
             load_size <= in_load_size;
-            store_size <= in_store_size;
             mem_addr <= in_mem_addr;
 
             out_rd <= in_rd;
-            out_src1 <= in_src1;
-            out_src2 <= in_src2;
             out_rf_we <= in_rf_we;
             out_is_fencei <= in_is_fencei;
-            out_redirect_pc <= in_redirect_pc;
-            out_redirect_valid <= in_redirect_valid;
             out_pc        <= in_pc;
             out_inst      <= in_inst;
             out_npc       <= in_npc;
@@ -208,8 +192,6 @@ end
             out_valid <= 1'b0;
         end
     end
-
-
 
     ///////////////////////////////////////
     // AR Channel

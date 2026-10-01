@@ -74,7 +74,7 @@ module ysyx_25120302(
 );
 
 wire    [31:0]  inst/* verilator public_flat_rd */;
-wire    [31:0]  pc/* verilator public_flat_rd */;
+
 AXI_IF          axi_lsu();
 AXI_IF          axi_ifu();
 AXI_IF          axi_arb();
@@ -153,6 +153,11 @@ wire            wbu_to_lsu_ready;
 // IFU Output
 wire            ifu_icache_flush;
 wire    [31:0]  ifu_pc;
+wire            ifu_exception_valid;
+wire    [31:0]  ifu_exception_cause;
+
+wire            idu_exception_valid;
+wire    [31:0]  idu_exception_cause;
 
 // IDU Output
 wire    [31:0]  idu_pc;
@@ -177,16 +182,14 @@ wire    [ 2:0]  idu_store_size;
 wire    [ 3:0]  idu_alu_op;
 wire    [ 1:0]  idu_alu_src2_sel;
 wire    [ 1:0]  idu_alu_src1_sel;
-wire    [ 4:0]  idu_src1;
-wire    [ 4:0]  idu_src2;
 wire    [ 4:0]  idu_rd;
 wire    [31:0]  idu_imm;
 wire    [31:0]  idu_shamt;
 wire    [11:0]  idu_csr_addr;
 wire    [31:0]  idu_src1_data;
 wire    [31:0]  idu_src2_data;
-wire    [ 4:0]  idu_decode_src1;
-wire    [ 4:0]  idu_decode_src2;
+wire    [ 4:0]  idu_rf_raddr1;
+wire    [ 4:0]  idu_rf_raddr2;
 
 //  EXU Output
 wire            exu_is_load;
@@ -198,13 +201,9 @@ wire    [31:0]  exu_wb_data;
 wire    [31:0]  exu_store_data;
 wire    [31:0]  exu_mem_addr;
 wire            exu_rf_we;
-wire    [ 4:0]  exu_src1;
-wire    [ 4:0]  exu_src2;
 wire    [ 4:0]  exu_rd;
 wire            exu_redirect_fire;
 wire    [31:0]  exu_redirect_fire_pc;
-wire            exu_redirect_valid;
-wire    [31:0]  exu_redirect_pc;
 wire    [31:0]  exu_pc;
 wire    [31:0]  exu_inst;
 wire    [31:0]  exu_npc;
@@ -214,13 +213,10 @@ wire            exu_is_ebreak;
 wire            lsu_rf_we;
 wire    [31:0]  lsu_wb_data;
 wire    [ 4:0]  lsu_rd;
-wire    [ 4:0]  lsu_src1;
-wire    [ 4:0]  lsu_src2;
 wire            lsu_is_mmio;
 wire            lsu_is_fencei;
 wire            lsu_pending_valid;
-wire            lsu_redirect_valid;
-wire    [31:0]  lsu_redirect_pc;
+
 wire    [31:0]  lsu_pc;
 wire    [31:0]  lsu_inst;
 wire    [31:0]  lsu_npc;
@@ -251,6 +247,8 @@ IFU ifu(
     .in_redirect_pc(exu_redirect_fire_pc),
     .in_redirect_fire(exu_redirect_fire),
     
+    .out_exception_valid(ifu_exception_valid),
+    .out_exception_cause(ifu_exception_cause),
     .out_valid(ifu_to_idu_valid),
     .out_inst(inst),
     .out_icache_flush(ifu_icache_flush)
@@ -261,6 +259,8 @@ IDU idu(
     .reset(reset),
     .in_inst(inst),
     .in_pc(ifu_pc),
+    .in_exception_valid(ifu_exception_valid),
+    .in_exception_cause(ifu_exception_cause),
     .in_flush(exu_redirect_fire),
     .in_src1_data(wbu_src1_data),
     .in_src2_data(wbu_src2_data),
@@ -284,6 +284,8 @@ IDU idu(
     .out_ready(idu_to_ifu_ready),
     .out_pc(idu_pc),
     .out_inst(idu_inst),
+    .out_exception_valid(idu_exception_valid),
+    .out_exception_cause(idu_exception_cause),
     .out_rf_we(idu_rf_we),
     .out_csr_wen(idu_csr_wen),
     .out_is_ecall(idu_is_ecall),
@@ -304,16 +306,14 @@ IDU idu(
     .out_branch_op(idu_branch_op),
     .out_load_size(idu_load_size),
     .out_store_size(idu_store_size),
-    .out_src1(idu_src1),
-    .out_src2(idu_src2),
     .out_rd(idu_rd),
     .out_imm(idu_imm),
     .out_shamt(idu_shamt),
     .out_csr_addr(idu_csr_addr),
     .out_src1_data(idu_src1_data),
     .out_src2_data(idu_src2_data),
-    .idu_decode_src1(idu_decode_src1),
-    .idu_decode_src2(idu_decode_src2)
+    .rf_raddr1(idu_rf_raddr1),
+    .rf_raddr2(idu_rf_raddr2)
 );
 
 
@@ -336,8 +336,6 @@ EXU exu(
     .in_is_load(idu_is_load),
     .in_is_store(idu_is_store),
     .in_is_fencei(idu_is_fencei),
-    .in_src1(idu_src1),
-    .in_src2(idu_src2),
     .in_src1_data(idu_src1_data),
     .in_src2_data(idu_src2_data),
 
@@ -364,8 +362,6 @@ EXU exu(
     .out_is_ebreak(exu_is_ebreak),
     .out_wb_data(exu_wb_data),
     .out_store_data(exu_store_data),
-    .out_src1(exu_src1),
-    .out_src2(exu_src2),
     .out_rd(exu_rd),
     .out_mem_addr(exu_mem_addr),
     .out_load_size(exu_load_size),
@@ -376,8 +372,6 @@ EXU exu(
 
     .out_redirect_fire(exu_redirect_fire),
     .out_redirect_fire_pc(exu_redirect_fire_pc),
-    .out_redirect_valid(exu_redirect_valid),
-    .out_redirect_pc(exu_redirect_pc),
     .out_rf_we(exu_rf_we),
     .out_ready(exu_to_idu_ready),
     .out_valid(exu_to_lsu_valid)
@@ -393,14 +387,10 @@ LSU lsu(
     .in_is_ebreak(exu_is_ebreak),
     .in_rf_we(exu_rf_we),
     .in_rd(exu_rd),
-    .in_src1(exu_src1),
-    .in_src2(exu_src2),
     .in_is_load(exu_is_load),
     .in_is_store(exu_is_store),
     .in_is_fencei(exu_is_fencei),
     .in_ready(wbu_to_lsu_ready),
-    .in_redirect_valid(exu_redirect_valid),
-    .in_redirect_pc(exu_redirect_pc),
     .in_load_size(exu_load_size),
     .in_store_size(exu_store_size),
     .in_mem_addr(exu_mem_addr),
@@ -421,12 +411,8 @@ LSU lsu(
     .out_is_mmio(lsu_is_mmio),
     .out_wb_data(lsu_wb_data),
     .out_rd(lsu_rd),
-    .out_src1(lsu_src1),
-    .out_src2(lsu_src2),
     .out_pending_valid(lsu_pending_valid),
-    .out_rf_we(lsu_rf_we),
-    .out_redirect_valid(lsu_redirect_valid),
-    .out_redirect_pc(lsu_redirect_pc)
+    .out_rf_we(lsu_rf_we)
 );
 
 
@@ -443,8 +429,8 @@ WBU wbu (
     .in_waddr(lsu_rd),
     .in_rf_we(lsu_rf_we),
     .in_valid(lsu_to_wbu_valid),
-    .in_raddr1(idu_decode_src1),
-    .in_raddr2(idu_decode_src2),
+    .in_raddr1(idu_rf_raddr1),
+    .in_raddr2(idu_rf_raddr2),
     .commit_ready(1'b1),
     .commit_valid(wbu_commit_valid),
     .commit_fire(wbu_commit_fire),

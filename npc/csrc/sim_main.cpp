@@ -21,8 +21,7 @@ VerilatedFstC* tfp = new VerilatedFstC;
 #if CONFIG_NVBOARD
     void nvboard_bind_all_pins(TOP_NAME* top);
 #endif
-int flag = 0;
-void ebreak(svBit is_ebreak){ flag = is_ebreak; }
+
 
 void sdb_mainloop();
 void init_monitor(int, char *[]);
@@ -147,13 +146,15 @@ bool exec_once(Decode *s) {
     cpu.csr[0x342] = top->rootp->top__DOT__csr__DOT__mcause;
     */
 
-    if(flag) { 
+    if (commit_fire && s->is_ebreak) {
+        npc_state.halt_pc  = s->pc;
+        npc_state.halt_ret = cpu.gpr[10];
+
         if (cpu.gpr[10] == 0)
             npc_state.state = NPC_END;
         else
             npc_state.state = NPC_ABORT;
     }
-    // 原有 ebreak/flag 处理暂时保留，第 4 项再修。
     return commit_fire;
 }
 

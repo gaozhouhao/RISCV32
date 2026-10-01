@@ -4,6 +4,8 @@ module IDU(
     input                   reset,
     input   reg     [31:0]  in_inst,
     input           [31:0]  in_pc,
+    input                   in_exception_valid,
+    input           [31:0]  in_exception_cause,
     input                   in_flush,
     input                   in_valid,
     input                   in_ready,
@@ -51,8 +53,6 @@ module IDU(
     output  reg     [31:0]  out_pc,
     output  reg     [31:0]  out_inst,
     output  reg     [ 3:0]  out_alu_op,
-    output          [ 4:0]  out_src1,
-    output          [ 4:0]  out_src2,
     output          [ 4:0]  out_rd,
     output          [31:0]  out_imm,
     output          [31:0]  out_shamt,
@@ -60,8 +60,10 @@ module IDU(
 
     output          [31:0]  out_src1_data,
     output          [31:0]  out_src2_data,
-    output          [ 4:0]  idu_decode_src1,
-    output          [ 4:0]  idu_decode_src2
+    output          [ 4:0]  rf_raddr1,
+    output          [ 4:0]  rf_raddr2,
+    output  reg             out_exception_valid,
+    output  reg     [31:0]  out_exception_cause
 );
 
 `ifdef VERILATOR
@@ -80,8 +82,8 @@ assign funct7 = in_inst[31:25];
 assign rs1_idx = in_inst[19:15];
 assign rs2_idx = in_inst[24:20];
 
-assign idu_decode_src1 = rs1_idx;
-assign idu_decode_src2 = rs2_idx;
+assign rf_raddr1 = rs1_idx;
+assign rf_raddr2 = rs2_idx;
 assign src1_data = in_src1_data;
 assign src2_data = in_src2_data;
 assign rd   = in_inst[11:7];
@@ -146,7 +148,8 @@ always @(posedge clk) begin
         //     out_pc, out_inst, out_valid, in_ready, $time
         // );
 
-        if ((out_pc == 32'h00000000) ||
+        if (!out_exception_valid &&
+            (out_pc == 32'h00000000) ||
             (out_inst == 32'h00000000)) begin
             $error(
                 "[PIPE ERROR] stage=IDU->EXU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
@@ -168,9 +171,13 @@ end
 always @(posedge clk) begin
     if (reset == 1'b1) begin
         out_valid <= 1'b0;
+        out_exception_valid <= 1'b0;
+        out_exception_cause <= 32'b0;
     end
     else if (in_flush) begin
         out_valid <= 1'b0;
+        out_exception_valid <= 1'b0;
+        out_exception_cause <= 32'b0;
     end
     else if (idu_in_fire) begin
         out_valid           <=  1'b1            ;
@@ -194,8 +201,6 @@ always @(posedge clk) begin
         out_alu_src2_sel    <=  alu_src2_sel    ;
         out_alu_src1_sel    <=  alu_src1_sel    ;
         out_alu_op          <=  alu_op          ;
-        out_src1            <=  rs1_idx         ;
-        out_src2            <=  rs2_idx         ;
         out_rd              <=  rd              ;
         out_imm             <=  imm             ;
         out_shamt           <=  shamt           ;
@@ -204,6 +209,8 @@ always @(posedge clk) begin
         out_src2_data       <=  src2_data       ;
         out_pc              <=  in_pc           ;
         out_inst            <=  in_inst         ;
+        out_exception_valid <=  in_exception_valid;
+        out_exception_cause <=  in_exception_cause;
 
     end
     else if (idu_out_fire) begin
@@ -324,10 +331,7 @@ always @(*) begin
         if (opcode == 7'b0000011) begin// lb/lh/lw/lbu/lhu
             rf_we = 1;
             wb_sel = `NPC_MEM;
-            if(in_valid == 1'b1)begin
-                is_load = 1'b1;
-            end
-            else is_load = 1'b0;
+            is_load = 1'b1;
             alu_src1_sel = `NPC_RS1_DATA;
             alu_src2_sel = `NPC_IMM;
             alu_op = `NPC_ALU_ADD;
@@ -472,4 +476,3 @@ assign raw_hazard =
 
 
 endmodule
-
