@@ -28,6 +28,7 @@ module ICACHE(
     localparam int TAG_WIDTH    = ADDR_WIDTH - OFFSET_WIDTH - INDEX_WIDTH;
 
     reg [ADDR_WIDTH-1:0] req_addr;
+    reg [OFFSET_WIDTH-BYTE_OFFSET_WIDTH-1:0] req_word_offset;
     reg [ADDR_WIDTH-1:0] refill_addr;
 
     wire [TAG_WIDTH-1:0] tag;
@@ -106,7 +107,8 @@ module ICACHE(
                                 perf_event(PERF_ICACHE_MISS_CYCLES);
                             `endif
                             refill_cnt <= 0;
-                            req_addr <= axi_in.araddr;
+                            req_word_offset <= axi_in.araddr[OFFSET_WIDTH-1:BYTE_OFFSET_WIDTH];
+                            //req_addr <= axi_in.araddr;
                             refill_addr <= {axi_in.araddr[ADDR_WIDTH-1:OFFSET_WIDTH], {{OFFSET_WIDTH}{1'b0}}} ; // align to cache line
                             axi_out.araddr <= {axi_in.araddr[ADDR_WIDTH-1:OFFSET_WIDTH], {{OFFSET_WIDTH}{1'b0}}};
                             axi_out.arvalid <= 1'b1;
@@ -144,11 +146,18 @@ module ICACHE(
                         if (axi_out.rlast == 1'b1) begin
                             valid_array[refill_index] <= 1'b1;
                             tag_array[refill_index] <= refill_tag;
-                            if (req_addr == refill_addr) begin
+                            // if (req_addr == refill_addr) begin
+                            //     axi_in.rdata <= axi_out.rdata;
+                            // end
+                            // else begin
+                            //     axi_in.rdata <= data_array[req_index][req_offset*8 +: DATA_WIDTH];
+                            // end
+                            if (req_word_offset == refill_cnt) begin
                                 axi_in.rdata <= axi_out.rdata;
                             end
                             else begin
-                                axi_in.rdata <= data_array[req_index][req_offset*8 +: DATA_WIDTH];
+                                axi_in.rdata <= data_array[refill_index]
+                                                        [req_word_offset*DATA_WIDTH +: DATA_WIDTH];
                             end
                             axi_in.rvalid <= 1'b1;
                             axi_in.rresp <= 2'b00;
