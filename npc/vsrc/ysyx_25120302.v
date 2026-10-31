@@ -152,6 +152,7 @@ wire            wbu_to_lsu_ready;
 
 // IFU Output
 wire            ifu_icache_flush;
+wire            ifu_fencei_flush_done;
 wire    [31:0]  ifu_pc;
 wire            ifu_exception_valid;
 wire    [31:0]  ifu_exception_cause;
@@ -251,7 +252,8 @@ IFU ifu(
     .out_exception_cause(ifu_exception_cause),
     .out_valid(ifu_to_idu_valid),
     .out_inst(inst),
-    .out_icache_flush(ifu_icache_flush)
+    .out_icache_flush(ifu_icache_flush),
+    .out_fencei_flush_done(ifu_fencei_flush_done)
 );
 
 IDU idu(
@@ -262,6 +264,7 @@ IDU idu(
     .in_exception_valid(ifu_exception_valid),
     .in_exception_cause(ifu_exception_cause),
     .in_flush(exu_redirect_fire),
+    .in_fencei_flush_done(ifu_fencei_flush_done),
     .in_src1_data(wbu_src1_data),
     .in_src2_data(wbu_src2_data),
     .in_valid(ifu_to_idu_valid),

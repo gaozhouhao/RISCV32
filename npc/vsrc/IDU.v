@@ -7,6 +7,7 @@ module IDU(
     input                   in_exception_valid,
     input           [31:0]  in_exception_cause,
     input                   in_flush,
+    input                   in_fencei_flush_done,
     input                   in_valid,
     input                   in_ready,
 
@@ -99,7 +100,7 @@ assign csr_addr = in_inst[31:20];
 assign branch_op = funct3;
 assign load_size = funct3;
 assign store_size = funct3;
-assign out_ready = (!out_valid || in_ready) && !raw_hazard;
+assign out_ready = (!out_valid || in_ready) && !raw_hazard && !fence_pending;
 
 
 reg             rf_we       ;
@@ -115,6 +116,7 @@ reg             is_branch   ;
 reg             is_load     ;
 reg             is_store    ;
 reg             is_fencei   ;
+reg             fence_pending;
 reg             trap_valid  ;
 reg     [ 2:0]  branch_op   ;
 reg     [ 2:0]  load_size   ;
@@ -167,6 +169,20 @@ end
     assign idu_in_fire = in_valid && out_ready;
     assign idu_out_fire = out_valid && in_ready;
 
+always @(posedge clk) begin
+    if (reset == 1'b1) begin
+        fence_pending <= 1'b0;
+    end
+    else if (in_flush) begin
+        fence_pending <= 1'b0;
+    end
+    else if (idu_in_fire && is_fencei) begin
+        fence_pending <= 1'b1;
+    end
+    else if (in_fencei_flush_done) begin
+        fence_pending <= 1'b0;
+    end
+end
 
 always @(posedge clk) begin
     if (reset == 1'b1) begin

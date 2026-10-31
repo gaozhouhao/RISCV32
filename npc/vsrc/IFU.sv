@@ -1,4 +1,6 @@
+
 `include "params.vh"
+
 module IFU(
     input                   clk,
     input                   reset,
@@ -12,6 +14,7 @@ module IFU(
     output reg  [31:0]      out_pc/* verilator public_flat_rd */,
     output reg  [31:0]      out_inst,
     output reg              out_icache_flush,
+    output reg              out_fencei_flush_done,
 
     output                  out_valid/* verilator public_flat_rd */,
 
@@ -32,7 +35,7 @@ module IFU(
                 perf_event(PERF_IFU_STALL);
             if (axi_state == AXI_WAIT_R && !(axi.rvalid && axi.rready))
                 perf_event(PERF_IFU_MEM_WAIT);
-            if (axi.rvalid && axi.rready)begin
+            if (axi.rvalid && axi.rready) begin
                 get_inst(axi.rdata);
                 perf_event(PERF_IFU_FETCH);
             end
@@ -48,7 +51,7 @@ module IFU(
 
             if (!out_exception_valid &&
                 ((out_pc == 32'h00000000) ||
-                (out_inst == 32'h00000000))) begin
+                 (out_inst == 32'h00000000))) begin
                 $error(
                     "[PIPE ERROR] stage=IFU->IDU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
                     out_pc, out_inst, out_valid, in_ready, $time
@@ -82,6 +85,7 @@ module IFU(
 
     wire ifu_out_fire;
     assign ifu_out_fire = out_valid && in_ready;
+
     wire ifu_ar_fire = axi.arvalid && axi.arready;
     wire ifu_r_fire  = axi.rvalid && axi.rready;
 
@@ -95,18 +99,19 @@ module IFU(
         AXI_SEND_AR,
         AXI_WAIT_R
     } axi_state_t;
+
     axi_state_t axi_state;
 
     reg [31:0] fetch_pc;
+
     assign axi.araddr  = outstanding_pc;
     assign axi.arvalid = (axi_state == AXI_SEND_AR);
-    assign axi.rready = (axi_state == AXI_WAIT_R) && (!out_valid || in_ready);
+    assign axi.rready  = (axi_state == AXI_WAIT_R) && (!out_valid || in_ready);
 
-    
     always @(posedge clk) begin
         if (reset) begin
-            axi_state    <= AXI_IDLE;
-            outstanding_pc <= `RESET_PC;
+            axi_state       <= AXI_IDLE;
+            outstanding_pc  <= `RESET_PC;
             outstanding_stale <= 1'b0;
         end
         else begin
@@ -119,10 +124,12 @@ module IFU(
                         !in_redirect_fire &&
                         !fetch_pc_misaligned &&
                         !exception_pending) begin
-                        axi_state    <= AXI_SEND_AR;
-                        outstanding_pc <= fetch_pc;
+
+                        axi_state       <= AXI_SEND_AR;
+                        outstanding_pc  <= fetch_pc;
                     end
                 end
+
                 AXI_SEND_AR: begin
                     if (in_redirect_fire) begin
                         outstanding_stale <= 1'b1;
@@ -130,6 +137,7 @@ module IFU(
                     if (ifu_ar_fire)
                         axi_state <= AXI_WAIT_R;
                 end
+
                 AXI_WAIT_R: begin
                     if (ifu_r_fire) begin
                         axi_state <= AXI_IDLE;
@@ -139,45 +147,68 @@ module IFU(
                         outstanding_stale <= 1'b1;
                     end
                 end
+
                 default: ;
             endcase
         end
     end
 
+    // ============================================================
+    // FENCE.I FSM - Modified
+    // ============================================================
 
-    typedef enum logic {
+    typedef enum logic [1:0] {
         FENCEI_IDLE,
+        FENCEI_WAIT,
         FENCEI_BUSY
     } fencei_state_t;
+
     fencei_state_t fencei_state;
 
     always @(posedge clk) begin
         if (reset == 1'b1) begin
             fencei_state <= FENCEI_IDLE;
             out_icache_flush <= 1'b0;
+            out_fencei_flush_done <= 1'b0;
         end
         else begin
+            out_fencei_flush_done <= 1'b0;
             case (fencei_state)
+
                 FENCEI_IDLE: begin
                     if (in_fencei_done) begin
+                        fencei_state <= FENCEI_WAIT;
+                    end
+                end
+
+                FENCEI_WAIT: begin
+                    if (axi_state == AXI_IDLE && axi.arready) begin
                         fencei_state <= FENCEI_BUSY;
                         out_icache_flush <= 1'b1;
                     end
                 end
+
                 FENCEI_BUSY: begin
                     fencei_state <= FENCEI_IDLE;
                     out_icache_flush <= 1'b0;
+                    out_fencei_flush_done <= 1'b1;
                 end
+
+                default: ;
+
             endcase
         end
     end
-    
 
+    // ============================================================
+    // IFU FSM - Unchanged
+    // ============================================================
 
     typedef enum logic {
         IFU_EMPTY,
         IFU_VALID
     } ifu_state_t;
+
     ifu_state_t ifu_state;
 
     always @(posedge clk) begin
@@ -191,6 +222,7 @@ module IFU(
             out_exception_cause <= 32'b0;
             exception_pending <= 1'b0;
         end
+
         else if (in_redirect_fire) begin
             ifu_state <= IFU_EMPTY;
             fetch_pc <= in_redirect_pc;
@@ -198,8 +230,19 @@ module IFU(
             out_exception_cause <= 32'b0;
             exception_pending <= 1'b0;
         end
+
+        else if (in_fencei_done) begin
+            if (ifu_state == IFU_VALID)
+                fetch_pc <= out_pc;
+            ifu_state <= IFU_EMPTY;
+            out_exception_valid <= 1'b0;
+            out_exception_cause <= 32'b0;
+            exception_pending <= 1'b0;
+        end
+
         else begin
             case (ifu_state)
+
                 IFU_EMPTY: begin
                     if (fetch_pc_misaligned && !exception_pending) begin
                         ifu_state           <= IFU_VALID;
@@ -209,8 +252,10 @@ module IFU(
                         out_exception_cause <= 32'd0;
                         exception_pending   <= 1'b1;
                     end
+
                     else if (ifu_r_fire) begin
-                        if (drop_response) begin
+                        if (drop_response ||
+                            fencei_state != FENCEI_IDLE) begin
                             ifu_state <= IFU_EMPTY;
                         end
                         else begin
@@ -223,17 +268,20 @@ module IFU(
                         end
                     end
                 end
+
                 IFU_VALID: begin
                     if (ifu_out_fire) begin
                         ifu_state <= IFU_EMPTY;
                         out_exception_valid <= 1'b0;
                     end
                 end
+
             endcase
-        end 
+        end
     end
 
     assign out_valid = (ifu_state == IFU_VALID) && !in_redirect_fire;
+
     wire ifu_empty /* verilator public_flat_rd */;
     assign ifu_empty = (ifu_state == IFU_EMPTY);
 
