@@ -25,7 +25,10 @@ static uint8_t *pmem = NULL;
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #endif
 
-#ifdef CONFIG_TARGET_SHARE
+#if defined(CONFIG_TARGET_SHARE) || \
+    defined(CONFIG_PC_TRACE) || \
+    defined(CONFIG_BRANCH_TRACE)
+
 static uint8_t mrom[CONFIG_MROM_SIZE];
 static uint8_t sram[CONFIG_SRAM_SIZE];
 static uint8_t psram[CONFIG_PSRAM_SIZE];
@@ -39,27 +42,32 @@ static uint8_t* psram_guest_to_host(paddr_t paddr) { return psram + paddr - CONF
 
 #endif
 
+
+
 void itrace_dump();
 
 static uint8_t *pmem_guest_to_host(paddr_t paddr) {
   return pmem + paddr - CONFIG_MBASE;
 }
 uint8_t *guest_to_host(paddr_t paddr) {
-#ifdef CONFIG_TARGET_SHARE
-  if (in_sram(paddr)) { return sram_guest_to_host(paddr); }
-  if (in_mrom(paddr)) { return mrom_guest_to_host(paddr); }
-  if (in_flash(paddr)) { return flash_guest_to_host(paddr); }
-  if (in_psram(paddr)) { return psram_guest_to_host(paddr); }
-  if (in_sdram(paddr)) { return sdram + paddr - CONFIG_SDRAM_BASE; }
-  if (in_pmem(paddr)) { return pmem_guest_to_host(paddr); }
-  panic(
-      "guest address " FMT_PADDR
-      " is not backed by REF memory",
-      paddr
-  );
-  return NULL;
+#if defined(CONFIG_TARGET_SHARE) || \
+    defined(CONFIG_PC_TRACE) || \
+    defined(CONFIG_BRANCH_TRACE)
+
+    if (in_sram(paddr)) { return sram_guest_to_host(paddr); }
+    if (in_mrom(paddr)) { return mrom_guest_to_host(paddr); }
+    if (in_flash(paddr)) { return flash_guest_to_host(paddr); }
+    if (in_psram(paddr)) { return psram_guest_to_host(paddr); }
+    if (in_sdram(paddr)) { return sdram + paddr - CONFIG_SDRAM_BASE; }
+    if (in_pmem(paddr)) { return pmem_guest_to_host(paddr); }
+    panic(
+        "guest address " FMT_PADDR
+        " is not backed by REF memory",
+        paddr
+    );
+    return NULL;
 #else
-  return pmem_guest_to_host(paddr);
+    return pmem_guest_to_host(paddr);
 #endif
 }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
@@ -79,7 +87,9 @@ static word_t pmem_read(paddr_t addr, int len) {
   return ret;
 }
 
-#ifdef CONFIG_TARGET_SHARE
+#if defined(CONFIG_TARGET_SHARE) || \
+    defined(CONFIG_PC_TRACE) || \
+    defined(CONFIG_BRANCH_TRACE)
 static word_t mrom_read(paddr_t addr, int len) {
     word_t ret = host_read(mrom + addr - CONFIG_MROM_BASE, len);
     return ret;
@@ -119,7 +129,9 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
 #endif
 }
 
-#ifdef CONFIG_TARGET_SHARE
+#if defined(CONFIG_TARGET_SHARE) || \
+    defined(CONFIG_PC_TRACE) || \
+    defined(CONFIG_BRANCH_TRACE)
 static void sram_write(paddr_t addr, int len, word_t data) {
     host_write(sram + addr - CONFIG_SRAM_BASE, len, data);
 }
@@ -153,66 +165,45 @@ void init_mem() {
 
 word_t paddr_read(paddr_t addr, int len) {
   IFDEF(CONFIG_MTRACE, Log("read:\t0x%08x", addr));
-#ifdef CONFIG_TARGET_SHARE
-  if (likely(in_sram(addr))) return sram_read(addr, len);
-  if (likely(in_mrom(addr))) return mrom_read(addr, len);
-  if (likely(in_flash(addr))) return flash_read(addr, len);
-  if (likely(in_psram(addr))) return psram_read(addr, len);
-  if (likely(in_sdram(addr))) return sdram_read(addr, len);
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
+#if defined(CONFIG_TARGET_SHARE) || \
+    defined(CONFIG_PC_TRACE) || \
+    defined(CONFIG_BRANCH_TRACE)
+    if (likely(in_sram(addr))) return sram_read(addr, len);
+    if (likely(in_mrom(addr))) return mrom_read(addr, len);
+    if (likely(in_flash(addr))) return flash_read(addr, len);
+    if (likely(in_psram(addr))) return psram_read(addr, len);
+    if (likely(in_sdram(addr))) return sdram_read(addr, len);
+    if (likely(in_pmem(addr))) return pmem_read(addr, len);
 #else
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
+    if (likely(in_pmem(addr))) return pmem_read(addr, len);
 #endif
-  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
-  IFDEF(CONFIG_ITRACE, itrace_dump());
+    IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+    IFDEF(CONFIG_ITRACE, itrace_dump());
   
-#ifdef CONFIG_PC_TRACE
-  if (addr >= 0x10000000 && addr < 0x10000000 + 0x1000) { // UART is readable
-    if (addr == 0x10000005) return 0x20; 
-  }
-  else if (addr >= 0x02000000 && addr < 0x0200ffff) {
-    return 0;
-  }
-  else {
     out_of_bound(addr);
-  }
-#else
-  out_of_bound(addr);
-#endif
 
   return 0;
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  IFDEF(CONFIG_MTRACE, Log("write:\t0x%08x", addr));
-#ifdef CONFIG_TARGET_SHARE
-  if (likely(in_sram(addr))) { sram_write(addr, len, data); return; }
-  if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
-  if (likely(in_flash(addr))) { flash_write(addr, len, data); return; }
-  if (likely(in_psram(addr))) { psram_write(addr, len, data); return; }
-  if (likely(in_sdram(addr))) { sdram_write(addr, len, data); return; }
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+    IFDEF(CONFIG_MTRACE, Log("write:\t0x%08x", addr));
+#if defined(CONFIG_TARGET_SHARE) || \
+    defined(CONFIG_PC_TRACE) || \
+    defined(CONFIG_BRANCH_TRACE)
+    if (likely(in_sram(addr))) { sram_write(addr, len, data); return; }
+    if (likely(in_mrom(addr))) { panic("address = " FMT_PADDR " in mrom is not writable", addr); }
+    if (likely(in_flash(addr))) { flash_write(addr, len, data); return; }
+    if (likely(in_psram(addr))) { psram_write(addr, len, data); return; }
+    if (likely(in_sdram(addr))) { sdram_write(addr, len, data); return; }
+    if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
 #else
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+    if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
 #endif
-  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
-  IFDEF(CONFIG_ITRACE, itrace_dump());
+    IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
+    IFDEF(CONFIG_ITRACE, itrace_dump());
 
-#ifdef CONFIG_PC_TRACE
-  if (addr >= 0x1000000 && addr < 0x10000000 + 0x1000) { // UART is writable
-    if (addr == 0x10000000) {
-      putchar(data & 0xff);
-      return;
-    }
-  }
-  else if (addr >= 0x02000000 && addr < 0x0200ffff) {
-    return;
-  }
-  else {
+
     out_of_bound(addr);
-  }
-#else
-  out_of_bound(addr);
-#endif
+
   
 }

@@ -71,32 +71,51 @@ static long load_img() {
 
     pc_trace_init();
 
+    //***************
+    //load Branch trace img into flash
+    //***************
+#elif CONFIG_BRANCH_TRACE
+
+    img_file = "/home/gao-zhouhao/ysyx-workbench/am-kernels/benchmarks/microbench/build/microbench-riscv32e-ysyxsoc.bin";
+    FILE *fp = fopen(img_file, "rb");
+    Assert(fp, "Can not open '%s'", img_file);
+    Log("Image is given: %s.", img_file);
+    fseek(fp, 0, SEEK_END);
+
+    long size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    int ret = fread(guest_to_host(CONFIG_FLASH_BASE), size, 1, fp);
+    // int ret = fread(psram, size, 1, fp);
+
+
+    branch_trace_init();
+    printf("branch trace init done\n");
+
 #else
 
-  if (img_file == NULL) {
-    Log("No image is given. Use the default build-in image.");
-    return 4096; // built-in image size
-  }
+    if (img_file == NULL) {
+        Log("No image is given. Use the default build-in image.");
+        return 4096; // built-in image size
+    }
 
-  FILE *fp = fopen(img_file, "rb");
-  Assert(fp, "Can not open '%s'", img_file);
+    FILE *fp = fopen(img_file, "rb");
+    Assert(fp, "Can not open '%s'", img_file);
 
-  fseek(fp, 0, SEEK_END);
-  long size = ftell(fp);
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
 
-  Log("The image is %s, size = %ld", img_file, size);
+    Log("The image is %s, size = %ld", img_file, size);
 
-  fseek(fp, 0, SEEK_SET);
-  int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
-  //int ret = fread(mrom_guest_to_host(CONFIG_RESET_VECTOR), size, 1, fp);
-  // int ret = fread(flash_guest_to_host(CONFIG_RESET_VECTOR), size, 1, fp);
+    fseek(fp, 0, SEEK_SET);
+    int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
+    //int ret = fread(mrom_guest_to_host(CONFIG_RESET_VECTOR), size, 1, fp);
+    // int ret = fread(flash_guest_to_host(CONFIG_RESET_VECTOR), size, 1, fp);
 
 #endif
-  assert(ret == 1);
+    assert(ret == 1);
 
-
-  fclose(fp);
-  return size;
+    fclose(fp);
+    return size;
 
 }
 

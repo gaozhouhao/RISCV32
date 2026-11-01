@@ -64,6 +64,9 @@ int main(int argc, char *argv[]) {
   //test_expr();
   /* Start engine. */
   engine_start();
+  
   IFDEF(CONFIG_PC_TRACE, pc_trace_close());
+  IFDEF(CONFIG_BRANCH_TRACE, branch_trace_close());
+
   return is_exit_status_bad();
 };

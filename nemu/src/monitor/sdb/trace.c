@@ -113,3 +113,31 @@ void pc_trace_close() {
 } 
 
 
+
+FILE *branch_trace_fp = NULL;
+typedef struct {
+    uint32_t pc;
+    uint32_t target;
+    uint32_t taken;
+} BranchTrace;
+
+void branch_trace_init() {
+    branch_trace_fp = fopen("./../npc/tools/cachesim/traces/branch_trace.txt", "w");
+    Assert(branch_trace_fp, "Can not open branch_trace.txt");
+}
+
+void branch_trace_push(vaddr_t pc, vaddr_t target, bool taken) {
+    BranchTrace trace = {
+        .pc     = pc,
+        .target = target,
+        .taken  = taken ? 1u : 0u,
+    };
+    fwrite(&trace, sizeof(trace), 1, branch_trace_fp);
+    // fprintf(branch_trace_fp, "%08x\n", pc);
+}
+
+void branch_trace_close() {
+    fclose(branch_trace_fp);
+} 
+
+

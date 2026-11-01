@@ -200,6 +200,15 @@ config PC_TRACE_COND
   string "Only trace PC when the condition is true"
   default "true"
 
+config BRANCH_TRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable branch tracer"
+  default n
+
+config BRANCH_TRACE_COND
+  depends on BRANCH_TRACE
+  string "Only trace branches when the condition is true"
+  default "true"
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF

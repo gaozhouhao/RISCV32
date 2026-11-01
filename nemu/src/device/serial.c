@@ -33,8 +33,17 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
   switch (offset) {
     /* We bind the serial port with the host stderr in NEMU. */
     case CH_OFFSET:
-      if (is_write) serial_putc(serial_base[0]);
-      else panic("do not support read");
+      if (is_write && !(serial_base[3] & 0x80)) serial_putc(serial_base[0]);
+      break;
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 6:
+    case 7:
+      break;
+    case 5:
+      serial_base[5] = 0x60;
       break;
     default: panic("do not support offset = %d", offset);
   }
@@ -42,7 +51,12 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
 
 void init_serial() {
   serial_base = new_space(8);
-#ifdef CONFIG_HAS_PORT_IO
+  serial_base[3] = 0;
+  serial_base[5] = 0x60;
+
+#if defined(CONFIG_PC_TRACE) || defined(CONFIG_BRANCH_TRACE)
+  add_mmio_map("serial", 0x10000000, serial_base, 8, serial_io_handler);
+#elif defined(CONFIG_HAS_PORT_IO)
   add_pio_map ("serial", CONFIG_SERIAL_PORT, serial_base, 8, serial_io_handler);
 #else
   add_mmio_map("serial", CONFIG_SERIAL_MMIO, serial_base, 8, serial_io_handler);
