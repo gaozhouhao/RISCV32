@@ -127,6 +127,7 @@ RTL_FILES = \
     $(NPC_HOME)/vsrc/addr_map_pkg.sv \
     $(NPC_HOME)/vsrc/AXI_IF.sv \
     $(NPC_HOME)/vsrc/ICACHE.sv \
+	$(NPC_HOME)/vsrc/branch_predictor.sv \
     $(NPC_HOME)/vsrc/CSR.sv \
     $(NPC_HOME)/vsrc/CLINT.sv \
     $(NPC_HOME)/vsrc/IFU.sv \
@@ -141,7 +142,7 @@ RTL_FILES = \
 
 SV2V_OUT := $(O)/ysyx_sv2v.v
 
-$(SV2V_OUT): $(RTL_FILES)
+$(SV2V_OUT): $(RTL_FILES) $(NPC_HOME)/Makefile
 	@mkdir -p $(dir $(SV2V_OUT))
 	sv2v $(RTL_FILES) > $(SV2V_OUT)
 

@@ -210,6 +210,17 @@ wire    [31:0]  exu_inst;
 wire    [31:0]  exu_npc;
 wire            exu_is_ebreak;
 
+// Branch Predictor
+wire    [31:0]  ifu_bp_query_pc;
+wire    [31:0]  bp_ifu_pred_pc;
+wire    [31:0]  ifu_predicted_next_pc;
+wire    [31:0]  idu_predicted_next_pc;
+
+wire            exu_bp_update_en;
+wire    [31:0]  exu_bp_pc;
+wire    [31:0]  exu_bp_target;
+wire            exu_bp_taken;
+
 //  LSU Output
 wire            lsu_rf_we;
 wire    [31:0]  lsu_wb_data;
@@ -238,54 +249,75 @@ wire            wbu_commit_wen      /* verilator public_flat_rd */;
 wire    [ 4:0]  wbu_commit_rd       /* verilator public_flat_rd */;
 wire    [31:0]  wbu_commit_wdata    /* verilator public_flat_rd */;
 
+branch_predictor bp (
+    .clk                (clock),
+    .reset              (reset),
+
+    .ifu_pc_i           (ifu_bp_query_pc),
+    .ifu_pred_pc_o      (bp_ifu_pred_pc),
+
+    .exu_update_en_i    (exu_bp_update_en),
+    .exu_pc_i           (exu_bp_pc),
+    .exu_target_i       (exu_bp_target),
+    .exu_taken_i        (exu_bp_taken)
+);
+
+
 IFU ifu(
-    .axi(axi_ifu),
-    .clk(clock),
-    .reset(reset),
-    .in_ready(idu_to_ifu_ready),
+    .axi        (axi_ifu),
+    .clk        (clock),
+    .reset      (reset),
+    .in_ready   (idu_to_ifu_ready),
     .in_fencei_done(wbu_fencei_done),
-    .out_pc(ifu_pc),
+    .in_predicted_next_pc(bp_ifu_pred_pc),
+
+    .out_pc     (ifu_pc),
+    .out_bp_query_pc(ifu_bp_query_pc),
+    .out_predicted_next_pc(ifu_predicted_next_pc),
+
     .in_redirect_pc(exu_redirect_fire_pc),
     .in_redirect_fire(exu_redirect_fire),
-    
+
     .out_exception_valid(ifu_exception_valid),
     .out_exception_cause(ifu_exception_cause),
-    .out_valid(ifu_to_idu_valid),
-    .out_inst(inst),
+    .out_valid  (ifu_to_idu_valid),
+    .out_inst   (inst),
     .out_icache_flush(ifu_icache_flush),
     .out_fencei_flush_done(ifu_fencei_flush_done)
 );
 
 IDU idu(
-    .clk(clock),
-    .reset(reset),
-    .in_inst(inst),
-    .in_pc(ifu_pc),
+    .clk(       clock),
+    .reset      (reset),
+    .in_inst    (inst),
+    .in_pc      (ifu_pc),
+    .in_predicted_next_pc(ifu_predicted_next_pc),
     .in_exception_valid(ifu_exception_valid),
     .in_exception_cause(ifu_exception_cause),
-    .in_flush(exu_redirect_fire),
+    .in_flush   (exu_redirect_fire),
     .in_fencei_flush_done(ifu_fencei_flush_done),
     .in_src1_data(wbu_src1_data),
     .in_src2_data(wbu_src2_data),
-    .in_valid(ifu_to_idu_valid),
-    .in_ready(exu_to_idu_ready),
+    .in_valid   (ifu_to_idu_valid),
+    .in_ready   (exu_to_idu_ready),
 
     
     .in_exu_valid(exu_to_lsu_valid),
     .in_exu_rf_we(exu_rf_we),
-    .in_exu_rd(exu_rd),
+    .in_exu_rd  (exu_rd),
 
     .in_lsu_pending_valid(lsu_pending_valid),
-    .in_lsu_rf_we(lsu_rf_we),
-    .in_lsu_rd(lsu_rd),
+    .in_lsu_rf_we   (lsu_rf_we),
+    .in_lsu_rd      (lsu_rd),
 
-    .in_wbu_valid(wbu_commit_valid),
+    .in_wbu_valid   (wbu_commit_valid),
     .in_wbu_rf_we(wbu_commit_wen),
     .in_wbu_rd(wbu_commit_rd),
 
     .out_valid(idu_to_exu_valid),
     .out_ready(idu_to_ifu_ready),
     .out_pc(idu_pc),
+    .out_predicted_next_pc(idu_predicted_next_pc),
     .out_inst(idu_inst),
     .out_exception_valid(idu_exception_valid),
     .out_exception_cause(idu_exception_cause),
@@ -324,6 +356,7 @@ EXU exu(
     .clk(clock),
     .reset(reset),
     .in_pc(idu_pc),
+    .in_predicted_next_pc(idu_predicted_next_pc),
     .in_inst(idu_inst),
     .in_rf_we(idu_rf_we),
     .in_wb_sel(idu_wb_sel),
@@ -375,6 +408,12 @@ EXU exu(
 
     .out_redirect_fire(exu_redirect_fire),
     .out_redirect_fire_pc(exu_redirect_fire_pc),
+
+    .out_bp_update_en(exu_bp_update_en),
+    .out_bp_pc(exu_bp_pc),
+    .out_bp_target(exu_bp_target),
+    .out_bp_taken(exu_bp_taken),
+
     .out_rf_we(exu_rf_we),
     .out_ready(exu_to_idu_ready),
     .out_valid(exu_to_lsu_valid)

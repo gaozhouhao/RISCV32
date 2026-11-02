@@ -9,10 +9,13 @@ module IFU(
     input                   in_fencei_done,
     input       [31:0]      in_redirect_pc,
     input                   in_redirect_fire,
+    input       [31:0]      in_predicted_next_pc,
     input                   in_ready,
 
     output reg  [31:0]      out_pc/* verilator public_flat_rd */,
     output reg  [31:0]      out_inst,
+    output      [31:0]      out_bp_query_pc,
+    output reg  [31:0]      out_predicted_next_pc,
     output reg              out_icache_flush,
     output reg              out_fencei_flush_done,
 
@@ -90,6 +93,7 @@ module IFU(
     wire ifu_r_fire  = axi.rvalid && axi.rready;
 
     reg [31:0] outstanding_pc;
+    reg [31:0] outstanding_predicted_next_pc;
     reg outstanding_stale;
 
     wire drop_response = ifu_r_fire && (outstanding_stale || in_redirect_fire);
@@ -104,6 +108,8 @@ module IFU(
 
     reg [31:0] fetch_pc;
 
+    assign out_bp_query_pc = fetch_pc;
+
     assign axi.araddr  = outstanding_pc;
     assign axi.arvalid = (axi_state == AXI_SEND_AR);
     assign axi.rready  = (axi_state == AXI_WAIT_R) && (!out_valid || in_ready);
@@ -112,6 +118,7 @@ module IFU(
         if (reset) begin
             axi_state       <= AXI_IDLE;
             outstanding_pc  <= `RESET_PC;
+            outstanding_predicted_next_pc   <= 32'b0;
             outstanding_stale <= 1'b0;
         end
         else begin
@@ -127,6 +134,7 @@ module IFU(
 
                         axi_state       <= AXI_SEND_AR;
                         outstanding_pc  <= fetch_pc;
+                        outstanding_predicted_next_pc   <= in_predicted_next_pc;
                     end
                 end
 
@@ -218,6 +226,7 @@ module IFU(
             fetch_pc <= `RESET_PC;
             out_pc <= 32'b0;
             out_inst <= 32'b0;
+            out_predicted_next_pc <= 32'b0;
             out_exception_valid <= 1'b0;
             out_exception_cause <= 32'b0;
             exception_pending <= 1'b0;
@@ -260,9 +269,10 @@ module IFU(
                         end
                         else begin
                             ifu_state <= IFU_VALID;
-                            fetch_pc <= outstanding_pc + 32'd4;
+                            fetch_pc <= outstanding_predicted_next_pc;
                             out_inst  <= axi.rdata;
                             out_pc <= outstanding_pc;
+                            out_predicted_next_pc <= outstanding_predicted_next_pc;
                             out_exception_valid <= 1'b0;
                             out_exception_cause <= 32'b0;
                         end

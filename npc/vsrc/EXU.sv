@@ -3,6 +3,7 @@ module EXU (
     input                       clk,
     input                       reset,
     input           [31:0]      in_pc,
+    input           [31:0]      in_predicted_next_pc,
     input           [31:0]      in_inst,
     input   wire    [ 1:0]      in_wb_sel,
     input   wire    [ 1:0]      in_alu_src1_sel,
@@ -37,6 +38,12 @@ module EXU (
 
     output                      out_redirect_fire,
     output          [31:0]      out_redirect_fire_pc,
+
+    output  reg                 out_bp_update_en,
+    output  reg     [31:0]      out_bp_pc,
+    output  reg     [31:0]      out_bp_target,
+    output  reg                 out_bp_taken,
+
     output  reg                 out_is_load,
     output  reg                 out_is_store,
     output  reg                 out_is_fencei,
@@ -117,7 +124,7 @@ always @(posedge clk) begin
                 out_wb_data         <= wb_data          ;
                 out_pc              <= in_pc            ;
                 out_inst            <= in_inst          ;
-                out_npc             <= redirect_valid ? redirect_pc : (in_pc + 32'd4);
+                out_npc             <= resolved_npc;
                 out_is_ebreak       <= in_is_ebreak     ;
             end
             else if (out_valid & in_ready) begin
@@ -129,6 +136,11 @@ always @(posedge clk) begin
 
 wire    [31:0]  redirect_pc;
 wire            redirect_valid;
+wire            branch_op_valid;
+wire            valid_cond_branch;
+wire    [31:0]  actual_next_pc;
+wire            branch_mispredict;
+wire    [31:0]  resolved_npc;
 reg     [31:0]  wb_data;
 wire    [31:0]  store_data;
 wire    [31:0]  alu_result;
@@ -177,6 +189,15 @@ ALU alu(
     assign exu_in_fire = in_valid && out_ready;
     assign exu_out_fire = out_valid && in_ready;
 
+    assign out_bp_update_en = 
+        !reset &&
+        exu_in_fire &&
+        valid_cond_branch;
+
+    assign out_bp_pc = in_pc;
+    assign out_bp_target = branch_target;
+    assign out_bp_taken = branch_taken;
+
 `ifdef VERILATOR
 
 import "DPI-C" function int unsigned pmem_read(input int unsigned raddr);
@@ -197,6 +218,23 @@ always @(*) begin
     endcase
 end
 
+assign branch_op_valid =
+    (in_branch_op == 3'b000) ||
+    (in_branch_op == 3'b001) ||
+    (in_branch_op == 3'b100) ||
+    (in_branch_op == 3'b101) ||
+    (in_branch_op == 3'b110) ||
+    (in_branch_op == 3'b111);
+
+assign valid_cond_branch = in_is_branch && branch_op_valid;
+
+assign actual_next_pc =
+    branch_taken ? branch_target : (in_pc + 32'd4);
+
+assign branch_mispredict =
+    valid_cond_branch &&
+    (actual_next_pc != in_predicted_next_pc);
+
 always @(*) begin
     case (in_wb_sel)
         `NPC_ALU: wb_data = alu_result;
@@ -207,18 +245,18 @@ always @(*) begin
 end
 
 assign redirect_valid =
-           in_is_jal
-        |  in_is_jalr
-        | (in_is_branch && branch_taken)
-        | in_trap_valid;
+            in_is_jal
+        |   in_is_jalr
+        |   branch_mispredict
+        |   in_trap_valid;
 
 
 assign redirect_pc =
-        in_trap_valid              ? trap_pc       :
-        in_is_jal                  ? jal_target    :
-        in_is_jalr                 ? jalr_target   :
-        (in_is_branch & branch_taken)    ? branch_target :
-                                  32'b0;
+        in_trap_valid       ? trap_pc       :
+        in_is_jal           ? jal_target    :
+        in_is_jalr          ? jalr_target   :
+        branch_mispredict   ? actual_next_pc :
+                            32'b0;
 
 assign out_redirect_fire_pc = redirect_pc;
 assign out_redirect_fire = !reset && exu_in_fire && redirect_valid;
@@ -235,6 +273,13 @@ always @(*) begin
     if(in_is_mret)
         trap_pc = mepc_data;
 end
+
+assign resolved_npc =
+    in_trap_valid       ? trap_pc       :
+    in_is_jal           ? jal_target    :
+    in_is_jalr          ? jalr_target   :
+    valid_cond_branch   ? actual_next_pc :
+                        (in_pc + 32'd4);
 
 wire    [31:0]  csr_rdata;
 wire    [31:0]  csr_wdata = (in_csr_op_sel == `CSR_WRITE) ? in_src1_data : (csr_rdata | in_src1_data);

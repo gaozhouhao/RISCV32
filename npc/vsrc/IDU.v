@@ -4,6 +4,7 @@ module IDU(
     input                   reset,
     input   reg     [31:0]  in_inst,
     input           [31:0]  in_pc,
+    input           [31:0]  in_predicted_next_pc,
     input                   in_exception_valid,
     input           [31:0]  in_exception_cause,
     input                   in_flush,
@@ -52,6 +53,7 @@ module IDU(
     output  reg     [ 1:0]  out_alu_src2_sel,
     output  reg     [ 1:0]  out_alu_src1_sel,
     output  reg     [31:0]  out_pc,
+    output  reg     [31:0]  out_predicted_next_pc,
     output  reg     [31:0]  out_inst,
     output  reg     [ 3:0]  out_alu_op,
     output          [ 4:0]  out_rd,
@@ -224,6 +226,7 @@ always @(posedge clk) begin
         out_src1_data       <=  src1_data       ;
         out_src2_data       <=  src2_data       ;
         out_pc              <=  in_pc           ;
+        out_predicted_next_pc <=  in_predicted_next_pc;
         out_inst            <=  in_inst         ;
         out_exception_valid <=  in_exception_valid;
         out_exception_cause <=  in_exception_cause;
