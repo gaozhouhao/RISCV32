@@ -122,7 +122,7 @@ typedef struct {
 } BranchTrace;
 
 void branch_trace_init() {
-    branch_trace_fp = fopen("./../npc/tools/cachesim/traces/branch_trace.txt", "w");
+    branch_trace_fp = fopen("./../npc/tools/branchsim/traces/branch_trace.txt", "w");
     Assert(branch_trace_fp, "Can not open branch_trace.txt");
 }
 
