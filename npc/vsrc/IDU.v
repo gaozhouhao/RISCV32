@@ -17,6 +17,7 @@ module IDU(
 
     input                   in_exu_valid,
     input                   in_exu_rf_we,
+    input                   in_exu_csr_wen,
     input           [ 4:0]  in_exu_rd,
 
     input                   in_lsu_pending_valid,
@@ -25,6 +26,7 @@ module IDU(
 
     input                   in_wbu_valid,
     input                   in_wbu_rf_we,
+    input                   in_wbu_csr_wen,
     input           [ 4:0]  in_wbu_rd,
 
     output                  out_ready,
@@ -102,7 +104,11 @@ assign csr_addr = in_inst[31:20];
 assign branch_op = funct3;
 assign load_size = funct3;
 assign store_size = funct3;
-assign out_ready = (!out_valid || in_ready) && !raw_hazard && !fence_pending;
+assign out_ready =
+    (!out_valid || in_ready) &&
+    !raw_hazard &&
+    !csr_redirect_hazard &&
+    !fence_pending;
 
 
 reg             rf_we       ;
@@ -134,6 +140,8 @@ reg     [31:0]  shamt       ;
 reg     [11:0]  csr_addr    ;
 reg     [31:0]  src1_data   ;
 reg     [31:0]  src2_data   ;
+reg             exception_valid;
+reg     [31:0]  exception_cause;
 
 `ifdef VERILATOR
 always @(posedge clk) begin
@@ -228,8 +236,8 @@ always @(posedge clk) begin
         out_pc              <=  in_pc           ;
         out_predicted_next_pc <=  in_predicted_next_pc;
         out_inst            <=  in_inst         ;
-        out_exception_valid <=  in_exception_valid;
-        out_exception_cause <=  in_exception_cause;
+        out_exception_valid <=  exception_valid;
+        out_exception_cause <=  exception_cause;
 
     end
     else if (idu_out_fire) begin
@@ -254,6 +262,9 @@ end
 
 
 always @(*) begin
+    exception_valid = in_exception_valid;
+    exception_cause = in_exception_cause;
+
     is_ecall = 1'b0;
     is_mret = 1'b0;
     is_ebreak = 1'b0;
@@ -271,7 +282,7 @@ always @(*) begin
     rf_we = 0;
     wb_sel = `NPC_ALU;
     is_fencei = 0;
-    if(in_valid && out_ready) begin
+    if(in_valid && out_ready && !in_exception_valid) begin
         if(opcode == 7'b0110011) begin
             rf_we = 1;
             wb_sel = `NPC_ALU;
@@ -365,9 +376,13 @@ always @(*) begin
         if(in_inst == 32'b0000_0000_0000_0000_0000_0000_0111_0011) begin
             is_ecall = 1'b1;
             trap_valid = 1;
+            exception_valid = 1'b1;
+            exception_cause = 32'd11;
         end
         if(in_inst == 32'b0000_0000_0001_0000_0000_0000_0111_0011) begin
             is_ebreak = 1'b1;
+            exception_valid = 1'b1;
+            exception_cause = 32'd3;
         end
         if(in_inst == 32'b0011_0000_0010_0000_0000_0000_0111_0011) begin
             is_mret = 1'b1;
@@ -442,6 +457,8 @@ wire producer_match_rs2;
 wire raw_hazard_rs1;
 wire raw_hazard_rs2;
 wire raw_hazard;
+wire csr_redirect_consumer;
+wire csr_redirect_hazard;
 
 assign producer_match_rs1 =
        (out_valid && out_rf_we &&
@@ -480,17 +497,31 @@ assign producer_match_rs2 =
 assign raw_hazard_rs1 =
     in_valid &&
     uses_rs1 &&
+    !exception_valid &&
     (rs1_idx != 5'd0) &&
     producer_match_rs1;
 
 assign raw_hazard_rs2 =
     in_valid &&
     uses_rs2 &&
+    !exception_valid &&
     (rs2_idx != 5'd0) &&
     producer_match_rs2;
 
 assign raw_hazard =
-    raw_hazard_rs1 || raw_hazard_rs2;
+    !exception_valid &&
+    (raw_hazard_rs1 || raw_hazard_rs2);
+
+assign csr_redirect_consumer =
+    in_valid &&
+    ((in_inst == 32'h0000_0073) ||
+     (in_inst == 32'h3020_0073));
+
+assign csr_redirect_hazard =
+    csr_redirect_consumer &&
+    ((out_valid && out_csr_wen) ||
+     (in_exu_valid && in_exu_csr_wen) ||
+     (in_wbu_valid && in_wbu_csr_wen));
 
 
 

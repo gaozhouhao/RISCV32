@@ -7,8 +7,15 @@ module LSU(
     input               [31:0]          in_inst,
     input               [31:0]          in_npc,
     input                               in_is_ebreak,
+    input                               in_exception_valid,
+    input               [31:0]          in_exception_cause,
 
     input                               in_rf_we,
+    input               [ 1:0]          in_wb_sel,
+    input                               in_csr_wen,
+    input                               in_csr_op_sel,
+    input               [11:0]          in_csr_addr,
+    input               [31:0]          in_src1_data,
     input       reg                     in_is_load,
     input       reg                     in_is_store,
     input                               in_is_fencei,
@@ -27,6 +34,13 @@ module LSU(
     output      reg     [31:0]          out_inst,
     output      reg     [31:0]          out_npc,
     output      reg                     out_is_ebreak,
+    output      reg                     out_exception_valid,
+    output      reg     [31:0]          out_exception_cause,
+    output      reg     [ 1:0]          out_wb_sel,
+    output      reg                     out_csr_wen,
+    output      reg                     out_csr_op_sel,
+    output      reg     [11:0]          out_csr_addr,
+    output      reg     [31:0]          out_src1_data,
     output      reg                     out_is_fencei,
     output      reg                     out_is_mmio,
     output              [ 4:0]          out_rd,
@@ -164,11 +178,18 @@ end
 
             out_rd <= in_rd;
             out_rf_we <= in_rf_we;
+            out_wb_sel <= in_wb_sel;
+            out_csr_wen <= in_csr_wen;
+            out_csr_op_sel <= in_csr_op_sel;
+            out_csr_addr <= in_csr_addr;
+            out_src1_data <= in_src1_data;
             out_is_fencei <= in_is_fencei;
             out_pc        <= in_pc;
             out_inst      <= in_inst;
             out_npc       <= in_npc;
             out_is_ebreak <= in_is_ebreak;
+            out_exception_valid <= in_exception_valid;
+            out_exception_cause <= in_exception_cause;
 
             out_is_mmio <=
                 (in_is_load || in_is_store) &&

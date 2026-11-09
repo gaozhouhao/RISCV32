@@ -201,6 +201,11 @@ wire    [2 :0]  exu_store_size;
 wire    [31:0]  exu_wb_data;
 wire    [31:0]  exu_store_data;
 wire    [31:0]  exu_mem_addr;
+wire    [ 1:0]  exu_wb_sel;
+wire            exu_csr_wen;
+wire            exu_csr_op_sel;
+wire    [11:0]  exu_csr_addr;
+wire    [31:0]  exu_src1_data;
 wire            exu_rf_we;
 wire    [ 4:0]  exu_rd;
 wire            exu_redirect_fire;
@@ -209,6 +214,8 @@ wire    [31:0]  exu_pc;
 wire    [31:0]  exu_inst;
 wire    [31:0]  exu_npc;
 wire            exu_is_ebreak;
+wire            exu_exception_valid;
+wire    [31:0]  exu_exception_cause;
 
 // Branch Predictor
 wire    [31:0]  ifu_bp_query_pc;
@@ -224,6 +231,11 @@ wire            exu_bp_taken;
 //  LSU Output
 wire            lsu_rf_we;
 wire    [31:0]  lsu_wb_data;
+wire    [ 1:0]  lsu_wb_sel;
+wire            lsu_csr_wen;
+wire            lsu_csr_op_sel;
+wire    [11:0]  lsu_csr_addr;
+wire    [31:0]  lsu_src1_data;
 wire    [ 4:0]  lsu_rd;
 wire            lsu_is_mmio;
 wire            lsu_is_fencei;
@@ -233,10 +245,14 @@ wire    [31:0]  lsu_pc;
 wire    [31:0]  lsu_inst;
 wire    [31:0]  lsu_npc;
 wire            lsu_is_ebreak;
+wire            lsu_exception_valid;
+wire    [31:0]  lsu_exception_cause;
 
 //  WBU Output
 wire    [31:0]  wbu_src1_data;
 wire    [31:0]  wbu_src2_data;
+wire    [31:0]  wbu_mtvec_data;
+wire    [31:0]  wbu_mepc_data;
 wire            wbu_fencei_done;
 wire            wbu_commit_valid    /* verilator public_flat_rd */;
 wire            wbu_commit_fire     /* verilator public_flat_rd */;
@@ -304,6 +320,7 @@ IDU idu(
     
     .in_exu_valid(exu_to_lsu_valid),
     .in_exu_rf_we(exu_rf_we),
+    .in_exu_csr_wen(exu_csr_wen),
     .in_exu_rd  (exu_rd),
 
     .in_lsu_pending_valid(lsu_pending_valid),
@@ -312,6 +329,7 @@ IDU idu(
 
     .in_wbu_valid   (wbu_commit_valid),
     .in_wbu_rf_we(wbu_commit_wen),
+    .in_wbu_csr_wen(lsu_csr_wen),
     .in_wbu_rd(wbu_commit_rd),
 
     .out_valid(idu_to_exu_valid),
@@ -364,6 +382,8 @@ EXU exu(
     .in_alu_src2_sel(idu_alu_src2_sel),
     .in_alu_op(idu_alu_op),
     
+    .in_exception_valid(idu_exception_valid),
+    .in_exception_cause(idu_exception_cause),
     .in_is_jal(idu_is_jal),
     .in_is_jalr(idu_is_jalr),
     .in_is_branch(idu_is_branch),
@@ -388,6 +408,8 @@ EXU exu(
     .in_csr_op_sel(idu_csr_op_sel),
     .in_is_ecall(idu_is_ecall),
     .in_is_mret(idu_is_mret),
+    .in_mtvec_data(wbu_mtvec_data),
+    .in_mepc_data(wbu_mepc_data),
 
     .in_ready(lsu_to_exu_ready),
     .in_valid(idu_to_exu_valid),
@@ -405,6 +427,14 @@ EXU exu(
     .out_is_load(exu_is_load),
     .out_is_store(exu_is_store),
     .out_is_fencei(exu_is_fencei),
+    .out_wb_sel(exu_wb_sel),
+    .out_csr_wen(exu_csr_wen),
+    .out_csr_op_sel(exu_csr_op_sel),
+    .out_csr_addr(exu_csr_addr),
+    .out_src1_data(exu_src1_data),
+
+    .out_exception_valid(exu_exception_valid),
+    .out_exception_cause(exu_exception_cause),
 
     .out_redirect_fire(exu_redirect_fire),
     .out_redirect_fire_pc(exu_redirect_fire_pc),
@@ -427,6 +457,13 @@ LSU lsu(
     .in_inst(exu_inst),
     .in_npc(exu_npc),
     .in_is_ebreak(exu_is_ebreak),
+    .in_exception_valid(exu_exception_valid),
+    .in_exception_cause(exu_exception_cause),
+    .in_wb_sel(exu_wb_sel),
+    .in_csr_wen(exu_csr_wen),
+    .in_csr_op_sel(exu_csr_op_sel),
+    .in_csr_addr(exu_csr_addr),
+    .in_src1_data(exu_src1_data),
     .in_rf_we(exu_rf_we),
     .in_rd(exu_rd),
     .in_is_load(exu_is_load),
@@ -449,6 +486,13 @@ LSU lsu(
     .out_inst(lsu_inst),
     .out_npc(lsu_npc),
     .out_is_ebreak(lsu_is_ebreak),
+    .out_exception_valid(lsu_exception_valid),
+    .out_exception_cause(lsu_exception_cause),
+    .out_wb_sel(lsu_wb_sel),
+    .out_csr_wen(lsu_csr_wen),
+    .out_csr_op_sel(lsu_csr_op_sel),
+    .out_csr_addr(lsu_csr_addr),
+    .out_src1_data(lsu_src1_data),
     .out_is_fencei(lsu_is_fencei),
     .out_is_mmio(lsu_is_mmio),
     .out_wb_data(lsu_wb_data),
@@ -465,6 +509,13 @@ WBU wbu (
     .in_inst(lsu_inst),
     .in_npc(lsu_npc),
     .in_is_ebreak(lsu_is_ebreak),
+    .in_exception_valid(lsu_exception_valid),
+    .in_exception_cause(lsu_exception_cause),
+    .in_wb_sel(lsu_wb_sel),
+    .in_csr_wen(lsu_csr_wen),
+    .in_csr_op_sel(lsu_csr_op_sel),
+    .in_csr_addr(lsu_csr_addr),
+    .in_src1_data(lsu_src1_data),
     .in_is_mmio(lsu_is_mmio),
     .in_is_fencei(lsu_is_fencei),
     .in_wdata(lsu_wb_data),
@@ -486,6 +537,8 @@ WBU wbu (
     .commit_wdata(wbu_commit_wdata),
     .out_rdata1(wbu_src1_data),
     .out_rdata2(wbu_src2_data),
+    .out_mtvec_data(wbu_mtvec_data),
+    .out_mepc_data(wbu_mepc_data),
     .out_fencei_done(wbu_fencei_done),
     .out_ready(wbu_to_lsu_ready)
 );

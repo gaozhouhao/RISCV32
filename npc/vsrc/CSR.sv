@@ -1,7 +1,8 @@
 module CSR(
     input               [11:0]  csr_addr,
     input                       csr_wen,
-    input                       is_ecall,
+    input                       in_exception_valid,
+    input               [31:0]  in_exception_cause,
     input       reg     [31:0]  pc,
     input                       clk,
 
@@ -42,9 +43,9 @@ end
 
 
 always @(posedge clk) begin
-    if(is_ecall) begin
+    if(in_exception_valid) begin
         mepc <= pc;
-        mcause <= 32'd11;
+        mcause <= in_exception_cause;
     end
     else if(csr_wen) begin
         case (csr_addr)

@@ -11,6 +11,8 @@ module EXU (
     input   reg     [ 3:0]      in_alu_op,
     input   reg                 in_rf_we,
 
+    input                       in_exception_valid,
+    input           [31:0]      in_exception_cause,
     input   reg                 in_is_ebreak,
     input   reg                 in_is_load,
     input   reg                 in_is_store,
@@ -19,6 +21,8 @@ module EXU (
     input   reg                 in_is_jal,
     input                       in_is_ecall,
     input                       in_is_mret,
+    input           [31:0]      in_mtvec_data,
+    input           [31:0]      in_mepc_data,
     input                       in_is_fencei,
     input   reg                 in_trap_valid,
 
@@ -36,6 +40,8 @@ module EXU (
     input                       in_valid,
     input                       in_ready,
 
+    output  reg                 out_exception_valid,
+    output  reg     [31:0]      out_exception_cause,
     output                      out_redirect_fire,
     output          [31:0]      out_redirect_fire_pc,
 
@@ -47,6 +53,11 @@ module EXU (
     output  reg                 out_is_load,
     output  reg                 out_is_store,
     output  reg                 out_is_fencei,
+    output  reg     [ 1:0]      out_wb_sel,
+    output  reg                 out_csr_wen,
+    output  reg                 out_csr_op_sel,
+    output  reg     [11:0]      out_csr_addr,
+    output  reg     [31:0]      out_src1_data,
     output          [ 2:0]      out_load_size,
     output          [ 2:0]      out_store_size,
     output  reg     [31:0]      out_wb_data,
@@ -115,6 +126,11 @@ always @(posedge clk) begin
                 out_is_load         <= in_is_load       ;
                 out_is_store        <= in_is_store      ;
                 out_is_fencei       <= in_is_fencei     ;
+                out_wb_sel          <= in_wb_sel        ;
+                out_csr_wen         <= in_csr_wen       ;
+                out_csr_op_sel      <= in_csr_op_sel    ;
+                out_csr_addr        <= in_csr_addr      ;
+                out_src1_data       <= in_src1_data     ;
                 out_load_size       <= in_load_size     ;
                 out_store_size      <= in_store_size    ;
                 out_rf_we           <= in_rf_we         ;
@@ -126,6 +142,8 @@ always @(posedge clk) begin
                 out_inst            <= in_inst          ;
                 out_npc             <= resolved_npc;
                 out_is_ebreak       <= in_is_ebreak     ;
+                out_exception_valid <= in_exception_valid;
+                out_exception_cause <= in_exception_cause;
             end
             else if (out_valid & in_ready) begin
                 out_valid <= 1'b0;
@@ -239,7 +257,7 @@ always @(*) begin
     case (in_wb_sel)
         `NPC_ALU: wb_data = alu_result;
         `NPC_PC4: wb_data = in_pc + 32'h4;
-        `NPC_CSR: wb_data = csr_rdata;
+        `NPC_CSR: wb_data = 32'b0;
         `NPC_MEM: wb_data = 32'b0;
     endcase
 end
@@ -262,16 +280,15 @@ assign out_redirect_fire_pc = redirect_pc;
 assign out_redirect_fire = !reset && exu_in_fire && redirect_valid;
 
 
-wire [31:0] mtvec_data, mepc_data;
 always @(*) begin
     jal_target = in_imm + in_pc;
     jalr_target = (in_imm + in_src1_data) & ~1;
     branch_target = jal_target; 
     trap_pc = 0;
     if(in_is_ecall)
-        trap_pc = mtvec_data;
+        trap_pc = in_mtvec_data;
     if(in_is_mret)
-        trap_pc = mepc_data;
+        trap_pc = in_mepc_data;
 end
 
 assign resolved_npc =
@@ -280,20 +297,5 @@ assign resolved_npc =
     in_is_jalr          ? jalr_target   :
     valid_cond_branch   ? actual_next_pc :
                         (in_pc + 32'd4);
-
-wire    [31:0]  csr_rdata;
-wire    [31:0]  csr_wdata = (in_csr_op_sel == `CSR_WRITE) ? in_src1_data : (csr_rdata | in_src1_data);
-CSR csr(
-    .clk(clk),
-    .pc(in_pc),
-    .csr_addr(in_csr_addr),
-    .csr_wen(in_csr_wen && in_valid && out_ready),
-    .is_ecall(in_is_ecall && in_valid && out_ready),
-    .csr_rdata(csr_rdata),
-    .csr_wdata(csr_wdata),
-    .mtvec_data(mtvec_data),
-    .mepc_data(mepc_data)
-);
-
 
 endmodule
