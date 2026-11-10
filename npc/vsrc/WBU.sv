@@ -6,7 +6,7 @@ module WBU(
     input       [31:0]  in_pc,
     input       [31:0]  in_inst,
     input       [31:0]  in_npc,
-    input               in_is_ebreak,
+
     input               in_is_mret,
     input               in_exception_valid,
     input       [31:0]  in_exception_cause,

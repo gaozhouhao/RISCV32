@@ -14,7 +14,7 @@ module EXU (
 
     input                       in_exception_valid,
     input           [31:0]      in_exception_cause,
-    input   reg                 in_is_ebreak,
+
     input   reg                 in_is_load,
     input   reg                 in_is_store,
     input   reg                 in_is_branch,
@@ -64,7 +64,7 @@ module EXU (
     output  reg     [31:0]      out_inst,
     output  reg     [31:0]      out_pc,
     output  reg     [31:0]      out_npc,
-    output  reg                 out_is_ebreak,
+
     output                      out_rf_we,
     output          [ 4:0]      out_rd,
     output                      out_ready,
@@ -115,7 +115,7 @@ always @(posedge clk) begin
             out_pc              <= 32'b0;
             out_inst            <= 32'b0;
             out_npc             <= 32'b0;
-            out_is_ebreak       <= 1'b0;
+
             out_is_mret         <= 1'b0;
             out_exception_valid <= 1'b0;
             out_exception_cause <= 32'b0;
@@ -142,7 +142,7 @@ always @(posedge clk) begin
                 out_pc              <= in_pc            ;
                 out_inst            <= in_inst          ;
                 out_npc             <= resolved_npc;
-                out_is_ebreak       <= in_is_ebreak     ;
+
                 out_exception_valid <= in_exception_valid;
                 out_exception_cause <= in_exception_cause;
             end

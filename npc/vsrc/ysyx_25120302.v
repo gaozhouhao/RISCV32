@@ -167,16 +167,13 @@ wire            idu_rf_we;
 wire            idu_csr_wen;
 wire    [ 1:0]  idu_wb_sel;
 wire            idu_csr_op_sel;
-wire            idu_is_ecall;
 wire            idu_is_mret;
-wire            idu_is_ebreak;
 wire            idu_is_jalr;
 wire            idu_is_jal;
 wire            idu_is_branch;
 wire            idu_is_load;
 wire            idu_is_store;
 wire            idu_is_fencei;
-wire            idu_trap_valid;
 wire    [ 2:0]  idu_branch_op;
 wire    [ 2:0]  idu_load_size;
 wire    [ 2:0]  idu_store_size;
@@ -214,7 +211,7 @@ wire    [31:0]  exu_redirect_fire_pc;
 wire    [31:0]  exu_pc;
 wire    [31:0]  exu_inst;
 wire    [31:0]  exu_npc;
-wire            exu_is_ebreak;
+
 wire            exu_exception_valid;
 wire    [31:0]  exu_exception_cause;
 
@@ -246,7 +243,7 @@ wire            lsu_pending_valid;
 wire    [31:0]  lsu_pc;
 wire    [31:0]  lsu_inst;
 wire    [31:0]  lsu_npc;
-wire            lsu_is_ebreak;
+
 wire            lsu_exception_valid;
 wire    [31:0]  lsu_exception_cause;
 
@@ -352,16 +349,14 @@ IDU idu(
     .out_exception_cause(idu_exception_cause),
     .out_rf_we(idu_rf_we),
     .out_csr_wen(idu_csr_wen),
-    .out_is_ecall(idu_is_ecall),
     .out_is_mret(idu_is_mret),
-    .out_is_ebreak(idu_is_ebreak),
     .out_is_jalr(idu_is_jalr),
     .out_is_jal(idu_is_jal),
     .out_is_load(idu_is_load),
     .out_is_store(idu_is_store),
     .out_is_branch(idu_is_branch),
     .out_is_fencei(idu_is_fencei),
-    .out_trap_valid(idu_trap_valid),
+
     .out_wb_sel(idu_wb_sel),
     .out_csr_op_sel(idu_csr_op_sel),
     .out_alu_src1_sel(idu_alu_src1_sel),
@@ -399,7 +394,7 @@ EXU exu(
     .in_is_jal(idu_is_jal),
     .in_is_jalr(idu_is_jalr),
     .in_is_branch(idu_is_branch),
-    .in_is_ebreak(idu_is_ebreak),
+
     .in_is_load(idu_is_load),
     .in_is_store(idu_is_store),
     .in_is_fencei(idu_is_fencei),
@@ -426,7 +421,7 @@ EXU exu(
     .out_pc(exu_pc),
     .out_inst(exu_inst),
     .out_npc(exu_npc),
-    .out_is_ebreak(exu_is_ebreak),
+
     .out_wb_data(exu_wb_data),
     .out_store_data(exu_store_data),
     .out_rd(exu_rd),
@@ -466,7 +461,7 @@ LSU lsu(
     .in_pc(exu_pc),
     .in_inst(exu_inst),
     .in_npc(exu_npc),
-    .in_is_ebreak(exu_is_ebreak),
+
     .in_is_mret(exu_is_mret),
     .in_exception_valid(exu_exception_valid),
     .in_exception_cause(exu_exception_cause),
@@ -496,7 +491,7 @@ LSU lsu(
     .out_pc(lsu_pc),
     .out_inst(lsu_inst),
     .out_npc(lsu_npc),
-    .out_is_ebreak(lsu_is_ebreak),
+
     .out_is_mret(lsu_is_mret),
     .out_exception_valid(lsu_exception_valid),
     .out_exception_cause(lsu_exception_cause),
@@ -520,7 +515,7 @@ WBU wbu (
     .in_pc(lsu_pc),
     .in_inst(lsu_inst),
     .in_npc(lsu_npc),
-    .in_is_ebreak(lsu_is_ebreak),
+
     .in_is_mret(lsu_is_mret),
     .in_exception_valid(lsu_exception_valid),
     .in_exception_cause(lsu_exception_cause),

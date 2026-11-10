@@ -42,16 +42,13 @@ module IDU(
     output  reg     [ 1:0]  out_wb_sel,
     output  reg             out_csr_op_sel,
     
-    output  reg             out_is_ecall,
     output  reg             out_is_mret,
-    output  reg             out_is_ebreak,
     output  reg             out_is_jalr,
     output  reg             out_is_jal,
     output  reg             out_is_branch,
     output  reg             out_is_load,
     output  reg             out_is_store,
     output  reg             out_is_fencei,
-    output  reg             out_trap_valid,
 
     output          [ 2:0]  out_branch_op,
     output          [ 2:0]  out_load_size,
@@ -136,9 +133,8 @@ reg             rf_we       ;
 reg             csr_wen     ;
 reg     [ 1:0]  wb_sel      ;
 reg             csr_op_sel  ;
-reg             is_ecall    ;
 reg             is_mret     ;
-reg             is_ebreak   ;
+
 reg             is_jalr     ;
 reg             is_jal      ;
 reg             is_branch   ;
@@ -147,7 +143,6 @@ reg             is_store    ;
 reg             is_fencei;
 reg             fence_pending;
 reg             trap_pending;
-reg             trap_valid;
 reg     [ 2:0]  branch_op   ;
 reg     [ 2:0]  load_size   ;
 reg     [ 2:0]  store_size  ;
@@ -246,16 +241,14 @@ always @(posedge clk) begin
         out_csr_wen         <=  csr_wen         ;
         out_wb_sel          <=  wb_sel          ;
         out_csr_op_sel      <=  csr_op_sel      ;
-        out_is_ecall        <=  is_ecall        ;
         out_is_mret         <=  is_mret         ;
-        out_is_ebreak       <=  is_ebreak       ;
         out_is_jalr         <=  is_jalr         ;
         out_is_jal          <=  is_jal          ;
         out_is_branch       <=  is_branch       ;
         out_is_load         <=  is_load         ;
         out_is_store        <=  is_store        ;
         out_is_fencei       <=  is_fencei       ;
-        out_trap_valid      <=  trap_valid      ;
+
         out_branch_op       <=  branch_op       ;
         out_load_size       <=  load_size       ;
         out_store_size      <=  store_size      ;
@@ -300,9 +293,7 @@ always @(*) begin
     exception_valid = in_exception_valid;
     exception_cause = in_exception_cause;
 
-    is_ecall = 1'b0;
     is_mret = 1'b0;
-    is_ebreak = 1'b0;
     alu_op = `NPC_ALU_ADD;
     csr_op_sel = `CSR_WRITE;
     alu_src1_sel = `NPC_RS1_DATA;
@@ -312,135 +303,152 @@ always @(*) begin
     is_load = 0;
     is_store = 0;
     is_branch = 0;
-    trap_valid = 0;
+
     csr_wen = 0;
     rf_we = 0;
     wb_sel = `NPC_ALU;
     is_fencei = 0;
     if(in_valid && out_ready && !in_exception_valid) begin
-        if(opcode == 7'b0110011) begin
-            rf_we = 1;
-            wb_sel = `NPC_ALU;
-            alu_src1_sel = `NPC_RS1_DATA;
-            alu_src2_sel = `NPC_RS2_DATA;
-            if(funct3 == 3'b000)begin
-                if(funct7 == 7'b0000000) alu_op = `NPC_ALU_ADD;
-                if(funct7 == 7'b0100000) alu_op = `NPC_ALU_SUB;
+        case (opcode)
+            7'b0110011: begin
+                rf_we = 1;
+                wb_sel = `NPC_ALU;
+                alu_src1_sel = `NPC_RS1_DATA;
+                alu_src2_sel = `NPC_RS2_DATA;
+                case (funct3)
+                3'b000: begin
+                    if(funct7 == 7'b0000000) alu_op = `NPC_ALU_ADD;
+                    if(funct7 == 7'b0100000) alu_op = `NPC_ALU_SUB;
+                end
+                3'b001: alu_op = `NPC_ALU_SLL;
+                3'b010: alu_op = `NPC_ALU_SLT;
+                3'b011: alu_op = `NPC_ALU_SLTU;
+                3'b100: alu_op = `NPC_ALU_XOR;
+                3'b110: alu_op = `NPC_ALU_OR;
+                3'b101: begin
+                    if(funct7 == 7'b0000000) alu_op = `NPC_ALU_SRL;
+                    if(funct7 == 7'b0100000) alu_op = `NPC_ALU_SRA;
+                end
+                3'b111: alu_op = `NPC_ALU_AND;
+                endcase
             end
-            if(funct3 == 3'b001) alu_op = `NPC_ALU_SLL;
-            if(funct3 == 3'b010) alu_op = `NPC_ALU_SLT;
-            if(funct3 == 3'b011) alu_op = `NPC_ALU_SLTU;
-            if(funct3 == 3'b100) alu_op = `NPC_ALU_XOR;
-            if(funct3 == 3'b110) alu_op = `NPC_ALU_OR;
-            if(funct3 == 3'b101) begin
-                if(funct7 == 7'b0000000) alu_op = `NPC_ALU_SRL;
-                if(funct7 == 7'b0100000) alu_op = `NPC_ALU_SRA;
+            7'b0010011: begin
+                rf_we = 1;
+                wb_sel = `NPC_ALU;
+                alu_src1_sel = `NPC_RS1_DATA;
+                alu_src2_sel = `NPC_IMM;
+                case (funct3)
+                    3'b000: alu_op = `NPC_ALU_ADD; //addi
+                    3'b001: alu_op = `NPC_ALU_SLL; //slli
+                    3'b010: alu_op = `NPC_ALU_SLT;
+                    3'b011: alu_op = `NPC_ALU_SLTU; //sltiu
+                    3'b100: alu_op = `NPC_ALU_XOR;//xori
+                    3'b110: alu_op = `NPC_ALU_OR;//ori
+                    3'b101: begin
+                        alu_src2_sel = `NPC_SHAMT;
+                        if(funct7 == 7'b0000000) alu_op = `NPC_ALU_SRL;//srli
+                        if(funct7 == 7'b0100000) alu_op = `NPC_ALU_SRA;//srai
+                    end
+                    3'b111: alu_op = `NPC_ALU_AND;
+                endcase
             end
-            if(funct3 == 3'b111) alu_op = `NPC_ALU_AND;
-        end
-        if(opcode == 7'b0010011) begin
-            rf_we = 1;
-            wb_sel = `NPC_ALU;
-            alu_src1_sel = `NPC_RS1_DATA;
-            alu_src2_sel = `NPC_IMM;
-            if (funct3 == 3'b000) alu_op = `NPC_ALU_ADD; //addi
-            if (funct3 == 3'b001) alu_op = `NPC_ALU_SLL; //slli
-            if (funct3 == 3'b010) alu_op = `NPC_ALU_SLT;
-            if (funct3 == 3'b011) alu_op = `NPC_ALU_SLTU; //sltiu
-            if (funct3 == 3'b100) alu_op = `NPC_ALU_XOR;//xori
-            if (funct3 == 3'b110) alu_op = `NPC_ALU_OR;//ori
-            if (funct3 == 3'b101) begin
-                alu_src2_sel = `NPC_SHAMT;
-                if(funct7 == 7'b0000000) alu_op = `NPC_ALU_SRL;//srli
-                if(funct7 == 7'b0100000) alu_op = `NPC_ALU_SRA;//srai
+            7'b1101111: begin // jal
+                rf_we = 1;
+                wb_sel = `NPC_PC4;
+                alu_src1_sel = `NPC_CUR_PC;
+                alu_src2_sel = `NPC_IMM;
+                alu_op = `NPC_ALU_ADD;
+                is_jal = 1;
             end
-            if(funct3 == 3'b111) alu_op = `NPC_ALU_AND;
-        end
-        if(opcode == 7'b1101111)begin // jal
-            rf_we = 1;
-            wb_sel = `NPC_PC4;
-            alu_src1_sel = `NPC_CUR_PC;
-            alu_src2_sel = `NPC_IMM;
-            alu_op = `NPC_ALU_ADD;
-            is_jal = 1;
-        end
-        if(opcode == 7'b1100111 && funct3 == 3'b000) begin//jalr
-            rf_we = 1;
-            wb_sel = `NPC_PC4;
-            alu_src1_sel = `NPC_RS1_DATA;
-            alu_src2_sel = `NPC_IMM;
-            alu_op = `NPC_ALU_ADD;
-            is_jalr = 1;
-        end
-        if (opcode == 7'b1100011) begin // branch
-            rf_we = 0;
-            alu_src1_sel = `NPC_CUR_PC;
-            alu_src2_sel = `NPC_IMM;
-            is_branch = 1;
-        end
+            7'b1100111: begin//jalr
+                rf_we = 1;
+                wb_sel = `NPC_PC4;
+                alu_src1_sel = `NPC_RS1_DATA;
+                alu_src2_sel = `NPC_IMM;
+                alu_op = `NPC_ALU_ADD;
+                is_jalr = 1;
+            end
+            7'b1100011: begin // branch
+                rf_we = 0;
+                alu_src1_sel = `NPC_CUR_PC;
+                alu_src2_sel = `NPC_IMM;
+                is_branch = 1;
+            end
 
-        if(opcode == 7'b0110111) begin//lui
-            rf_we = 1;
-            wb_sel = `NPC_ALU;
-            alu_src1_sel = `NPC_ZERO;
-            alu_src2_sel = `NPC_IMM;
-            alu_op = `NPC_ALU_ADD;
-        end
-        if(opcode == 7'b0010111) begin //auipc
-            rf_we = 1;
-            wb_sel = `NPC_ALU;
-            alu_src1_sel = `NPC_CUR_PC;
-            alu_src2_sel = `NPC_IMM;
-            alu_op = `NPC_ALU_ADD;
-        end
-        if (opcode == 7'b0000011) begin// lb/lh/lw/lbu/lhu
-            rf_we = 1;
-            wb_sel = `NPC_MEM;
-            is_load = 1'b1;
-            alu_src1_sel = `NPC_RS1_DATA;
-            alu_src2_sel = `NPC_IMM;
-            alu_op = `NPC_ALU_ADD;
-        end
-        if (opcode == 7'b0100011) begin // sb/sh/sw
-            alu_src1_sel = `NPC_RS1_DATA;
-            alu_src2_sel = `NPC_IMM;
-            alu_op = `NPC_ALU_ADD;
-            is_store = 1;
-        end
-        
-        if(in_inst == 32'b0000_0000_0000_0000_0000_0000_0111_0011) begin
-            is_ecall = 1'b1;
-            trap_valid = 1;
-            exception_valid = 1'b1;
-            exception_cause = 32'd11;
-        end
-        if(in_inst == 32'b0000_0000_0001_0000_0000_0000_0111_0011) begin
-            is_ebreak = 1'b1;
-            exception_valid = 1'b1;
-            exception_cause = 32'd3;
-        end
-        if(in_inst == 32'b0011_0000_0010_0000_0000_0000_0111_0011) begin
-            is_mret = 1'b1;
-            trap_valid = 1;
-        end
-        if(opcode == 7'b1110011) begin//priortiy
-            if(funct3 == 3'b001)begin //CSRRW
-                if(rd != 0) rf_we = 1;
-                wb_sel = `NPC_CSR;
-                csr_wen = 1;
-                csr_op_sel = `CSR_WRITE;
+            7'b0110111: begin//lui
+                rf_we = 1;
+                wb_sel = `NPC_ALU;
+                alu_src1_sel = `NPC_ZERO;
+                alu_src2_sel = `NPC_IMM;
+                alu_op = `NPC_ALU_ADD;
             end
-            if(funct3 == 3'b010)begin //CSRRS
-                csr_wen = 1;
-                if(rd != 0) rf_we = 1;
-                wb_sel = `NPC_CSR;
-                if(rs1_idx == 0) csr_wen = 0;
-                csr_op_sel = `CSR_SET;
+            7'b0010111: begin //auipc
+                rf_we = 1;
+                wb_sel = `NPC_ALU;
+                alu_src1_sel = `NPC_CUR_PC;
+                alu_src2_sel = `NPC_IMM;
+                alu_op = `NPC_ALU_ADD;
             end
-        end
-        if (opcode == 7'b0001111) begin // Fence.i
-            if (funct3 == 3'b001) is_fencei = 1;
-        end
+            7'b0000011: begin// lb/lh/lw/lbu/lhu
+                rf_we = 1;
+                wb_sel = `NPC_MEM;
+                is_load = 1'b1;
+                alu_src1_sel = `NPC_RS1_DATA;
+                alu_src2_sel = `NPC_IMM;
+                alu_op = `NPC_ALU_ADD;
+            end
+            7'b0100011: begin // sb/sh/sw
+                alu_src1_sel = `NPC_RS1_DATA;
+                alu_src2_sel = `NPC_IMM;
+                alu_op = `NPC_ALU_ADD;
+                is_store = 1;
+            end
+            
+            7'b1110011: begin
+                case (funct3)
+                    3'b000: begin
+                        if (in_inst == 32'h0000_0073) begin //ecall
+                            exception_valid = 1'b1;
+                            exception_cause = 32'd11;
+                        end
+                        if (in_inst == 32'h0010_0073) begin //ebreak
+                            exception_valid = 1'b1;
+                            exception_cause = 32'd3;
+                        end
+                        if (in_inst == 32'h3020_0073) begin //mret
+                            is_mret = 1'b1;
+                        end
+                    end
+                    3'b001: begin //CSRRW
+                        if(rd != 0) rf_we = 1;
+                        wb_sel = `NPC_CSR;
+                        csr_wen = 1;
+                        csr_op_sel = `CSR_WRITE;
+                    end
+                    3'b010: begin //CSRRS
+                        csr_wen = 1;
+                        if(rd != 0) rf_we = 1;
+                        wb_sel = `NPC_CSR;
+                        if(rs1_idx == 0) csr_wen = 0;
+                        csr_op_sel = `CSR_SET;
+                    end
+                    default: begin
+                        exception_valid = 1'b1;
+                        exception_cause = 32'd2;
+                    end
+                endcase
+
+            end
+
+            7'b0001111: begin // Fence.i
+                if (funct3 == 3'b001) is_fencei = 1;
+            end
+
+            default: begin
+                exception_valid = 1'b1;
+                exception_cause = 32'd2;
+            end
+        endcase
     end
 end
 
