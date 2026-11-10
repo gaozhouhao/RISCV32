@@ -3,8 +3,10 @@ module CSR(
     input                       csr_wen,
     input                       in_exception_valid,
     input               [31:0]  in_exception_cause,
+    input                       in_mret_commit,
     input       reg     [31:0]  pc,
     input                       clk,
+    input                       reset,
 
     output      reg     [31:0]  csr_rdata,
     input       reg     [31:0]  csr_wdata,
@@ -43,9 +45,23 @@ end
 
 
 always @(posedge clk) begin
-    if(in_exception_valid) begin
+    if (reset) begin
+        mstatus <= 32'h0000_1800;
+        mtvec   <= 32'b0;
+        mepc    <= 32'b0;
+        mcause  <= 32'b0;
+    end
+    else if(in_exception_valid) begin
         mepc <= pc;
         mcause <= in_exception_cause;
+        mstatus[7] <= mstatus[3];
+        mstatus[3] <= 1'b0;
+        mstatus[12:11] <= 2'b11;
+    end
+    else if (in_mret_commit) begin
+        mstatus[3] <= mstatus[7];
+        mstatus[7] <= 1'b1;
+        mstatus[12:11] <= 2'b11;
     end
     else if(csr_wen) begin
         case (csr_addr)

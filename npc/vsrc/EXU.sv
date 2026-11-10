@@ -2,6 +2,7 @@
 module EXU (
     input                       clk,
     input                       reset,
+    input                       in_flush,
     input           [31:0]      in_pc,
     input           [31:0]      in_predicted_next_pc,
     input           [31:0]      in_inst,
@@ -19,12 +20,8 @@ module EXU (
     input   reg                 in_is_branch,
     input   reg                 in_is_jalr,
     input   reg                 in_is_jal,
-    input                       in_is_ecall,
     input                       in_is_mret,
-    input           [31:0]      in_mtvec_data,
-    input           [31:0]      in_mepc_data,
     input                       in_is_fencei,
-    input   reg                 in_trap_valid,
 
     input                       in_csr_wen,
     input                       in_csr_op_sel,
@@ -53,6 +50,7 @@ module EXU (
     output  reg                 out_is_load,
     output  reg                 out_is_store,
     output  reg                 out_is_fencei,
+    output  reg                 out_is_mret,
     output  reg     [ 1:0]      out_wb_sel,
     output  reg                 out_csr_wen,
     output  reg                 out_csr_op_sel,
@@ -109,16 +107,18 @@ end
 
 reg     [31:0]      jalr_target;
 reg     [31:0]      jal_target;
-reg     [31:0]      trap_pc;
 reg     [31:0]      branch_target;
 
 always @(posedge clk) begin
-        if (reset) begin
-            out_valid <= 1'b0;
-            out_pc             <= 32'b0;
-            out_inst           <= 32'b0;
-            out_npc            <= 32'b0;
-            out_is_ebreak      <= 1'b0;
+        if (reset || in_flush) begin
+            out_valid           <= 1'b0;
+            out_pc              <= 32'b0;
+            out_inst            <= 32'b0;
+            out_npc             <= 32'b0;
+            out_is_ebreak       <= 1'b0;
+            out_is_mret         <= 1'b0;
+            out_exception_valid <= 1'b0;
+            out_exception_cause <= 32'b0;
         end
         else begin
             if (exu_in_fire) begin
@@ -126,6 +126,7 @@ always @(posedge clk) begin
                 out_is_load         <= in_is_load       ;
                 out_is_store        <= in_is_store      ;
                 out_is_fencei       <= in_is_fencei     ;
+                out_is_mret         <= in_is_mret       ;
                 out_wb_sel          <= in_wb_sel        ;
                 out_csr_wen         <= in_csr_wen       ;
                 out_csr_op_sel      <= in_csr_op_sel    ;
@@ -199,7 +200,7 @@ ALU alu(
 
 
 
-    assign out_ready = !out_valid || in_ready;
+    assign out_ready = (!out_valid || in_ready);
     assign store_data = in_is_store ? in_src2_data : 32'b0;
 
     wire exu_in_fire;
@@ -265,12 +266,10 @@ end
 assign redirect_valid =
             in_is_jal
         |   in_is_jalr
-        |   branch_mispredict
-        |   in_trap_valid;
+        |   branch_mispredict;
 
 
 assign redirect_pc =
-        in_trap_valid       ? trap_pc       :
         in_is_jal           ? jal_target    :
         in_is_jalr          ? jalr_target   :
         branch_mispredict   ? actual_next_pc :
@@ -284,15 +283,9 @@ always @(*) begin
     jal_target = in_imm + in_pc;
     jalr_target = (in_imm + in_src1_data) & ~1;
     branch_target = jal_target; 
-    trap_pc = 0;
-    if(in_is_ecall)
-        trap_pc = in_mtvec_data;
-    if(in_is_mret)
-        trap_pc = in_mepc_data;
 end
 
 assign resolved_npc =
-    in_trap_valid       ? trap_pc       :
     in_is_jal           ? jal_target    :
     in_is_jalr          ? jalr_target   :
     valid_cond_branch   ? actual_next_pc :

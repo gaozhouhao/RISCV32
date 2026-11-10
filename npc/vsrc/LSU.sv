@@ -7,6 +7,7 @@ module LSU(
     input               [31:0]          in_inst,
     input               [31:0]          in_npc,
     input                               in_is_ebreak,
+    input                               in_is_mret,
     input                               in_exception_valid,
     input               [31:0]          in_exception_cause,
 
@@ -34,6 +35,7 @@ module LSU(
     output      reg     [31:0]          out_inst,
     output      reg     [31:0]          out_npc,
     output      reg                     out_is_ebreak,
+    output      reg                     out_is_mret,
     output      reg                     out_exception_valid,
     output      reg     [31:0]          out_exception_cause,
     output      reg     [ 1:0]          out_wb_sel,
@@ -188,6 +190,7 @@ end
             out_inst      <= in_inst;
             out_npc       <= in_npc;
             out_is_ebreak <= in_is_ebreak;
+            out_is_mret   <= in_is_mret;
             out_exception_valid <= in_exception_valid;
             out_exception_cause <= in_exception_cause;
 

@@ -7,7 +7,10 @@ module IDU(
     input           [31:0]  in_predicted_next_pc,
     input                   in_exception_valid,
     input           [31:0]  in_exception_cause,
-    input                   in_flush,
+    input                   in_exu_redirect_fire,
+    input           [31:0]  in_exu_redirect_pc,
+    input                   in_wbu_redirect_fire,
+    input           [31:0]  in_wbu_redirect_pc,
     input                   in_fencei_flush_done,
     input                   in_valid,
     input                   in_ready,
@@ -31,6 +34,8 @@ module IDU(
 
     output                  out_ready,
     output                  out_valid,
+    output                  out_redirect_fire,
+    output          [31:0]  out_redirect_pc,
     
     output  reg             out_rf_we,
     output  reg             out_csr_wen,
@@ -104,7 +109,23 @@ assign csr_addr = in_inst[31:20];
 assign branch_op = funct3;
 assign load_size = funct3;
 assign store_size = funct3;
+
+
+wire redirect_fire;
+
+assign redirect_fire =
+    in_wbu_redirect_fire || in_exu_redirect_fire;
+
+assign out_redirect_fire = redirect_fire;
+
+assign out_redirect_pc =
+    in_wbu_redirect_fire ? in_wbu_redirect_pc :
+    in_exu_redirect_fire ? in_exu_redirect_pc :
+                           32'b0;
+
 assign out_ready =
+    !redirect_fire &&
+    !trap_pending &&
     (!out_valid || in_ready) &&
     !raw_hazard &&
     !csr_redirect_hazard &&
@@ -123,17 +144,18 @@ reg             is_jal      ;
 reg             is_branch   ;
 reg             is_load     ;
 reg             is_store    ;
-reg             is_fencei   ;
+reg             is_fencei;
 reg             fence_pending;
-reg             trap_valid  ;
+reg             trap_pending;
+reg             trap_valid;
 reg     [ 2:0]  branch_op   ;
 reg     [ 2:0]  load_size   ;
 reg     [ 2:0]  store_size  ;
 reg     [ 1:0]  alu_src2_sel;
 reg     [ 1:0]  alu_src1_sel;
 reg     [ 3:0]  alu_op      ;
-wire     [ 4:0]  rs1_idx        ;
-wire     [ 4:0]  rs2_idx        ;
+reg     [ 4:0]  rs1_idx     ;
+reg     [ 4:0]  rs2_idx     ;
 reg     [ 4:0]  rd          ;
 reg     [31:0]  imm         ;
 reg     [31:0]  shamt       ;
@@ -161,8 +183,8 @@ always @(posedge clk) begin
         // );
 
         if (!out_exception_valid &&
-            (out_pc == 32'h00000000) ||
-            (out_inst == 32'h00000000)) begin
+            ((out_pc == 32'h00000000) ||
+             (out_inst == 32'h00000000))) begin
             $error(
                 "[PIPE ERROR] stage=IDU->EXU pc=%08x inst=%08x valid=%b ready=%b time=%0t",
                 out_pc, out_inst, out_valid, in_ready, $time
@@ -183,7 +205,7 @@ always @(posedge clk) begin
     if (reset == 1'b1) begin
         fence_pending <= 1'b0;
     end
-    else if (in_flush) begin
+    else if (redirect_fire) begin
         fence_pending <= 1'b0;
     end
     else if (idu_in_fire && is_fencei) begin
@@ -196,11 +218,24 @@ end
 
 always @(posedge clk) begin
     if (reset == 1'b1) begin
+        trap_pending <= 1'b0;
+    end
+    else if (redirect_fire) begin
+        trap_pending <= 1'b0;
+    end
+    else if (idu_in_fire &&
+             (exception_valid || is_mret)) begin
+        trap_pending <= 1'b1;
+    end
+end
+
+always @(posedge clk) begin
+    if (reset == 1'b1) begin
         out_valid <= 1'b0;
         out_exception_valid <= 1'b0;
         out_exception_cause <= 32'b0;
     end
-    else if (in_flush) begin
+    else if (redirect_fire) begin
         out_valid <= 1'b0;
         out_exception_valid <= 1'b0;
         out_exception_cause <= 32'b0;

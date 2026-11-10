@@ -7,6 +7,7 @@ module WBU(
     input       [31:0]  in_inst,
     input       [31:0]  in_npc,
     input               in_is_ebreak,
+    input               in_is_mret,
     input               in_exception_valid,
     input       [31:0]  in_exception_cause,
     input       [ 1:0]  in_wb_sel,
@@ -36,8 +37,8 @@ module WBU(
     output      [31:0]  commit_wdata,
     output      [31:0]  out_rdata1,
     output      [31:0]  out_rdata2,
-    output      [31:0]  out_mtvec_data,
-    output      [31:0]  out_mepc_data,
+    output              out_redirect_fire,
+    output      [31:0]  out_redirect_fire_pc,
     output              out_fencei_done,
     output              out_ready
 );
@@ -72,17 +73,34 @@ module WBU(
 
     wire        [31:0]  csr_rdata;
     wire        [31:0]  csr_wdata;
+    wire        [31:0]  mtvec_data;
+    wire        [31:0]  mepc_data;
     wire                csr_write_commit;
+    wire                exception_commit;
+    wire                mret_commit;
+    wire                trap_redirect_valid;
+    wire        [31:0]  trap_redirect_pc;
 
     assign commit_valid = in_valid;
 
     assign out_ready   = commit_ready && !reset;
     assign commit_fire = commit_valid && out_ready;
 
+    assign exception_commit = commit_fire && in_exception_valid;
+    assign mret_commit      = commit_fire && in_is_mret;
+
     assign csr_wdata =
         (in_csr_op_sel == `CSR_WRITE)
         ? in_src1_data
         : (csr_rdata | in_src1_data);
+
+    assign trap_redirect_valid =
+        in_exception_valid || in_is_mret;
+
+    assign trap_redirect_pc =
+        in_exception_valid ? {mtvec_data[31:2], 2'b00} :
+        in_is_mret         ? mepc_data  :
+                            32'b0;
 
     assign csr_write_commit =
         commit_fire &&
@@ -91,15 +109,20 @@ module WBU(
 
     assign commit_pc       = in_pc;
     assign commit_inst     = in_inst;
-    assign commit_npc      = in_npc;
+    assign commit_npc      =
+        trap_redirect_valid ? trap_redirect_pc : in_npc;
     assign commit_ebreak   = in_exception_valid &&
-                              (in_exception_cause == 32'd3);
+                            (in_exception_cause == 32'd3);
     assign commit_skip_ref = in_is_mmio;
 
     assign commit_wen      = in_rf_we && (in_waddr != 5'd0);
     assign commit_rd       = in_waddr;
     assign commit_wdata    =
         (in_wb_sel == `NPC_CSR) ? csr_rdata : in_wdata;
+
+    assign out_redirect_fire =
+        exception_commit || mret_commit;
+    assign out_redirect_fire_pc = trap_redirect_pc;
 
     assign out_fencei_done = commit_fire && in_is_fencei;
 
@@ -122,15 +145,17 @@ module WBU(
 
     CSR csr(
         .clk(clk),
+        .reset(reset),
         .pc(in_pc),
         .csr_addr(in_csr_addr),
         .csr_wen(csr_write_commit),
-        .in_exception_valid(in_exception_valid && commit_fire),
+        .in_exception_valid(exception_commit),
         .in_exception_cause(in_exception_cause),
+        .in_mret_commit(mret_commit),
         .csr_rdata(csr_rdata),
         .csr_wdata(csr_wdata),
-        .mtvec_data(out_mtvec_data),
-        .mepc_data(out_mepc_data)
+        .mtvec_data(mtvec_data),
+        .mepc_data(mepc_data)
     );
 
 endmodule
