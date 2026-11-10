@@ -115,7 +115,11 @@ module WBU(
                             (in_exception_cause == 32'd3);
     assign commit_skip_ref = in_is_mmio;
 
-    assign commit_wen      = in_rf_we && (in_waddr != 5'd0);
+    assign commit_wen =
+        in_rf_we &&
+        !in_exception_valid &&
+        (in_waddr != 5'd0);
+
     assign commit_rd       = in_waddr;
     assign commit_wdata    =
         (in_wb_sel == `NPC_CSR) ? csr_rdata : in_wdata;

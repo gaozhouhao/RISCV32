@@ -74,11 +74,15 @@ module LSU(
     endfunction
 
     wire    aw_fire, w_fire, ar_fire, b_fire, r_fire;
+    wire    read_access_fault;
+
     assign  aw_fire = axi.awvalid && axi.awready;
     assign  w_fire = axi.wvalid && axi.wready;
     assign  ar_fire = axi.arvalid && axi.arready;
     assign  b_fire = axi.bvalid && axi.bready;
     assign  r_fire = axi.rvalid && axi.rready;
+    assign  read_access_fault = r_fire && axi.rresp[1];
+
     wire in_fire  = in_valid && out_ready;
     wire out_fire = out_valid && in_ready;
 
@@ -198,6 +202,10 @@ end
                 (in_is_load || in_is_store) &&
                 is_mmio_addr(in_mem_addr);
         end
+        else if (read_access_fault) begin
+            out_exception_valid <= 1'b1;
+            out_exception_cause <= 32'd5; // load access fault
+        end
     end
 
 
@@ -249,14 +257,20 @@ end
             `ifdef VERILATOR
                 perf_event(PERF_LSU_LOAD);
             `endif
-            case (load_size)
-                3'b000: out_wb_data <= {{24{word[7]}}, word[7:0]}; //lb
-                3'b001: out_wb_data <= {{16{word[15]}}, word[15:0]};//lh
-                3'b010: out_wb_data <= word; //lw
-                3'b100: out_wb_data <= word & 32'hff;//lbu
-                3'b101: out_wb_data <= word & 32'hffff; //lhu
-                default:out_wb_data <= 32'b0;
-            endcase
+            
+            if (read_access_fault) begin
+                out_wb_data <= 32'b0;
+            end
+            else begin
+                case (load_size)
+                    3'b000: out_wb_data <= {{24{word[7]}}, word[7:0]}; //lb
+                    3'b001: out_wb_data <= {{16{word[15]}}, word[15:0]};//lh
+                    3'b010: out_wb_data <= word; //lw
+                    3'b100: out_wb_data <= word & 32'hff;//lbu
+                    3'b101: out_wb_data <= word & 32'hffff; //lhu
+                    default:out_wb_data <= 32'b0;
+                endcase
+            end
         end
         if (in_fire && !in_is_load && !in_is_store) begin
             out_wb_data <= in_wb_data;
